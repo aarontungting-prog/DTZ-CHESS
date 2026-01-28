@@ -160,19 +160,26 @@
 
     window.onload = () => { initGame(); };
 
-    // 手機版選單切換
+    // ✨ 修復：正確切換 mobile-visible ✨
     window.toggleMenu = function() {
         const panel = document.getElementById('menu-panel');
-        // 切換 class 來控制顯示/隱藏
+        // 使用 toggle 簡單明瞭
         panel.classList.toggle('mobile-visible');
+        
+        // 同步遮罩狀態
+        const backdrop = document.getElementById('menu-backdrop');
+        if(panel.classList.contains('mobile-visible')) {
+            backdrop.classList.add('active');
+        } else {
+            backdrop.classList.remove('active');
+        }
     }
 
     window.closeAllMenus = function() {
         document.getElementById('custom-panel').classList.remove('active');
+        document.getElementById('menu-panel').classList.remove('mobile-visible'); // 關閉下方選單
         if(window.innerWidth <= 600) {
             document.getElementById('menu-backdrop').classList.remove('active');
-            // 點背景時也收起下方選單
-            document.getElementById('menu-panel').classList.remove('mobile-visible');
         }
     }
 </script>
