@@ -27,7 +27,7 @@ let userSettings = {
     avatarSeed: "Bot", avatarImage: null, name: "Commander",
     pieceStyle: "neon", boardStyle: "neon"
 };
-let lastCursorUpdate = 0;
+let lastCameraUpdate = 0; // 用於節流
 
 export function initGame() {
     console.log("Game Logic Initializing...");
@@ -41,7 +41,8 @@ export function initGame() {
         auth = getAuth(app);
     } catch(e) { console.error("Firebase Init Error:", e); }
 
-    Visuals.init3D(null, handleSquareClick, handleMouseMove);
+    // ✨ 修改：傳入 handleCameraUpdate 監聽相機移動 ✨
+    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
     Visuals.setLoginMode(true);
 
     setTimeout(setupUIListeners, 500);
@@ -66,6 +67,50 @@ export function initGame() {
     });
 
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 100);
+}
+
+// ✨ 新增：處理相機移動並上傳 Firebase ✨
+function handleCameraUpdate(camData) {
+    if (!isOnline || !gameId || !currentUser) return;
+    const now = Date.now();
+    // 200ms 傳送一次，避免太頻繁
+    if (now - lastCameraUpdate > 200) {
+        update(ref(db, `games/${gameId}/${playerColor}/camera`), {
+            x: camData.x, y: camData.y, z: camData.z
+        });
+        lastCameraUpdate = now;
+    }
+}
+
+function setupGameListeners() {
+    onValue(ref(db, 'games/' + gameId), (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        
+        if (data.status === 'playing' && !data.winner && document.getElementById('turn-txt').innerText.includes("等待")) {
+            if (data.black) {
+                const oppName = playerColor === 'w' ? data.black.name : data.white.name;
+                document.getElementById('opponent-info').innerText = `VS: ${oppName}`;
+                document.getElementById('room-display').innerText = `房間號：${gameId} (對戰中)`;
+                if(playerColor === 'w') alert(`對手 ${data.black.name} 已加入！`);
+                updateStatusHUD();
+            }
+        }
+        if (data.fen !== game.fen()) {
+            game.load(data.fen);
+            Visuals.syncBoardVisuals(game);
+            updateStatusHUD();
+            if (game.turn() === playerColor) isProcessing = false;
+        }
+        if (data.winner) handleGameOver(data.winner);
+    });
+
+    // ✨ 修改：監聽對手相機位置 (Camera) ✨
+    const opponentColor = playerColor === 'w' ? 'b' : 'w';
+    onValue(ref(db, `games/${gameId}/${opponentColor}/camera`), (snapshot) => {
+        const pos = snapshot.val();
+        if (pos) Visuals.updateOpponentGhost(pos); // 呼叫更新幽靈位置
+    });
 }
 
 function setupUIListeners() {
@@ -118,15 +163,15 @@ function leaveRoom() {
     if (!confirmLeave) return;
 
     off(ref(db, 'games/' + gameId));
-    off(ref(db, `games/${gameId}/w/cursor`));
-    off(ref(db, `games/${gameId}/b/cursor`));
+    off(ref(db, `games/${gameId}/w/camera`)); // 停止監聽
+    off(ref(db, `games/${gameId}/b/camera`));
 
     gameId = null;
     isOnline = false;
     game.reset();
     Visuals.syncBoardVisuals(game);
     Visuals.moveCamera({x: 0, y: 60, z: 100});
-    Visuals.updateOpponentCursor(null);
+    Visuals.updateOpponentGhost(null); // 移除幽靈
     toggleLobbyUI(false);
 }
 
@@ -218,49 +263,6 @@ function joinRoom() {
     });
 }
 
-function setupGameListeners() {
-    onValue(ref(db, 'games/' + gameId), (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-        
-        if (data.status === 'playing' && !data.winner && document.getElementById('turn-txt').innerText.includes("等待")) {
-            if (data.black) {
-                const oppName = playerColor === 'w' ? data.black.name : data.white.name;
-                document.getElementById('opponent-info').innerText = `VS: ${oppName}`;
-                document.getElementById('room-display').innerText = `房間號：${gameId} (對戰中)`;
-                if(playerColor === 'w') alert(`對手 ${data.black.name} 已加入！`);
-                updateStatusHUD();
-            }
-        }
-        if (data.fen !== game.fen()) {
-            game.load(data.fen);
-            Visuals.syncBoardVisuals(game);
-            updateStatusHUD();
-            // 如果輪到我下，解除鎖定
-            if (game.turn() === playerColor) isProcessing = false;
-        }
-        if (data.winner) handleGameOver(data.winner);
-    });
-
-    const opponentColor = playerColor === 'w' ? 'b' : 'w';
-    onValue(ref(db, `games/${gameId}/${opponentColor}/cursor`), (snapshot) => {
-        const pos = snapshot.val();
-        if (pos) Visuals.updateOpponentCursor(pos);
-    });
-}
-
-function handleMouseMove(point) {
-    if (!isOnline || !gameId || !currentUser) return;
-    const now = Date.now();
-    // 減少發送頻率到 150ms，減輕網路負擔
-    if (now - lastCursorUpdate > 150) {
-        update(ref(db, `games/${gameId}/${playerColor}/cursor`), {
-            x: point.x, y: point.y, z: point.z
-        });
-        lastCursorUpdate = now;
-    }
-}
-
 export function previewStyle(type, value) {
     const tempSettings = {};
     if (type === 'piece') tempSettings.pieceStyle = value;
@@ -268,7 +270,6 @@ export function previewStyle(type, value) {
     Visuals.updateTheme(tempSettings);
 }
 
-// ... (以下為輔助函數，保持不變) ...
 export function triggerAvatarUpload() {
     if (currentUser && !currentUser.isAnonymous) {
         document.getElementById('avatar-upload').click();
@@ -384,8 +385,6 @@ function handleSquareClick(sq) {
     if(isProcessing) return;
     if(isOnline && game.turn() !== playerColor) return;
     const p = game.get(sq);
-    
-    // 選擇棋子
     if(!selectedSquare) {
         if(p && p.color === game.turn()) {
             if(!isOnline || (isOnline && p.color === playerColor)) {
@@ -395,35 +394,24 @@ function handleSquareClick(sq) {
             }
         }
     } else {
-        // 如果點擊自己另一個棋子 -> 換選
         if(p && p.color === game.turn()) {
             selectedSquare = sq;
             const validMoves = game.moves({square: sq, verbose: true});
             Visuals.highlightSquare(sq, validMoves);
             return;
         }
-
-        // 嘗試移動
         const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
         if(move) {
             isProcessing = true;
-            
-            // ✨ 優化：並行處理 ✨
-            // 1. 本地動畫 (立即執行)
             Visuals.animateMove(move, () => {
                 Visuals.syncBoardVisuals(game);
                 updateStatusHUD();
-                
-                // 動畫結束後的處理 (例如單機模式的AI)
-                if(!isOnline) {
+                if(isOnline) sendMove(move);
+                else {
                     if(game.turn() === 'b') setTimeout(makeRandomAI, 500);
                     else isProcessing = false;
                 }
             });
-
-            // 2. 網路發送 (不等待動畫)
-            if(isOnline) sendMove(move);
-            
             selectedSquare = null;
         } else {
             selectedSquare = null;
@@ -549,7 +537,7 @@ function sendMove(move) {
         calculateELO(winnerColor);
     }
     update(ref(db, 'games/' + gameId), updateData);
-    // 注意：這裡不設 isProcessing = false，讓動畫 callback 去做，或者依賴 onValue
+    isProcessing = false;
 }
 
 function makeRandomAI(){
