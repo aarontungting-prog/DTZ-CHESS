@@ -129,7 +129,7 @@
                 <button id="btn-join" class="game-btn join-btn">加入房間 (執黑)</button>
             </div>
 
-            <button id="btn-leave" class="game-btn" style="display:none; background:#ff3333; margin-top:10px;">退出房間 / 結束連線</button>
+            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff; color:white; margin-top:10px;">退出房間 / 結束連線</button>
             
             <div class="separator"></div>
             <button id="btn-logout" class="logout-btn">登出</button>
@@ -160,10 +160,8 @@
 
     window.onload = () => { initGame(); };
 
-    // 手機版選單控制
     window.toggleMenu = function() {
         const panel = document.getElementById('menu-panel');
-        // 只有手機版需要這個切換邏輯
         if (panel.classList.contains('mobile-hidden')) {
             panel.classList.remove('mobile-hidden');
         } else {
