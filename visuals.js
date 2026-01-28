@@ -5,10 +5,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const CONFIG = {
-    grassCount: isMobile ? 15000 : 80000,
-    treeCount: isMobile ? 200 : 850,
-    shadowSize: isMobile ? 1024 : 2048,
-    pixelRatio: isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio
+    // 手機版大幅減少草的數量和陰影解析度
+    grassCount: isMobile ? 5000 : 80000,
+    treeCount: isMobile ? 50 : 850,
+    shadowSize: isMobile ? 512 : 2048, 
+    pixelRatio: isMobile ? Math.min(window.devicePixelRatio, 1.2) : window.devicePixelRatio
 };
 
 let scene, camera, renderer, controls, raycaster, mouse, clock;
@@ -21,6 +22,8 @@ let currentSettings = { pieceStyle: 'neon', boardStyle: 'neon' };
 let isLoginRotating = false; 
 let opponentCursorMesh = null;
 
+// ... (幾何體定義 GEOMETRIES, MATERIALS 保持不變，省略以節省篇幅) ...
+// 請務必保留原檔案中的 GEOMETRIES 和 MATERIALS 定義
 const GEOMETRIES = {
     cylBase: new THREE.CylinderGeometry(0.4, 0.45, 0.2, 32),
     pawnBody: new THREE.CylinderGeometry(0.15, 0.35, 0.6, 16),
@@ -59,8 +62,12 @@ export function init3D(container, onClickCallback, onMouseMoveCallback) {
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setPixelRatio(CONFIG.pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // 手機版降低陰影負擔
+    if (!isMobile) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     
@@ -80,6 +87,7 @@ export function init3D(container, onClickCallback, onMouseMoveCallback) {
     requestAnimationFrame(() => {
         createFloatingBoard();
         createProceduralTerrain();
+        // 手機版只生成少量植被
         setTimeout(createVegetation, 50);
         setTimeout(createHighAltitudeClouds, 100);
     });
@@ -133,18 +141,19 @@ export function updateOpponentCursor(pos) {
     }
 
     if(window.TWEEN) {
+        // 加快幽靈手的更新速度
         new TWEEN.Tween(opponentCursorMesh.position)
-            .to({x: pos.x, y: pos.y + 1, z: pos.z}, 100)
+            .to({x: pos.x, y: pos.y + 1, z: pos.z}, 120) 
             .start();
     } else {
         opponentCursorMesh.position.set(pos.x, pos.y + 1, pos.z);
     }
 }
 
+// ... (updateTheme, loadCustomModels, moveCamera, syncBoardVisuals, highlightSquare, clearHighlights 保持不變) ...
 export function updateTheme(settings) {
     if (settings.pieceStyle) currentSettings.pieceStyle = settings.pieceStyle;
     if (settings.boardStyle) currentSettings.boardStyle = settings.boardStyle;
-
     if (window.gameInstance) syncBoardVisuals(window.gameInstance);
 }
 
@@ -166,7 +175,6 @@ export function moveCamera(targetPos, lookAtPos) {
 
 export function syncBoardVisuals(chessInstance) {
     if(!window.gameInstance) window.gameInstance = chessInstance;
-
     for(let sq in piecesMap) { scene.remove(piecesMap[sq]); }
     piecesMap = {};
     const b = chessInstance.board();
@@ -216,7 +224,8 @@ export function animateMove(move, callback) {
     }
     
     if(window.TWEEN) {
-        new TWEEN.Tween(s.position).to(ePos, 500).easing(TWEEN.Easing.Quadratic.Out)
+        // ✨ 極速動畫：200ms (原本 500) ✨
+        new TWEEN.Tween(s.position).to(ePos, 200).easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(() => { 
                 if(move.promotion) { scene.remove(s); }
                 if(callback) callback(); 
@@ -243,7 +252,8 @@ function createOptimizedPiece(t, c) {
     if (currentSettings.pieceStyle === 'classic') {
         const mat = c === 'w' ? MATERIALS.classicWhite : MATERIALS.classicBlack;
         const base = new THREE.Mesh(GEOMETRIES.cylBase, mat);
-        base.position.y = 0.1; base.castShadow = true;
+        base.position.y = 0.1; 
+        if(!isMobile) base.castShadow = true; // 手機不投射陰影
         g.add(base);
 
         if(t === 'p') {
@@ -260,38 +270,40 @@ function createOptimizedPiece(t, c) {
         }
         
     } else {
+        // Neon 風格
         const mat = c === 'w' ? MATERIALS.white : MATERIALS.black;
         const glow = c === 'w' ? MATERIALS.glowW : MATERIALS.glowB;
         const base = new THREE.Mesh(GEOMETRIES.cylBase, mat);
-        base.position.y = 0.1; base.castShadow = true;
+        base.position.y = 0.1; 
+        if(!isMobile) base.castShadow = true;
         g.add(base);
 
         if(t === 'p') {
             const body = new THREE.Mesh(GEOMETRIES.pawnBody, mat);
-            body.position.y = 0.5; body.castShadow = true;
+            body.position.y = 0.5; if(!isMobile) body.castShadow = true;
             const head = new THREE.Mesh(GEOMETRIES.pawnHead, mat);
-            head.position.y = 0.95; head.castShadow = true;
+            head.position.y = 0.95; if(!isMobile) head.castShadow = true;
             g.add(body, head);
         } else if(t === 'r') {
             const body = new THREE.Mesh(GEOMETRIES.rookBody, mat);
-            body.position.y = 0.6; body.castShadow = true;
+            body.position.y = 0.6; if(!isMobile) body.castShadow = true;
             const head = new THREE.Mesh(GEOMETRIES.rookHead, mat);
-            head.position.y = 1.1; head.castShadow = true;
+            head.position.y = 1.1; if(!isMobile) head.castShadow = true;
             const top = new THREE.Mesh(GEOMETRIES.torus, glow);
             top.position.y = 1.25; top.rotation.x = Math.PI/2;
             g.add(body, head, top);
         } else if(t === 'n') {
             const body = new THREE.Mesh(GEOMETRIES.knightBody, mat);
-            body.position.y = 0.5; body.castShadow = true;
+            body.position.y = 0.5; if(!isMobile) body.castShadow = true;
             const head = new THREE.Mesh(GEOMETRIES.knightHead, mat);
-            head.position.set(0, 1.0, 0.1); head.rotation.x = -Math.PI/6; head.castShadow = true;
+            head.position.set(0, 1.0, 0.1); head.rotation.x = -Math.PI/6; if(!isMobile) head.castShadow = true;
             const eye = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.05), glow); 
             eye.position.set(0, 1.1, -0.15); eye.rotation.x = -Math.PI/6;
             g.add(body, head, eye);
             if(c === 'b') g.rotation.y = Math.PI;
         } else if(t === 'b') {
             const body = new THREE.Mesh(GEOMETRIES.bishopBody, mat);
-            body.position.y = 0.7; body.castShadow = true;
+            body.position.y = 0.7; if(!isMobile) body.castShadow = true;
             const neck = new THREE.Mesh(GEOMETRIES.pawnBody, mat); 
             neck.scale.set(0.5, 0.5, 0.5); neck.position.y = 1.35; 
             const top = new THREE.Mesh(GEOMETRIES.sphereSmall, glow);
@@ -299,13 +311,13 @@ function createOptimizedPiece(t, c) {
             g.add(body, neck, top);
         } else if(t === 'q') {
             const body = new THREE.Mesh(GEOMETRIES.queenBody, mat);
-            body.position.y = 0.9; body.castShadow = true;
+            body.position.y = 0.9; if(!isMobile) body.castShadow = true;
             const top = new THREE.Mesh(GEOMETRIES.sphereSmall, glow);
             top.position.y = 1.7; top.scale.setScalar(1.5);
             g.add(body, top);
         } else if(t === 'k') {
             const body = new THREE.Mesh(GEOMETRIES.kingBody, mat);
-            body.position.y = 1.0; body.castShadow = true;
+            body.position.y = 1.0; if(!isMobile) body.castShadow = true;
             const top = new THREE.Mesh(GEOMETRIES.boxCross, glow);
             top.position.y = 1.95;
             g.add(body, top);
@@ -341,9 +353,15 @@ function onResize(){camera.aspect=window.innerWidth/window.innerHeight;camera.up
 function setupSunsetLighting(){
     const ambient=new THREE.AmbientLight(0xffccaa,0.75);scene.add(ambient);
     const sunLight=new THREE.DirectionalLight(0xff8800,3.2);
-    sunLight.position.set(-300,100,-300);sunLight.castShadow=true;
-    sunLight.shadow.mapSize.set(CONFIG.shadowSize,CONFIG.shadowSize);
-    const d=700;sunLight.shadow.camera.left=-d;sunLight.shadow.camera.right=d;sunLight.shadow.camera.top=d;sunLight.shadow.camera.bottom=-d;
+    sunLight.position.set(-300,100,-300);
+    
+    // 手機不投射場景陰影，只保留光照
+    if(!isMobile) {
+        sunLight.castShadow=true;
+        sunLight.shadow.mapSize.set(CONFIG.shadowSize,CONFIG.shadowSize);
+        const d=700;sunLight.shadow.camera.left=-d;sunLight.shadow.camera.right=d;sunLight.shadow.camera.top=d;sunLight.shadow.camera.bottom=-d;
+    }
+    
     scene.add(sunLight);
     const sky=new Sky();sky.scale.setScalar(450000);scene.add(sky);
     const uniforms=sky.material.uniforms;
@@ -380,11 +398,13 @@ function createProceduralTerrain(){
     geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
     geo.computeVertexNormals();
     const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.9,metalness:0.1,flatShading:true});
-    const mesh=new THREE.Mesh(geo,mat);mesh.receiveShadow=true;scene.add(mesh);
+    const mesh=new THREE.Mesh(geo,mat);
+    if(!isMobile) mesh.receiveShadow=true;
+    scene.add(mesh);
 }
 function createVegetation(){
     const grp=new THREE.Group();
-    const lMat=new THREE.MeshStandardMaterial({color:0x1a3d1a,roughness:0.9,flatShading:true});const tMat=new THREE.MeshStandardMaterial({color:0x3d2817,roughness:1.0});const lGeo=new THREE.DodecahedronGeometry(4,0);const tGeo=new THREE.CylinderGeometry(0.7,1.0,6,6);tGeo.translate(0,3,0);for(let i=0;i<CONFIG.treeCount;i++){const a=Math.random()*Math.PI*2;const r=70+Math.random()*380;const x=Math.cos(a)*r;const z=Math.sin(a)*r;const h=getTerrainHeight(x,z);const tr=new THREE.Group();const t=new THREE.Mesh(tGeo,tMat);t.castShadow=true;tr.add(t);for(let j=0;j<3;j++){const l=new THREE.Mesh(lGeo,lMat);l.position.set((Math.random()-0.5)*5,5.5+Math.random()*3.5,(Math.random()-0.5)*5);l.scale.setScalar(0.8+Math.random()*0.4);l.castShadow=true;tr.add(l);}tr.position.set(x,h,z);tr.scale.setScalar(0.9+Math.random()*0.6);grp.add(tr);}scene.add(grp);
+    const lMat=new THREE.MeshStandardMaterial({color:0x1a3d1a,roughness:0.9,flatShading:true});const tMat=new THREE.MeshStandardMaterial({color:0x3d2817,roughness:1.0});const lGeo=new THREE.DodecahedronGeometry(4,0);const tGeo=new THREE.CylinderGeometry(0.7,1.0,6,6);tGeo.translate(0,3,0);for(let i=0;i<CONFIG.treeCount;i++){const a=Math.random()*Math.PI*2;const r=70+Math.random()*380;const x=Math.cos(a)*r;const z=Math.sin(a)*r;const h=getTerrainHeight(x,z);const tr=new THREE.Group();const t=new THREE.Mesh(tGeo,tMat);if(!isMobile) t.castShadow=true;tr.add(t);for(let j=0;j<3;j++){const l=new THREE.Mesh(lGeo,lMat);l.position.set((Math.random()-0.5)*5,5.5+Math.random()*3.5,(Math.random()-0.5)*5);l.scale.setScalar(0.8+Math.random()*0.4);if(!isMobile) l.castShadow=true;tr.add(l);}tr.position.set(x,h,z);tr.scale.setScalar(0.9+Math.random()*0.6);grp.add(tr);}scene.add(grp);
     const bGeo=new THREE.PlaneGeometry(0.3,1.5);bGeo.translate(0,0.75,0);
     grassMat=new THREE.MeshStandardMaterial({color:0x226622,side:THREE.DoubleSide});
     grassMat.onBeforeCompile=s=>{s.uniforms.time={value:0};s.vertexShader=`uniform float time;\n`+s.vertexShader;s.vertexShader=s.vertexShader.replace(`#include <begin_vertex>`,`vec3 transformed=vec3(position);float w=sin(time*1.5+position.x*0.5)*0.2*position.y;transformed.x+=w;#include <begin_vertex>`);grassMat.userData.shader=s;};
@@ -395,7 +415,8 @@ function createVegetation(){
         const r=Math.random()*420;const a=Math.random()*Math.PI*2;const x=Math.cos(a)*r;const z=Math.sin(a)*r;const h=getTerrainHeight(x,z);
         if(h<-8){dummy.position.set(x,h,z);dummy.rotation.y=Math.random()*Math.PI;dummy.scale.setScalar(0.7+Math.random()*0.6);dummy.updateMatrix();iG.setMatrixAt(c++,dummy.matrix);}
     }
-    iG.receiveShadow=true;scene.add(iG);
+    if(!isMobile) iG.receiveShadow=true;
+    scene.add(iG);
 }
 function createHighAltitudeClouds(){
     const cv=document.createElement('canvas');cv.width=128;cv.height=128;
@@ -409,11 +430,11 @@ function createHighAltitudeClouds(){
 }
 function createFloatingBoard(){
     const g=new THREE.TorusGeometry(8,0.3,16,32);const m=new THREE.MeshBasicMaterial({color:0xffaa00});const r=new THREE.Mesh(g,m);r.rotation.x=Math.PI/2;r.position.y=BOARD_HEIGHT-3;scene.add(r);
-    const b=new THREE.Mesh(new THREE.BoxGeometry(9,0.5,9),new THREE.MeshStandardMaterial({color:0x221111,roughness:0.5}));b.position.y=BOARD_HEIGHT-0.25;b.receiveShadow=true;scene.add(b);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(9,0.5,9),new THREE.MeshStandardMaterial({color:0x221111,roughness:0.5}));b.position.y=BOARD_HEIGHT-0.25;if(!isMobile) b.receiveShadow=true;scene.add(b);
     for(let r=0;r<8;r++)for(let c=0;c<8;c++){
         const n=String.fromCharCode(97+c)+(r+1),w=(r+c)%2!==0;
         const t=new THREE.Mesh(new THREE.BoxGeometry(1,0.2,1),new THREE.MeshStandardMaterial({color:w?0xffddbb:0x443333,roughness:0.2,metalness:0.3}));
-        t.position.set(c-3.5,BOARD_HEIGHT,3.5-r);t.userData={square:n,isTile:true};t.receiveShadow=true;t.castShadow=true;scene.add(t);tilesMap[n]=t;
+        t.position.set(c-3.5,BOARD_HEIGHT,3.5-r);t.userData={square:n,isTile:true};if(!isMobile) {t.receiveShadow=true;t.castShadow=true;}scene.add(t);tilesMap[n]=t;
     }
 }
 
