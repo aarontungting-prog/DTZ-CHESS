@@ -78,7 +78,6 @@ function setupUIListeners() {
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     bind('guest-btn', () => signInAnonymously(auth).catch(handleAuthError));
-    // 修改：登出按鈕改用新的 handleLogout 函式
     bind('btn-logout', handleLogout); 
     bind('forgot-pw', handleForgotPassword);
     
@@ -100,33 +99,21 @@ function setupUIListeners() {
     document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
 }
 
-// ✨ 新增：智慧登出邏輯 (解決資料庫爆炸問題) ✨
 function handleLogout() {
     if (!currentUser) return;
-
     if (currentUser.isAnonymous) {
-        const confirmLogout = confirm("訪客登出後，您的戰績和設定將會被刪除。確定要登出嗎？");
+        const confirmLogout = confirm("訪客登出後，您的戰績將會被刪除。確定要登出嗎？");
         if (!confirmLogout) return;
-
-        // 刪除該訪客在資料庫的資料
         remove(ref(db, 'users/' + currentUser.uid))
-            .then(() => {
-                console.log("訪客資料已清理");
-                signOut(auth);
-            })
-            .catch((err) => {
-                console.error("清理失敗", err);
-                signOut(auth); // 就算清理失敗也要讓人登出
-            });
+            .then(() => signOut(auth))
+            .catch(() => signOut(auth));
     } else {
-        // 正式會員直接登出，保留資料
         signOut(auth);
     }
 }
 
 function leaveRoom() {
     if (!gameId) return;
-    
     const confirmLeave = confirm("確定要退出房間嗎？");
     if (!confirmLeave) return;
 
@@ -140,7 +127,6 @@ function leaveRoom() {
     Visuals.syncBoardVisuals(game);
     Visuals.moveCamera({x: 0, y: 60, z: 100});
     Visuals.updateOpponentCursor(null);
-
     toggleLobbyUI(false);
 }
 
@@ -162,7 +148,6 @@ function toggleLobbyUI(isPlaying) {
 
 function createRoom() {
     if (!currentUser) { alert("請先登入"); return; }
-    
     game.reset(); 
     Visuals.syncBoardVisuals(game); 
     
@@ -170,7 +155,6 @@ function createRoom() {
     console.log("正在創建房間:", gameId);
     
     document.getElementById('room-display').innerHTML = `房間號碼：<span style="color:#00e5ff; font-size:16px;">${gameId}</span><br>等待對手加入...`;
-    document.getElementById('room-display').style.color = "#00ff00";
     document.getElementById('opponent-info').innerText = "等待對手...";
     toggleLobbyUI(true);
     
@@ -188,6 +172,7 @@ function createRoom() {
             isOnline = true;
             setupGameListeners();
             Visuals.moveCamera({x: 0, y: 60, z: 100}); 
+            alert(`房間已建立！號碼：${gameId}`);
         }).catch(err => {
             console.error(err);
             alert("網路錯誤，無法建立房間");
@@ -251,6 +236,7 @@ function setupGameListeners() {
             game.load(data.fen);
             Visuals.syncBoardVisuals(game);
             updateStatusHUD();
+            // 如果輪到我下，解除鎖定
             if (game.turn() === playerColor) isProcessing = false;
         }
         if (data.winner) handleGameOver(data.winner);
@@ -266,7 +252,8 @@ function setupGameListeners() {
 function handleMouseMove(point) {
     if (!isOnline || !gameId || !currentUser) return;
     const now = Date.now();
-    if (now - lastCursorUpdate > 100) {
+    // 減少發送頻率到 150ms，減輕網路負擔
+    if (now - lastCursorUpdate > 150) {
         update(ref(db, `games/${gameId}/${playerColor}/cursor`), {
             x: point.x, y: point.y, z: point.z
         });
@@ -281,6 +268,7 @@ export function previewStyle(type, value) {
     Visuals.updateTheme(tempSettings);
 }
 
+// ... (以下為輔助函數，保持不變) ...
 export function triggerAvatarUpload() {
     if (currentUser && !currentUser.isAnonymous) {
         document.getElementById('avatar-upload').click();
@@ -368,29 +356,14 @@ function loadUserProfile() {
             document.getElementById('user-name').innerText = data.name;
             document.getElementById('edit-name').value = data.name;
             document.getElementById('user-elo').innerText = data.elo;
-            
             const seed = data.avatarSeed || data.name;
-            const avatarUrl = data.avatarImage ? data.avatarImage : 
-                `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-            
+            const avatarUrl = data.avatarImage ? data.avatarImage : `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
             document.getElementById('hud-avatar').src = avatarUrl;
             document.getElementById('my-avatar').src = avatarUrl;
             if(!data.avatarImage) document.getElementById('avatar-seed').value = seed;
-
             updateRankBadge(data.elo);
-
-            if(data.pieceStyle) {
-                const grid = document.getElementById('piece-skin-grid');
-                if(grid) {
-                    for(let item of grid.getElementsByClassName('skin-item')) item.classList.remove('selected');
-                    if(data.pieceStyle === 'classic') grid.children[1].classList.add('selected');
-                    else grid.children[0].classList.add('selected');
-                }
-                document.getElementById('selected-piece-style').value = data.pieceStyle;
-            }
-            if(data.boardStyle) {
-                document.getElementById('selected-board-style').value = data.boardStyle;
-            }
+            if(data.pieceStyle) document.getElementById('selected-piece-style').value = data.pieceStyle;
+            if(data.boardStyle) document.getElementById('selected-board-style').value = data.boardStyle;
             Visuals.updateTheme(userSettings);
         }
     });
@@ -411,6 +384,8 @@ function handleSquareClick(sq) {
     if(isProcessing) return;
     if(isOnline && game.turn() !== playerColor) return;
     const p = game.get(sq);
+    
+    // 選擇棋子
     if(!selectedSquare) {
         if(p && p.color === game.turn()) {
             if(!isOnline || (isOnline && p.color === playerColor)) {
@@ -420,24 +395,35 @@ function handleSquareClick(sq) {
             }
         }
     } else {
+        // 如果點擊自己另一個棋子 -> 換選
         if(p && p.color === game.turn()) {
             selectedSquare = sq;
             const validMoves = game.moves({square: sq, verbose: true});
             Visuals.highlightSquare(sq, validMoves);
             return;
         }
+
+        // 嘗試移動
         const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
         if(move) {
             isProcessing = true;
+            
+            // ✨ 優化：並行處理 ✨
+            // 1. 本地動畫 (立即執行)
             Visuals.animateMove(move, () => {
                 Visuals.syncBoardVisuals(game);
                 updateStatusHUD();
-                if(isOnline) sendMove(move);
-                else {
+                
+                // 動畫結束後的處理 (例如單機模式的AI)
+                if(!isOnline) {
                     if(game.turn() === 'b') setTimeout(makeRandomAI, 500);
                     else isProcessing = false;
                 }
             });
+
+            // 2. 網路發送 (不等待動畫)
+            if(isOnline) sendMove(move);
+            
             selectedSquare = null;
         } else {
             selectedSquare = null;
@@ -495,7 +481,6 @@ function handleAuthError(error) {
     let msg = error.message;
     if(msg.includes("weak-password")) msg = "密碼太弱";
     if(msg.includes("email-already-in-use")) msg = "此信箱已被註冊";
-    if(msg.includes("operation-not-allowed")) msg = "系統錯誤：請聯繫管理員開啟 Firebase Email 登入！";
     errorMsg.innerText = msg;
     console.error("Auth Error:", error);
 }
@@ -564,7 +549,7 @@ function sendMove(move) {
         calculateELO(winnerColor);
     }
     update(ref(db, 'games/' + gameId), updateData);
-    isProcessing = false;
+    // 注意：這裡不設 isProcessing = false，讓動畫 callback 去做，或者依賴 onValue
 }
 
 function makeRandomAI(){
