@@ -11,17 +11,17 @@ body {
 #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
 .hud { position: absolute; pointer-events: auto; }
 
-/* 電腦版隱藏手機選單按鈕 */
+/* 手機選單按鈕 (電腦版隱藏) */
 #mobile-menu-btn { display: none; }
 
-/* HUD 容器 (電腦版) */
+/* HUD 容器 (電腦版預設樣式) */
 .hud-container {
     position: absolute; top: 20px; left: 20px; 
     display: flex; flex-direction: column; gap: 15px;
     width: 260px; pointer-events: auto;
 }
 
-/* 黑色盒子 */
+/* 黑色盒子樣式 */
 .hud-box {
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid #444; 
@@ -132,39 +132,40 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
    2. 手機版專用設定 (Mobile Overrides)
    ========================================= */
 @media (max-width: 600px) {
-    /* 1. 顯示漢堡選單 */
+    /* 1. 漢堡選單按鈕 */
     #mobile-menu-btn { 
-        display: flex; position: absolute; top: 15px; left: 15px; width: 40px; height: 40px; 
-        background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; color: #fff; 
-        justify-content: center; align-items: center; font-size: 20px; cursor: pointer; 
-        z-index: 200; pointer-events: auto; 
+        display: flex; position: absolute; bottom: 20px; left: 20px; width: 50px; height: 50px; 
+        background: #000; border: 2px solid #00e5ff; border-radius: 50%; color: #00e5ff; 
+        justify-content: center; align-items: center; font-size: 12px; cursor: pointer; 
+        z-index: 2000; pointer-events: auto; box-shadow: 0 0 15px rgba(0,229,255,0.5);
+        font-weight: bold;
     }
 
-    /* 2. HUD 下沉式設計 */
+    /* 2. HUD 下沉式抽屜 */
     .hud-container { 
         display: flex; 
-        width: 90%; 
-        top: auto; bottom: 20px; /* 改到底部 */
-        left: 50%; 
-        transform: translateX(-50%) scale(1);
-        z-index: 1000;
-        transition: transform 0.3s ease, opacity 0.3s ease;
+        width: 100%; box-sizing: border-box;
+        position: fixed; top: auto; bottom: 0; left: 0;
+        transform: translateY(110%); /* 預設藏在下面 */
+        z-index: 1500;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 10px 20px 80px 20px; /* 底部留空給按鈕 */
+        background: rgba(0,0,0,0.9);
+        border-top: 2px solid #00e5ff;
     }
 
-    /* 縮小黑框內距，讓它更扁 */
+    /* 當加上 .mobile-visible 時滑上來 */
+    .hud-container.mobile-visible {
+        transform: translateY(0);
+    }
+
+    /* 調整內容排版 */
     .hud-box {
-        padding: 12px;
-        gap: 5px;
+        background: transparent; border: none; box-shadow: none; padding: 0; margin-bottom: 10px;
     }
-
-    /* 隱藏選單時的效果 */
-    .hud-container.mobile-hidden {
-        opacity: 0;
-        pointer-events: none;
-        transform: translate(-50%, 20px); /* 往下沉消失 */
-    }
-
-    /* 調整狀態列 (放在上方) */
+    .profile-box { border-bottom: 1px solid #333; padding-bottom: 10px; }
+    
+    /* 狀態列 */
     #status-panel { 
         top: 15px; left: 50%; transform: translateX(-50%); width: auto; 
         background: rgba(0,0,0,0.6); border-radius: 30px; padding: 5px 20px; 
@@ -172,6 +173,5 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
     }
     #status-panel h1 { display: none; }
 
-    /* 側邊面板寬度 */
-    .side-panel { width: 85%; }
+    .side-panel { width: 90%; }
 }
