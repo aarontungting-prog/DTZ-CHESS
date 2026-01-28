@@ -154,7 +154,7 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
         border-top: 2px solid #00e5ff;
     }
 
-    /* 當加上 .mobile-visible 時滑上來 */
+    /* ✨ 關鍵修復：這裡要對應 HTML 的 mobile-visible ✨ */
     .hud-container.mobile-visible {
         transform: translateY(0);
     }
