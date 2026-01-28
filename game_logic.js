@@ -30,6 +30,9 @@ let userSettings = {
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
+// ✨ 新增：判斷是否為手動點擊登入 ✨
+let isManualLogin = false;
+
 export function initGame() {
     console.log("Game Logic Initializing...");
     
@@ -47,20 +50,20 @@ export function initGame() {
 
     setTimeout(setupUIListeners, 500);
     
-    // ✨ 修改：強制訪客在載入時登出，避免自動登入 ✨
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            // 如果是訪客，強制登出，讓使用者重新選擇
-            if (user.isAnonymous) {
+            // ✨ 關鍵邏輯修改 ✨
+            // 如果是訪客，且「不是」手動點擊 (代表是重新整理網頁自動登入)，則強制登出
+            if (user.isAnonymous && !isManualLogin) {
                 console.log("偵測到舊的訪客會話，強制登出...");
                 signOut(auth);
                 return;
             }
 
-            // 如果是正式會員 (Email)，則保持登入
+            // 登入成功
             currentUser = user;
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
@@ -78,6 +81,48 @@ export function initGame() {
 
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 100);
 }
+
+function setupUIListeners() {
+    const bind = (id, fn) => {
+        const el = document.getElementById(id);
+        if(el) el.onclick = fn;
+    };
+    bind('btn-create', createRoom);
+    bind('btn-join', joinRoom);
+    bind('btn-leave', leaveRoom);
+    bind('auth-action-btn', handleLogin);
+    
+    // ✨ 修改：點擊訪客登入時，標記為手動登入 ✨
+    bind('guest-btn', () => {
+        isManualLogin = true; // 開啟通行證
+        signInAnonymously(auth).catch((error) => {
+            isManualLogin = false; // 失敗要重置
+            handleAuthError(error);
+        });
+    });
+
+    bind('btn-logout', handleLogout); 
+    bind('forgot-pw', handleForgotPassword);
+    
+    bind('btn-custom', () => {
+        document.getElementById('custom-panel').classList.add('active');
+        if(currentUser && currentUser.isAnonymous) {
+            document.getElementById('guest-avatar-controls').style.display = 'block';
+        } else {
+            document.getElementById('guest-avatar-controls').style.display = 'none';
+        }
+    });
+
+    bind('btn-save-custom', saveUserSettings);
+    bind('btn-random-avatar', randomizeAvatar);
+
+    const fileInput = document.getElementById('avatar-upload');
+    if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
+    
+    document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
+}
+
+// ... (以下為其餘邏輯，保持不變) ...
 
 function handleCameraUpdate(camData) {
     if (!isOnline || !gameId || !currentUser) return;
@@ -118,37 +163,6 @@ function setupGameListeners() {
         const pos = snapshot.val();
         if (pos) Visuals.updateOpponentGhost(pos);
     });
-}
-
-function setupUIListeners() {
-    const bind = (id, fn) => {
-        const el = document.getElementById(id);
-        if(el) el.onclick = fn;
-    };
-    bind('btn-create', createRoom);
-    bind('btn-join', joinRoom);
-    bind('btn-leave', leaveRoom);
-    bind('auth-action-btn', handleLogin);
-    bind('guest-btn', () => signInAnonymously(auth).catch(handleAuthError));
-    bind('btn-logout', handleLogout); 
-    bind('forgot-pw', handleForgotPassword);
-    
-    bind('btn-custom', () => {
-        document.getElementById('custom-panel').classList.add('active');
-        if(currentUser && currentUser.isAnonymous) {
-            document.getElementById('guest-avatar-controls').style.display = 'block';
-        } else {
-            document.getElementById('guest-avatar-controls').style.display = 'none';
-        }
-    });
-
-    bind('btn-save-custom', saveUserSettings);
-    bind('btn-random-avatar', randomizeAvatar);
-
-    const fileInput = document.getElementById('avatar-upload');
-    if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
-    
-    document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
 }
 
 function handleLogout() {
