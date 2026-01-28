@@ -30,8 +30,8 @@ let userSettings = {
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
-// ✨ 新增：判斷是否為手動點擊登入 ✨
-let isManualLogin = false;
+// ✨ 關鍵修正：訪客登入意圖標記 ✨
+let isGuestLoginIntent = false;
 
 export function initGame() {
     console.log("Game Logic Initializing...");
@@ -48,6 +48,7 @@ export function initGame() {
     Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
     Visuals.setLoginMode(true);
 
+    // 確保 DOM 載入後再綁定，延遲綁定比較安全
     setTimeout(setupUIListeners, 500);
     
     onAuthStateChanged(auth, (user) => {
@@ -55,27 +56,29 @@ export function initGame() {
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            // ✨ 關鍵邏輯修改 ✨
-            // 如果是訪客，且「不是」手動點擊 (代表是重新整理網頁自動登入)，則強制登出
-            if (user.isAnonymous && !isManualLogin) {
-                console.log("偵測到舊的訪客會話，強制登出...");
+            // ✨ 邏輯優化：如果是訪客，且沒有「手動登入意圖」，則強制登出 ✨
+            // 這樣可以防止重新整理網頁時自動登入訪客
+            if (user.isAnonymous && !isGuestLoginIntent) {
+                console.log("偵測到自動登入的訪客，執行安全登出...");
                 signOut(auth);
                 return;
             }
 
-            // 登入成功
+            // 驗證通過，進入遊戲
             currentUser = user;
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
-            // 未登入狀態
+            // 未登入
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
             Visuals.setLoginMode(true);
             resetAuthForm();
+            // 重置意圖，下次必須再點一次按鈕
+            isGuestLoginIntent = false;
         }
     });
 
@@ -85,21 +88,31 @@ export function initGame() {
 function setupUIListeners() {
     const bind = (id, fn) => {
         const el = document.getElementById(id);
-        if(el) el.onclick = fn;
+        if(el) {
+            el.onclick = fn;
+        } else {
+            console.warn("按鈕未找到:", id);
+        }
     };
+
     bind('btn-create', createRoom);
     bind('btn-join', joinRoom);
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     
-    // ✨ 修改：點擊訪客登入時，標記為手動登入 ✨
-    bind('guest-btn', () => {
-        isManualLogin = true; // 開啟通行證
-        signInAnonymously(auth).catch((error) => {
-            isManualLogin = false; // 失敗要重置
-            handleAuthError(error);
-        });
-    });
+    // ✨ 修改：點擊訪客按鈕時，設定意圖為 true ✨
+    const guestBtn = document.getElementById('guest-btn');
+    if(guestBtn) {
+        guestBtn.onclick = () => {
+            console.log("訪客嘗試登入...");
+            isGuestLoginIntent = true; // 發放通行證
+            signInAnonymously(auth).catch((error) => {
+                console.error("訪客登入失敗:", error);
+                isGuestLoginIntent = false; // 失敗則收回通行證
+                handleAuthError(error);
+            });
+        };
+    }
 
     bind('btn-logout', handleLogout); 
     bind('forgot-pw', handleForgotPassword);
@@ -122,7 +135,7 @@ function setupUIListeners() {
     document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
 }
 
-// ... (以下為其餘邏輯，保持不變) ...
+// ... (以下為標準功能，保持不變) ...
 
 function handleCameraUpdate(camData) {
     if (!isOnline || !gameId || !currentUser) return;
