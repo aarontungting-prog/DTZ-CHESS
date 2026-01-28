@@ -23,7 +23,7 @@
 
 <div id="loading">正在載入霓虹世界...</div>
 
-<div id="mobile-menu-btn" onclick="toggleMenu()">☰</div>
+<div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 
 <div id="custom-panel" class="side-panel">
@@ -105,7 +105,7 @@
 </div>
 
 <div id="ui" style="display:none;">
-    <div id="menu-panel" class="hud-container active">
+    <div id="menu-panel" class="hud-container">
         <div class="hud-box profile-box">
             <div class="user-card-header">
                 <img id="hud-avatar" src="" class="mini-avatar">
@@ -160,19 +160,19 @@
 
     window.onload = () => { initGame(); };
 
+    // 手機版選單切換
     window.toggleMenu = function() {
         const panel = document.getElementById('menu-panel');
-        if (panel.classList.contains('mobile-hidden')) {
-            panel.classList.remove('mobile-hidden');
-        } else {
-            panel.classList.add('mobile-hidden');
-        }
+        // 切換 class 來控制顯示/隱藏
+        panel.classList.toggle('mobile-visible');
     }
 
     window.closeAllMenus = function() {
         document.getElementById('custom-panel').classList.remove('active');
         if(window.innerWidth <= 600) {
             document.getElementById('menu-backdrop').classList.remove('active');
+            // 點背景時也收起下方選單
+            document.getElementById('menu-panel').classList.remove('mobile-visible');
         }
     }
 </script>
