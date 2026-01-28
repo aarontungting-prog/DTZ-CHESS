@@ -16,27 +16,26 @@ canvas {
     outline: none;
 }
 
-/* UI 層必須蓋過 Canvas，但不能阻擋非按鈕區域的點擊 */
+/* UI 層必須蓋過 Canvas */
 #ui { 
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-    pointer-events: none; /* 讓點擊穿透到 Canvas 控制鏡頭 */
+    pointer-events: none; /* 讓點擊穿透 */
     z-index: 100; 
 }
 
-/* 讓 HUD 內部的按鈕恢復可點擊 */
+/* 恢復子元素的點擊事件 */
 .hud { pointer-events: auto; }
 
 /* 手機選單按鈕 (電腦版隱藏) */
 #mobile-menu-btn { display: none; }
 
-/* HUD 容器 (電腦版預設樣式) */
+/* HUD 容器 */
 .hud-container {
     position: absolute; top: 20px; left: 20px; 
     display: flex; flex-direction: column; gap: 15px;
     width: 260px; pointer-events: auto;
 }
 
-/* 黑色盒子樣式 */
 .hud-box {
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid #444; 
@@ -46,7 +45,6 @@ canvas {
     backdrop-filter: blur(2px);
 }
 
-/* 個人資料區 */
 .user-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .name-text { font-weight: bold; font-size: 16px; color: #fff; display: block; }
 .elo-text { font-size: 12px; color: #888; margin-bottom: 10px; }
@@ -57,7 +55,6 @@ canvas {
 }
 .custom-btn:hover { background: #333; color: #fff; border-color: #666; }
 
-/* 遊戲操作區 */
 .lobby-title { color: #aaa; font-size: 12px; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; }
 .room-status { font-size: 14px; color: #00ff00; margin-bottom: 12px; font-weight: bold; text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
 .separator { height: 1px; background: #333; margin: 12px 0; }
@@ -147,25 +144,25 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
    2. 手機版專用設定 (Mobile Overrides)
    ========================================= */
 @media (max-width: 600px) {
-    /* 1. 漢堡選單按鈕 - 強制提升層級並可點擊 */
+    /* 1. 漢堡選單按鈕 - 強制提升層級 */
     #mobile-menu-btn { 
         display: flex; 
         position: absolute; 
-        bottom: 30px; left: 20px; /* 稍微往上移一點 */
+        bottom: 30px; left: 20px; 
         width: 50px; height: 50px; 
-        background: rgba(0,0,0,0.8); /* 加深背景，避免與地圖混淆 */
+        background: rgba(0,0,0,0.8); 
         border: 2px solid #00e5ff; 
         border-radius: 50%; 
         color: #00e5ff; 
         justify-content: center; align-items: center; 
-        font-size: 14px; /* 字體稍微加大 */
+        font-size: 14px; 
         cursor: pointer; 
-        z-index: 3000; /* 🔥 關鍵：層級設超高，蓋過所有東西 */
-        pointer-events: auto; /* 🔥 關鍵：確保可以接收點擊 */
+        z-index: 3000; /* 🔥 關鍵修正 */
+        pointer-events: auto; /* 🔥 關鍵修正 */
         box-shadow: 0 0 15px rgba(0,229,255,0.5);
         font-weight: bold;
-        user-select: none; /* 防止被選取 */
-        -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
     /* 2. HUD 下沉式抽屜 */
@@ -174,7 +171,7 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
         width: 100%; box-sizing: border-box;
         position: fixed; top: auto; bottom: 0; left: 0;
         transform: translateY(110%); /* 預設藏在下面 */
-        z-index: 2500; /* 比按鈕低一點，但比其他東西高 */
+        z-index: 2500; 
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         padding: 10px 20px 80px 20px; 
         background: rgba(10, 10, 15, 0.95);
@@ -186,13 +183,11 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
         transform: translateY(0);
     }
 
-    /* 調整內容排版 */
     .hud-box {
         background: transparent; border: none; box-shadow: none; padding: 0; margin-bottom: 10px;
     }
     .profile-box { border-bottom: 1px solid #333; padding-bottom: 10px; }
     
-    /* 狀態列 */
     #status-panel { 
         top: 15px; left: 50%; transform: translateX(-50%); width: auto; 
         background: rgba(0,0,0,0.6); border-radius: 30px; padding: 5px 20px; 
