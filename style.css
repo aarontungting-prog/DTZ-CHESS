@@ -1,29 +1,27 @@
 /* =========================================
-   1. 全域設定 (Global) - 電腦手機共用
+   1. 全域設定 (Global)
    ========================================= */
 body { 
-    margin: 0; padding: 0; /* 確保沒有邊距 */
-    overflow: hidden; 
+    margin: 0; padding: 0; overflow: hidden; 
     background: #000; 
     font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif; 
-    touch-action: none; 
-    color: white; 
+    touch-action: none; color: white; 
 }
 
 #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
 .hud { position: absolute; pointer-events: auto; }
 
-/* 隱藏手機選單按鈕 (電腦版預設隱藏) */
+/* 電腦版隱藏手機選單按鈕 */
 #mobile-menu-btn { display: none; }
 
-/* HUD 容器 (電腦版預設樣式) */
+/* HUD 容器 (電腦版) */
 .hud-container {
     position: absolute; top: 20px; left: 20px; 
     display: flex; flex-direction: column; gap: 15px;
     width: 260px; pointer-events: auto;
 }
 
-/* 黑色盒子樣式 */
+/* 黑色盒子 */
 .hud-box {
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid #444; 
@@ -80,7 +78,7 @@ body {
 h1 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; color: #00e5ff; margin-bottom: 5px; }
 #turn-txt { font-size: 1.5rem; font-weight: 900; color: #fff; }
 
-/* 側邊個人化面板 */
+/* 側邊面板 */
 .side-panel {
     position: fixed; top: 0; left: 0; bottom: 0; width: 320px;
     background: rgba(12, 12, 18, 0.98); border-right: 1px solid #00e5ff;
@@ -93,7 +91,6 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; color: #00e5ff; margin-b
 .custom-section { margin-bottom: 30px; }
 .custom-section h3 { font-size: 14px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
-/* 頭像與 Grid UI */
 .avatar-preview-container { width: 100px; height: 100px; margin: 0 auto 15px auto; position: relative; border-radius: 12px; background: #111; cursor: pointer; overflow: hidden; border: 2px solid #333; }
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 #avatar-hint { position: absolute; bottom: 0; width: 100%; text-align: center; background: rgba(0,0,0,0.7); font-size: 10px; padding: 3px 0; color: #fff; transform: translateY(100%); transition: 0.3s; }
@@ -131,13 +128,11 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 #menu-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; pointer-events: auto; }
 #menu-backdrop.active { display: block; }
 
-
 /* =========================================
    2. 手機版專用設定 (Mobile Overrides)
-   只在螢幕 < 600px 時生效，不影響電腦版
    ========================================= */
 @media (max-width: 600px) {
-    /* 顯示漢堡選單 */
+    /* 1. 顯示漢堡選單 */
     #mobile-menu-btn { 
         display: flex; position: absolute; top: 15px; left: 15px; width: 40px; height: 40px; 
         background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 8px; color: #fff; 
@@ -145,28 +140,34 @@ button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
         z-index: 200; pointer-events: auto; 
     }
 
-    /* 手機版 HUD 預設隱藏，置中顯示 */
+    /* 2. HUD 下沉式設計 */
     .hud-container { 
-        display: flex; /* 改為 flex 才能置中 */
-        opacity: 1;
-        width: 85%; 
-        top: 50%; left: 50%; 
-        transform: translate(-50%, -50%) scale(1); /* 預設位置 */
+        display: flex; 
+        width: 90%; 
+        top: auto; bottom: 20px; /* 改到底部 */
+        left: 50%; 
+        transform: translateX(-50%) scale(1);
         z-index: 1000;
         transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
-    /* 用 class 控制顯示隱藏 */
+    /* 縮小黑框內距，讓它更扁 */
+    .hud-box {
+        padding: 12px;
+        gap: 5px;
+    }
+
+    /* 隱藏選單時的效果 */
     .hud-container.mobile-hidden {
         opacity: 0;
         pointer-events: none;
-        transform: translate(-50%, -50%) scale(0.9);
+        transform: translate(-50%, 20px); /* 往下沉消失 */
     }
 
-    /* 調整狀態列位置 */
+    /* 調整狀態列 (放在上方) */
     #status-panel { 
         top: 15px; left: 50%; transform: translateX(-50%); width: auto; 
-        background: rgba(0,0,0,0.7); border-radius: 30px; padding: 5px 20px; 
+        background: rgba(0,0,0,0.6); border-radius: 30px; padding: 5px 20px; 
         white-space: nowrap; right: auto; border: 1px solid #333;
     }
     #status-panel h1 { display: none; }
