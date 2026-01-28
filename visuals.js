@@ -5,7 +5,6 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const CONFIG = {
-    // 手機版大幅減少草的數量和陰影解析度
     grassCount: isMobile ? 5000 : 80000,
     treeCount: isMobile ? 50 : 850,
     shadowSize: isMobile ? 512 : 2048, 
@@ -20,10 +19,9 @@ let customModels = null;
 const BOARD_HEIGHT = 15;
 let currentSettings = { pieceStyle: 'neon', boardStyle: 'neon' };
 let isLoginRotating = false; 
-let opponentCursorMesh = null;
+let opponentCursorMesh = null; // 現在這個其實是 "Ghost Camera"
 
-// ... (幾何體定義 GEOMETRIES, MATERIALS 保持不變，省略以節省篇幅) ...
-// 請務必保留原檔案中的 GEOMETRIES 和 MATERIALS 定義
+// ... (幾何體 GEOMETRIES, MATERIALS 保持不變，省略以節省篇幅) ...
 const GEOMETRIES = {
     cylBase: new THREE.CylinderGeometry(0.4, 0.45, 0.2, 32),
     pawnBody: new THREE.CylinderGeometry(0.15, 0.35, 0.6, 16),
@@ -50,7 +48,8 @@ const MATERIALS = {
     cursorGhost: new THREE.MeshBasicMaterial({color: 0xffaa00, transparent: true, opacity: 0.6})
 };
 
-export function init3D(container, onClickCallback, onMouseMoveCallback) {
+// ✨ 修改：接受 onCameraUpdate 回調 ✨
+export function init3D(container, onClickCallback, onCameraUpdate) {
     clock = new THREE.Clock();
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xff9966, 0.0008);
@@ -62,8 +61,6 @@ export function init3D(container, onClickCallback, onMouseMoveCallback) {
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setPixelRatio(CONFIG.pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    // 手機版降低陰影負擔
     if (!isMobile) {
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -81,13 +78,19 @@ export function init3D(container, onClickCallback, onMouseMoveCallback) {
     controls.minDistance = 10; controls.maxDistance = 450;
     controls.target.set(0, BOARD_HEIGHT, 0);
 
+    // ✨ 新增：監聽相機移動並回傳座標 ✨
+    controls.addEventListener('change', () => {
+        if(onCameraUpdate) {
+            onCameraUpdate(camera.position);
+        }
+    });
+
     setupSunsetLighting();
     loadCustomModels();
     
     requestAnimationFrame(() => {
         createFloatingBoard();
         createProceduralTerrain();
-        // 手機版只生成少量植被
         setTimeout(createVegetation, 50);
         setTimeout(createHighAltitudeClouds, 100);
     });
@@ -99,23 +102,10 @@ export function init3D(container, onClickCallback, onMouseMoveCallback) {
     window.addEventListener('touchstart', (e) => onTouchStart(e, onClickCallback), {passive: false});
     window.addEventListener('click', (e) => onMouseClick(e, onClickCallback));
     
-    window.addEventListener('mousemove', (e) => {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        
-        raycaster.setFromCamera(mouse, camera);
-        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -BOARD_HEIGHT);
-        const target = new THREE.Vector3();
-        raycaster.ray.intersectPlane(plane, target);
-        
-        if (target && onMouseMoveCallback) {
-            onMouseMoveCallback(target);
-        }
-    });
-
     animate();
     
-    return { scene, camera, controls, moveCamera, updateTheme, setLoginMode, updateOpponentCursor };
+    // 改名：updateOpponentCursor -> updateOpponentGhost
+    return { scene, camera, controls, moveCamera, updateTheme, setLoginMode, updateOpponentGhost: updateOpponentCursor };
 }
 
 export function setLoginMode(enabled) {
@@ -129,11 +119,12 @@ export function setLoginMode(enabled) {
     }
 }
 
+// 這個函式現在接收的是 "Camera Position"
 export function updateOpponentCursor(pos) {
     if (!pos) return;
 
     if (!opponentCursorMesh) {
-        const geo = new THREE.SphereGeometry(0.5, 16, 16);
+        const geo = new THREE.SphereGeometry(1.5, 16, 16); // 稍微變大一點，代表"頭"
         opponentCursorMesh = new THREE.Mesh(geo, MATERIALS.cursorGhost);
         scene.add(opponentCursorMesh);
         const light = new THREE.PointLight(0xffaa00, 1, 10);
@@ -141,16 +132,15 @@ export function updateOpponentCursor(pos) {
     }
 
     if(window.TWEEN) {
-        // 加快幽靈手的更新速度
         new TWEEN.Tween(opponentCursorMesh.position)
-            .to({x: pos.x, y: pos.y + 1, z: pos.z}, 120) 
+            .to({x: pos.x, y: pos.y, z: pos.z}, 120) 
             .start();
     } else {
-        opponentCursorMesh.position.set(pos.x, pos.y + 1, pos.z);
+        opponentCursorMesh.position.set(pos.x, pos.y, pos.z);
     }
 }
 
-// ... (updateTheme, loadCustomModels, moveCamera, syncBoardVisuals, highlightSquare, clearHighlights 保持不變) ...
+// ... (以下為標準 visuals 函數，保持不變) ...
 export function updateTheme(settings) {
     if (settings.pieceStyle) currentSettings.pieceStyle = settings.pieceStyle;
     if (settings.boardStyle) currentSettings.boardStyle = settings.boardStyle;
@@ -224,7 +214,6 @@ export function animateMove(move, callback) {
     }
     
     if(window.TWEEN) {
-        // ✨ 極速動畫：200ms (原本 500) ✨
         new TWEEN.Tween(s.position).to(ePos, 200).easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(() => { 
                 if(move.promotion) { scene.remove(s); }
@@ -253,7 +242,7 @@ function createOptimizedPiece(t, c) {
         const mat = c === 'w' ? MATERIALS.classicWhite : MATERIALS.classicBlack;
         const base = new THREE.Mesh(GEOMETRIES.cylBase, mat);
         base.position.y = 0.1; 
-        if(!isMobile) base.castShadow = true; // 手機不投射陰影
+        if(!isMobile) base.castShadow = true;
         g.add(base);
 
         if(t === 'p') {
@@ -270,7 +259,6 @@ function createOptimizedPiece(t, c) {
         }
         
     } else {
-        // Neon 風格
         const mat = c === 'w' ? MATERIALS.white : MATERIALS.black;
         const glow = c === 'w' ? MATERIALS.glowW : MATERIALS.glowB;
         const base = new THREE.Mesh(GEOMETRIES.cylBase, mat);
@@ -354,14 +342,11 @@ function setupSunsetLighting(){
     const ambient=new THREE.AmbientLight(0xffccaa,0.75);scene.add(ambient);
     const sunLight=new THREE.DirectionalLight(0xff8800,3.2);
     sunLight.position.set(-300,100,-300);
-    
-    // 手機不投射場景陰影，只保留光照
     if(!isMobile) {
         sunLight.castShadow=true;
         sunLight.shadow.mapSize.set(CONFIG.shadowSize,CONFIG.shadowSize);
         const d=700;sunLight.shadow.camera.left=-d;sunLight.shadow.camera.right=d;sunLight.shadow.camera.top=d;sunLight.shadow.camera.bottom=-d;
     }
-    
     scene.add(sunLight);
     const sky=new Sky();sky.scale.setScalar(450000);scene.add(sky);
     const uniforms=sky.material.uniforms;
