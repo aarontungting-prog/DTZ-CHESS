@@ -160,13 +160,12 @@
 
     window.onload = () => { initGame(); };
 
-    // ✨ 修復：正確切換 mobile-visible ✨
     window.toggleMenu = function() {
         const panel = document.getElementById('menu-panel');
-        // 使用 toggle 簡單明瞭
+        // 使用 classList.toggle 切換 CSS 的 mobile-visible
         panel.classList.toggle('mobile-visible');
         
-        // 同步遮罩狀態
+        // 如果選單打開，顯示背景遮罩
         const backdrop = document.getElementById('menu-backdrop');
         if(panel.classList.contains('mobile-visible')) {
             backdrop.classList.add('active');
@@ -177,9 +176,10 @@
 
     window.closeAllMenus = function() {
         document.getElementById('custom-panel').classList.remove('active');
-        document.getElementById('menu-panel').classList.remove('mobile-visible'); // 關閉下方選單
+        // 如果是手機，關閉選單時也要收回抽屜
         if(window.innerWidth <= 600) {
             document.getElementById('menu-backdrop').classList.remove('active');
+            document.getElementById('menu-panel').classList.remove('mobile-visible');
         }
     }
 </script>
