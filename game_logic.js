@@ -27,7 +27,8 @@ let userSettings = {
     avatarSeed: "Bot", avatarImage: null, name: "Commander",
     pieceStyle: "neon", boardStyle: "neon"
 };
-let lastCameraUpdate = 0; // 用於節流
+let lastCursorUpdate = 0;
+let lastCameraUpdate = 0;
 
 export function initGame() {
     console.log("Game Logic Initializing...");
@@ -41,23 +42,32 @@ export function initGame() {
         auth = getAuth(app);
     } catch(e) { console.error("Firebase Init Error:", e); }
 
-    // ✨ 修改：傳入 handleCameraUpdate 監聽相機移動 ✨
     Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
     Visuals.setLoginMode(true);
 
     setTimeout(setupUIListeners, 500);
     
+    // ✨ 修改：強制訪客在載入時登出，避免自動登入 ✨
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
+            // 如果是訪客，強制登出，讓使用者重新選擇
+            if (user.isAnonymous) {
+                console.log("偵測到舊的訪客會話，強制登出...");
+                signOut(auth);
+                return;
+            }
+
+            // 如果是正式會員 (Email)，則保持登入
             currentUser = user;
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
+            // 未登入狀態
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
@@ -69,11 +79,9 @@ export function initGame() {
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 100);
 }
 
-// ✨ 新增：處理相機移動並上傳 Firebase ✨
 function handleCameraUpdate(camData) {
     if (!isOnline || !gameId || !currentUser) return;
     const now = Date.now();
-    // 200ms 傳送一次，避免太頻繁
     if (now - lastCameraUpdate > 200) {
         update(ref(db, `games/${gameId}/${playerColor}/camera`), {
             x: camData.x, y: camData.y, z: camData.z
@@ -105,11 +113,10 @@ function setupGameListeners() {
         if (data.winner) handleGameOver(data.winner);
     });
 
-    // ✨ 修改：監聽對手相機位置 (Camera) ✨
     const opponentColor = playerColor === 'w' ? 'b' : 'w';
     onValue(ref(db, `games/${gameId}/${opponentColor}/camera`), (snapshot) => {
         const pos = snapshot.val();
-        if (pos) Visuals.updateOpponentGhost(pos); // 呼叫更新幽靈位置
+        if (pos) Visuals.updateOpponentGhost(pos);
     });
 }
 
@@ -163,7 +170,7 @@ function leaveRoom() {
     if (!confirmLeave) return;
 
     off(ref(db, 'games/' + gameId));
-    off(ref(db, `games/${gameId}/w/camera`)); // 停止監聽
+    off(ref(db, `games/${gameId}/w/camera`));
     off(ref(db, `games/${gameId}/b/camera`));
 
     gameId = null;
@@ -171,7 +178,7 @@ function leaveRoom() {
     game.reset();
     Visuals.syncBoardVisuals(game);
     Visuals.moveCamera({x: 0, y: 60, z: 100});
-    Visuals.updateOpponentGhost(null); // 移除幽靈
+    Visuals.updateOpponentGhost(null);
     toggleLobbyUI(false);
 }
 
@@ -261,6 +268,17 @@ function joinRoom() {
             });
         } else { alert("房間不存在"); }
     });
+}
+
+function handleMouseMove(point) {
+    if (!isOnline || !gameId || !currentUser) return;
+    const now = Date.now();
+    if (now - lastCursorUpdate > 150) {
+        update(ref(db, `games/${gameId}/${playerColor}/cursor`), {
+            x: point.x, y: point.y, z: point.z
+        });
+        lastCursorUpdate = now;
+    }
 }
 
 export function previewStyle(type, value) {
