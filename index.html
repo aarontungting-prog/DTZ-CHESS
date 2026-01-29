@@ -77,7 +77,9 @@
     <div id="status-panel" class="hud">
         <h1>NEON CHESS</h1>
         <div id="turn-txt">等待對戰</div>
+        <div id="opponent-info" style="font-size: 12px; color: #aaa;">對手: ---</div>
     </div>
+    <div id="footer-watermark">Made by DTZ</div>
 </div>
 
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
@@ -130,7 +132,7 @@
     window.closeAllMenus = function() {
         document.getElementById('custom-panel').classList.remove('active');
         document.getElementById('menu-panel').classList.remove('mobile-visible');
-        document.getElementById('menu-backdrop').classList.remove('active');
+        if(window.innerWidth <= 600) document.getElementById('menu-backdrop').classList.remove('active');
     }
 </script>
 </body>
