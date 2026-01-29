@@ -40,49 +40,55 @@ const GEO = {
 export function init3D(container, onClick, onCam) {
     if(scene) return;
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    try {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 15, 12);
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 12);
 
-    renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    const light = new THREE.DirectionalLight(0xffffff, 1.2);
-    light.position.set(5, 10, 5);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x505050));
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0,0,0);
-    if(onCam) controls.addEventListener('change', () => onCam(camera.position));
-
-    raycaster = new THREE.Raycaster();
-    mouse = new THREE.Vector2();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth/window.innerHeight;
-        camera.updateProjectionMatrix();
+        renderer = new THREE.WebGLRenderer({antialias:true});
         renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+        document.body.appendChild(renderer.domElement);
 
-    window.addEventListener('mousedown', (e) => {
-        if(e.target.tagName !== 'CANVAS') return;
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(Object.values(tilesMap));
-        if(intersects.length > 0 && onClick) onClick(intersects[0].object.userData.sq);
-    });
-    
-    // 預設場景 (幾何體)
-    createBoard2P();
-    animate();
+        const light = new THREE.DirectionalLight(0xffffff, 1.2);
+        light.position.set(5, 10, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x505050));
 
-    // 非同步載入模型
-    loadModels();
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0,0,0);
+        if(onCam) controls.addEventListener('change', () => onCam(camera.position));
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth/window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if(e.target.tagName !== 'CANVAS') return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(Object.values(tilesMap));
+            if(intersects.length > 0 && onClick) onClick(intersects[0].object.userData.sq);
+        });
+        
+        // 預設場景 (幾何體)
+        createBoard2P();
+        animate();
+
+        // 非同步載入模型
+        loadModels();
+        
+    } catch(e) {
+        console.error("3D Init Failed", e);
+        setStatus('status-3d', 'red');
+    }
 }
 
 function loadModels() {
@@ -105,6 +111,7 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// ✨✨ 這裡加了防禦，保證 scene 存在才執行 ✨✨
 export function setGameMode(mode) {
     if(!scene) return;
     is4P = (mode === '4p');
@@ -148,13 +155,13 @@ function createBoard4P() {
     }
 }
 
-export function syncBoardVisuals(gameInstance, is4pMode) {
-    if(!scene) return;
+export function syncBoardVisuals(gameInstance, is4P=false) {
+    if(!scene) return; // ⚠️ 防禦
     for(let k in piecesMap) scene.remove(piecesMap[k]);
     piecesMap = {};
 
     if(is4P) {
-        const b = gameInstance.getBoard();
+        const board = gameInstance.getBoard();
         const size=14, offset=size/2-0.5;
         for(let r=0; r<size; r++) {
             for(let c=0; c<size; c++) {
@@ -231,7 +238,6 @@ export function animateMove(move, cb) {
         p = piecesMap[move.from];
         tPos = tilesMap[move.to]?.position;
     }
-    
     if(p && tPos) {
         if(window.TWEEN) new TWEEN.Tween(p.position).to({x:tPos.x, z:tPos.z}, 200).onComplete(cb).start();
         else { p.position.set(tPos.x, 0.6, tPos.z); cb(); }
@@ -255,11 +261,12 @@ export function clearHighlights() {
 }
 
 export function updateTheme(settings) {
-    if(settings.boardStyle) currentSettings.boardStyle = settings.boardStyle;
-    if(settings.pieceStyle) currentSettings.pieceStyle = settings.pieceStyle;
-    if(scene) {
-        if(is4P) createBoard4P(); else createBoard2P();
-        if(window.gameInstance) syncBoardVisuals(window.gameInstance, is4P);
+    if(settings.boardStyle) {
+        currentSettings.boardStyle = settings.boardStyle;
+        if(scene) {
+            if(is4P) createBoard4P(); else createBoard2P();
+            if(window.gameInstance) syncBoardVisuals(window.gameInstance, is4P);
+        }
     }
 }
 
