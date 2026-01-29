@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
+import { Chess4P } from './chess_4p_rules.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
@@ -21,23 +22,18 @@ let playerColor = 'w';
 let isOnline = false;
 let isProcessing = false;
 let game = null;
+let game4p = null;
+let currentGameMode = '2p';
 let selectedSquare = null;
-let isRegistering = false;
-let userSettings = { 
-    avatarSeed: "Bot", avatarImage: null, name: "Commander",
-    pieceStyle: "neon", boardStyle: "neon"
-};
+let isGuestLoginIntent = false; // 關鍵修正：手動意圖標記
+let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pieceStyle: "neon", boardStyle: "neon" };
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
-// ✨ 關鍵修正：訪客登入意圖標記 ✨
-let isGuestLoginIntent = false;
-
 export function initGame() {
-    console.log("Game Logic Initializing...");
-    
+    console.log("Initializing Game Logic...");
     if (window.Chess) { game = new window.Chess(); } 
-    else { alert("錯誤：Chess.js 未載入"); return; }
+    game4p = new Chess4P();
 
     try {
         app = initializeApp(firebaseConfig);
@@ -45,40 +41,36 @@ export function initGame() {
         auth = getAuth(app);
     } catch(e) { console.error("Firebase Init Error:", e); }
 
+    // 優先綁定 UI (修復按鈕失效)
+    setupUIListeners();
+
     Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
     Visuals.setLoginMode(true);
 
-    // 確保 DOM 載入後再綁定，延遲綁定比較安全
-    setTimeout(setupUIListeners, 500);
-    
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            // ✨ 邏輯優化：如果是訪客，且沒有「手動登入意圖」，則強制登出 ✨
-            // 這樣可以防止重新整理網頁時自動登入訪客
+            // 如果是訪客，且沒有手動意圖，強制登出 (防止自動登入)
             if (user.isAnonymous && !isGuestLoginIntent) {
-                console.log("偵測到自動登入的訪客，執行安全登出...");
+                console.log("非手動訪客登入，執行登出...");
                 signOut(auth);
                 return;
             }
 
-            // 驗證通過，進入遊戲
             currentUser = user;
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
-            // 未登入
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
             Visuals.setLoginMode(true);
             resetAuthForm();
-            // 重置意圖，下次必須再點一次按鈕
-            isGuestLoginIntent = false;
+            isGuestLoginIntent = false; // 重置意圖
         }
     });
 
@@ -86,13 +78,11 @@ export function initGame() {
 }
 
 function setupUIListeners() {
+    // 通用綁定函式
     const bind = (id, fn) => {
         const el = document.getElementById(id);
-        if(el) {
-            el.onclick = fn;
-        } else {
-            console.warn("按鈕未找到:", id);
-        }
+        if(el) el.onclick = fn;
+        else console.warn(`Element ${id} not found`);
     };
 
     bind('btn-create', createRoom);
@@ -100,15 +90,17 @@ function setupUIListeners() {
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     
-    // ✨ 修改：點擊訪客按鈕時，設定意圖為 true ✨
+    // 訪客登入 (關鍵邏輯)
     const guestBtn = document.getElementById('guest-btn');
     if(guestBtn) {
         guestBtn.onclick = () => {
-            console.log("訪客嘗試登入...");
-            isGuestLoginIntent = true; // 發放通行證
+            console.log("Guest login clicked");
+            guestBtn.innerText = "🚀 進入中...";
+            isGuestLoginIntent = true; 
             signInAnonymously(auth).catch((error) => {
-                console.error("訪客登入失敗:", error);
-                isGuestLoginIntent = false; // 失敗則收回通行證
+                console.error("Guest login failed:", error);
+                guestBtn.innerText = "訪客登入";
+                isGuestLoginIntent = false;
                 handleAuthError(error);
             });
         };
@@ -119,23 +111,143 @@ function setupUIListeners() {
     
     bind('btn-custom', () => {
         document.getElementById('custom-panel').classList.add('active');
-        if(currentUser && currentUser.isAnonymous) {
-            document.getElementById('guest-avatar-controls').style.display = 'block';
-        } else {
-            document.getElementById('guest-avatar-controls').style.display = 'none';
-        }
+        const guestControls = document.getElementById('guest-avatar-controls');
+        if(currentUser && currentUser.isAnonymous) guestControls.style.display = 'block';
+        else guestControls.style.display = 'none';
     });
 
+    bind('btn-close-custom', window.closeAllMenus);
     bind('btn-save-custom', saveUserSettings);
     bind('btn-random-avatar', randomizeAvatar);
+    
+    // 模式切換按鈕
+    document.getElementById('mode-2p').onclick = () => window.switchMode('2p');
+    document.getElementById('mode-4p').onclick = () => window.switchMode('4p');
 
     const fileInput = document.getElementById('avatar-upload');
     if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
     
     document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
+
+    // 綁定預覽點擊
+    const pieceGrid = document.getElementById('piece-skin-grid');
+    if(pieceGrid) {
+        pieceGrid.querySelectorAll('.skin-item:not(.locked)').forEach(item => {
+            item.onclick = () => window.previewSkin('piece', item.dataset.val, item);
+        });
+    }
+    const boardGrid = document.getElementById('board-skin-grid');
+    if(boardGrid) {
+        boardGrid.querySelectorAll('.skin-item:not(.locked)').forEach(item => {
+            item.onclick = () => window.previewSkin('board', item.dataset.val, item);
+        });
+    }
 }
 
-// ... (以下為標準功能，保持不變) ...
+export function switchGameMode(mode) {
+    currentGameMode = mode;
+    Visuals.setGameMode(mode);
+
+    if (mode === '4p') {
+        game4p = new Chess4P(); 
+        Visuals.syncBoardVisuals(game4p, true); 
+        updateStatusHUD();
+        document.getElementById('btn-create').style.display = 'none';
+        document.getElementById('btn-join').style.display = 'none';
+        document.getElementById('room-display').innerText = "4人模式 (單機預覽)";
+        document.getElementById('room-display').style.color = "#ffff00";
+    } else {
+        game.reset();
+        Visuals.syncBoardVisuals(game, false);
+        updateStatusHUD();
+        document.getElementById('btn-create').style.display = 'block';
+        document.getElementById('btn-join').style.display = 'block';
+        document.getElementById('room-display').innerText = "狀態：閒置中";
+        document.getElementById('room-display').style.color = "#fff";
+    }
+}
+
+function handleSquareClick(sq) {
+    if(isProcessing) return;
+
+    if (currentGameMode === '4p') {
+        if (!selectedSquare) {
+            const p = game4p.board[sq.r][sq.c];
+            if (p && p.color === game4p.turn()) selectedSquare = sq;
+        } else {
+            const result = game4p.move(selectedSquare, sq);
+            if (result) {
+                Visuals.animateMove({
+                    from: {r: result.from.r, c: result.from.c},
+                    to: {r: result.to.r, c: result.to.c},
+                    color: result.color
+                }, () => {
+                    Visuals.syncBoardVisuals(game4p, true);
+                    updateStatusHUD();
+                });
+            }
+            selectedSquare = null;
+        }
+        return;
+    }
+
+    if(isOnline && game.turn() !== playerColor) return;
+    const p = game.get(sq);
+    
+    if(!selectedSquare) {
+        if(p && p.color === game.turn()) {
+            if(!isOnline || (isOnline && p.color === playerColor)) {
+                selectedSquare = sq;
+                const validMoves = game.moves({square: sq, verbose: true});
+                Visuals.highlightSquare(sq, validMoves);
+            }
+        }
+    } else {
+        if(p && p.color === game.turn()) {
+            selectedSquare = sq;
+            const validMoves = game.moves({square: sq, verbose: true});
+            Visuals.highlightSquare(sq, validMoves);
+            return;
+        }
+        const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
+        if(move) {
+            isProcessing = true;
+            Visuals.animateMove(move, () => {
+                Visuals.syncBoardVisuals(game, false);
+                updateStatusHUD();
+                if(!isOnline) {
+                    if(game.turn() === 'b') setTimeout(makeRandomAI, 500);
+                    else isProcessing = false;
+                }
+            });
+            if(isOnline) sendMove(move);
+            selectedSquare = null;
+        } else {
+            selectedSquare = null;
+            Visuals.clearHighlights();
+        }
+    }
+}
+
+function updateStatusHUD(){
+    const t = document.getElementById('turn-txt');
+    if (currentGameMode === '4p') {
+        const turn = game4p.turn(); 
+        const names = {'red': '紅方', 'blue': '藍方', 'yellow': '黃方', 'green': '綠方'};
+        const colors = {'red': '#ff3333', 'blue': '#3333ff', 'yellow': '#ffff33', 'green': '#33ff33'};
+        t.innerText = `${names[turn]} 回合`;
+        t.style.color = colors[turn];
+        return;
+    }
+    const turn = game.turn();
+    if(isOnline){
+        t.innerText = turn==='w' ? "白方回合" : "黑方回合";
+        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
+    } else {
+        t.innerText = turn==='w' ? "藍方回合" : "電腦回合";
+        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
+    }
+}
 
 function handleCameraUpdate(camData) {
     if (!isOnline || !gameId || !currentUser) return;
@@ -152,7 +264,6 @@ function setupGameListeners() {
     onValue(ref(db, 'games/' + gameId), (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
-        
         if (data.status === 'playing' && !data.winner && document.getElementById('turn-txt').innerText.includes("等待")) {
             if (data.black) {
                 const oppName = playerColor === 'w' ? data.black.name : data.white.name;
@@ -426,50 +537,18 @@ function updateRankBadge(elo) {
     else { badge.innerText = "霓虹宗師"; badge.classList.add('rank-master'); }
 }
 
-function handleSquareClick(sq) {
-    if(isProcessing) return;
-    if(isOnline && game.turn() !== playerColor) return;
-    const p = game.get(sq);
-    if(!selectedSquare) {
-        if(p && p.color === game.turn()) {
-            if(!isOnline || (isOnline && p.color === playerColor)) {
-                selectedSquare = sq;
-                const validMoves = game.moves({square: sq, verbose: true});
-                Visuals.highlightSquare(sq, validMoves);
-            }
-        }
-    } else {
-        if(p && p.color === game.turn()) {
-            selectedSquare = sq;
-            const validMoves = game.moves({square: sq, verbose: true});
-            Visuals.highlightSquare(sq, validMoves);
-            return;
-        }
-        const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
-        if(move) {
-            isProcessing = true;
-            Visuals.animateMove(move, () => {
-                Visuals.syncBoardVisuals(game);
-                updateStatusHUD();
-                if(isOnline) sendMove(move);
-                else {
-                    if(game.turn() === 'b') setTimeout(makeRandomAI, 500);
-                    else isProcessing = false;
-                }
-            });
-            selectedSquare = null;
-        } else {
-            selectedSquare = null;
-            Visuals.clearHighlights();
-        }
-    }
-}
-
 function resetAuthForm() {
     isRegistering = false;
     document.getElementById('nickname-container').style.display = 'none';
     document.getElementById('auth-action-btn').innerText = "進入世界";
     document.getElementById('auth-error').innerText = "";
+    
+    // 重置按鈕
+    const guestBtn = document.getElementById('guest-btn');
+    if(guestBtn) {
+        guestBtn.innerText = "訪客登入";
+        guestBtn.disabled = false;
+    }
 }
 
 async function handleLogin() {
@@ -530,18 +609,6 @@ async function handleForgotPassword() {
         alert(`密碼重設信已發送至 ${email}`);
     } catch (error) {
         errorMsg.innerText = "發送失敗：" + error.message;
-    }
-}
-
-function updateStatusHUD(){
-    const t = document.getElementById('turn-txt');
-    const turn = game.turn();
-    if(isOnline){
-        t.innerText = turn==='w' ? "白方回合" : "黑方回合";
-        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
-    } else {
-        t.innerText = turn==='w' ? "藍方回合" : "電腦回合";
-        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
     }
 }
 
