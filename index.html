@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>霓虹西洋棋：DTZ 最終版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -21,7 +20,7 @@
 </head>
 <body>
 
-<div id="loading">系統載入中...</div>
+<div id="loading">系統初始化中...</div>
 
 <div id="auth-modal">
     <div class="auth-box">
@@ -43,6 +42,7 @@
 </div>
 
 <div id="ui" style="display:none;">
+    
     <div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
 
     <div id="menu-panel" class="hud-container">
@@ -136,14 +136,14 @@
 
 <script type="module">
     import { initGame, triggerAvatarUpload, previewStyle, switchGameMode } from './game_logic.js';
-    window.triggerAvatarUpload = triggerAvatarUpload; 
     
+    // 全局變數綁定
+    window.triggerAvatarUpload = triggerAvatarUpload; 
     window.switchMode = function(mode) {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`mode-${mode}`).classList.add('active');
         switchGameMode(mode);
     }
-
     window.previewSkin = function(type, value, element) {
         if(element.classList.contains('locked')) return;
         const grid = document.getElementById(`${type}-skin-grid`);
@@ -154,8 +154,9 @@
         previewStyle(type, value);
     }
 
-    // 確保資源載入後執行
+    // 確保頁面載入後執行初始化
     window.onload = () => { 
+        console.log("Window loaded.");
         initGame(); 
     };
 
