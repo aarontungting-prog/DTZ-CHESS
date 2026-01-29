@@ -2,9 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
-import { Chess4P } from './chess_4p_rules.js';
 
-// 請確認這裡是你自己的 Config
+// ⚠️⚠️⚠️ 這裡請填入你自己的 Firebase Config ⚠️⚠️⚠️
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -16,40 +15,111 @@ const firebaseConfig = {
     measurementId: "G-0EMJ4W2KLS"
 };
 
-let app, db, auth, currentUser, gameId, game, game4p;
+// --- [直接整合] 四人棋規則引擎 (防止檔案遺失) ---
+class Chess4P {
+    constructor() {
+        this.board = []; 
+        this.colors = ['red', 'blue', 'yellow', 'green']; 
+        this.turnIndex = 0; 
+        this.initBoard();
+    }
+    initBoard() {
+        for(let r=0; r<14; r++) this.board[r] = new Array(14).fill(null);
+        const dead = [{r:[0,3], c:[0,3]}, {r:[0,3], c:[11,14]}, {r:[11,14], c:[0,3]}, {r:[11,14], c:[11,14]}];
+        for(let z of dead) for(let r=z.r[0]; r<z.r[1]; r++) for(let c=z.c[0]; c<z.c[1]; c++) this.board[r][c] = 'X';
+        this.setupPieces();
+    }
+    setupPieces() {
+        const p = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r']; 
+        this.place('red', 13, 12, false, p, 'row');
+        this.place('blue', 0, 1, false, p, 'col');
+        this.place('yellow', 0, 1, true, p, 'row');
+        this.place('green', 13, 12, true, p, 'col');
+    }
+    place(col, back, pawn, rev, list, mode) {
+        const pcs = rev ? [...list].reverse() : list;
+        for(let i=0; i<8; i++) {
+            let rB = mode==='row'? back : 3+i, cB = mode==='row'? 3+i : back;
+            let rP = mode==='row'? pawn : 3+i, cP = mode==='row'? 3+i : pawn;
+            this.board[rB][cB] = { type: pcs[i], color: col };
+            this.board[rP][cP] = { type: 'p', color: col };
+        }
+    }
+    turn() { return this.colors[this.turnIndex]; }
+    move(from, to) {
+        const piece = this.board[from.r][from.c];
+        const target = this.board[to.r][to.c];
+        if (!piece || piece.color !== this.turn() || target === 'X' || (target && target.color === piece.color)) return null;
+        this.board[to.r][to.c] = piece;
+        this.board[from.r][from.c] = null;
+        this.turnIndex = (this.turnIndex + 1) % 4;
+        return { from, to, color: piece.color };
+    }
+    getBoard() { return this.board; }
+}
+
+// --- 主程式開始 ---
+let app, db, auth;
+let currentUser = null;
+let gameId = null;
+let playerColor = 'w';
+let isOnline = false;
+let isProcessing = false;
+let game = null; 
+let game4p = null;
 let currentGameMode = '2p';
 let selectedSquare = null;
-let isGuestLoginIntent = false;
+let isGuestLoginIntent = false; // 標記是否為手動登入
+let userSettings = { avatarSeed: "Bot", pieceStyle: "neon", boardStyle: "neon" };
+let lastCameraUpdate = 0;
 
 export function initGame() {
-    console.log("🚀 System Launching...");
-    setupUIListeners(); // 先綁按鈕，確保有點擊反應
+    console.log("🚀 InitGame...");
 
-    // 初始化引擎
-    if(window.Chess) game = new window.Chess();
+    // 1. 先把按鈕綁好，確保能點
+    setupUIListeners();
+    
+    // 2. 初始化引擎
+    if (window.Chess) game = new window.Chess();
     game4p = new Chess4P();
 
-    // 啟動 3D
+    // 3. 嘗試啟動 3D
     try {
-        Visuals.init3D(null, handleSquareClick);
+        Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
         Visuals.setLoginMode(true);
-    } catch(e) { console.error("3D Fail", e); }
+    } catch(e) {
+        console.error("3D Init Error:", e);
+        // 如果 3D 掛了，至少讓背景變色，證明程式還活著
+        document.body.style.background = "#222";
+    }
 
-    // 連線 Firebase
+    // 4. 強制解除 Loading (5秒後強制隱藏，避免卡死)
+    setTimeout(() => {
+        const loading = document.getElementById('loading');
+        if(loading && loading.style.display !== 'none') {
+            console.warn("Loading timeout, forcing UI...");
+            loading.style.display = 'none';
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+    }, 5000);
+
+    // 5. 初始化 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
         
         onAuthStateChanged(auth, (user) => {
-            const loading = document.getElementById('loading');
-            if(loading) loading.style.display = 'none';
-
+            document.getElementById('loading').style.display = 'none'; // 確定連線後隱藏
+            
             if (user) {
-                // 如果是自動登入的訪客 -> 踢出
+                // 如果是訪客，且不是手動點的 -> 登出
                 if (user.isAnonymous && !isGuestLoginIntent) {
-                    signOut(auth); return;
+                    console.log("Auto-guest detected, signing out...");
+                    signOut(auth);
+                    return;
                 }
+                
                 currentUser = user;
                 document.getElementById('auth-modal').style.display = 'none';
                 document.getElementById('ui').style.display = 'block';
@@ -60,13 +130,16 @@ export function initGame() {
                 document.getElementById('auth-modal').style.display = 'flex';
                 document.getElementById('ui').style.display = 'none';
                 Visuals.setLoginMode(true);
-                // 重置按鈕
-                const btn = document.getElementById('guest-btn');
-                if(btn) { btn.innerText="訪客登入"; btn.disabled=false; }
+                resetAuthForm();
+                isGuestLoginIntent = false;
             }
         });
-    } catch(e) { alert("Firebase Config Error: " + e.message); }
-    
+    } catch(e) {
+        alert("Firebase 連線錯誤：" + e.message);
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    // 6. 畫出預設棋盤
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 500);
 }
 
@@ -80,20 +153,22 @@ function setupUIListeners() {
     click('btn-logout', () => signOut(auth));
     
     // 訪客按鈕
-    click('guest-btn', () => {
-        const btn = document.getElementById('guest-btn');
-        btn.innerText = "連線中...";
-        btn.disabled = true;
-        isGuestLoginIntent = true;
-        signInAnonymously(auth).catch(e => {
-            alert("登入失敗: " + e.message);
-            btn.innerText = "訪客登入";
-            btn.disabled = false;
-            isGuestLoginIntent = false;
-        });
-    });
+    const guestBtn = document.getElementById('guest-btn');
+    if(guestBtn) {
+        guestBtn.onclick = () => {
+            guestBtn.innerText = "連線中...";
+            guestBtn.disabled = true;
+            isGuestLoginIntent = true; 
+            
+            signInAnonymously(auth).catch((e) => {
+                alert("訪客登入失敗：" + e.message);
+                guestBtn.innerText = "訪客登入";
+                guestBtn.disabled = false;
+                isGuestLoginIntent = false;
+            });
+        };
+    }
 
-    click('btn-custom', () => document.getElementById('custom-panel').classList.add('active'));
     click('btn-save-custom', saveSettings);
     click('btn-random-avatar', () => {
         const seed = Math.random().toString(36).substring(7);
@@ -112,7 +187,8 @@ async function handleLogin() {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
     } catch(e) {
-        if(e.code.includes('user-not-found')) {
+        if(e.code.includes('user-not-found') || e.code.includes('invalid-credential')) {
+             // 自動註冊
              try { await createUserWithEmailAndPassword(auth, email, pass); }
              catch(err) { alert(err.message); }
         } else {
@@ -145,18 +221,16 @@ function saveSettings() {
     if(name) updates.name = name;
     if(seed) updates.avatarSeed = seed;
     update(ref(db, 'users/'+currentUser.uid), updates).then(() => {
-        alert("已保存");
+        alert("設定已保存");
         checkUserProfile(currentUser);
         window.closeAllMenus();
     });
 }
 
-// 遊戲邏輯區
 function createRoom() {
     gameId = Math.floor(Math.random()*9000+1000).toString();
     set(ref(db, 'games/'+gameId), {
-        fen: game.fen(), turn: 'w',
-        white: currentUser.uid, status: 'waiting'
+        fen: game.fen(), turn: 'w', white: currentUser.uid, status: 'waiting'
     }).then(() => {
         playerColor = 'w'; isOnline = true;
         setupGameListener();
@@ -191,11 +265,27 @@ function setupGameListener() {
             Visuals.syncBoardVisuals(game);
         }
     });
+    
+    // 監聽對手相機
+    const opColor = playerColor==='w'?'b':'w';
+    onValue(ref(db, `games/${gameId}/${opColor}/camera`), snap => {
+        Visuals.updateOpponentGhost(snap.val());
+    });
 }
 
 function sendMove(move) {
     if(isOnline) {
         update(ref(db, 'games/'+gameId), { fen: game.fen(), turn: game.turn() });
+    }
+}
+
+function handleCameraUpdate(pos) {
+    if(isOnline && gameId) {
+        const now = Date.now();
+        if(now - lastCameraUpdate > 200) {
+            update(ref(db, `games/${gameId}/${playerColor}/camera`), pos);
+            lastCameraUpdate = now;
+        }
     }
 }
 
@@ -211,13 +301,18 @@ function toggleLobby(inGame) {
     document.getElementById('btn-leave').style.display = inGame ? 'block' : 'none';
 }
 
+function resetAuthForm() {
+    const btn = document.getElementById('guest-btn');
+    if(btn) { btn.innerText = "訪客登入"; btn.disabled = false; }
+}
+
 export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
     if(mode === '4p') {
         game4p = new Chess4P();
         Visuals.syncBoardVisuals(game4p, true);
-        document.getElementById('room-display').innerText = "4人模式 (預覽)";
+        document.getElementById('room-display').innerText = "4人模式 (單機)";
     } else {
         game.reset();
         Visuals.syncBoardVisuals(game);
@@ -227,8 +322,10 @@ export function switchGameMode(mode) {
 
 function handleSquareClick(sq) {
     if(currentGameMode === '4p') {
-        if(!selectedSquare) selectedSquare = sq;
-        else {
+        if(!selectedSquare) {
+            const p = game4p.board[sq.r][sq.c];
+            if(p && p.color === game4p.turn()) selectedSquare = sq;
+        } else {
             const res = game4p.move(selectedSquare, sq);
             if(res) Visuals.animateMove({from: res.from, to: res.to, color: res.color}, () => Visuals.syncBoardVisuals(game4p, true));
             selectedSquare = null;
@@ -265,5 +362,6 @@ function makeRandomAI() {
     }
 }
 
-// 觸發上傳
-export function triggerAvatarUpload() { document.getElementById('avatar-upload').click(); }
+export function previewStyle(type, value) {
+    Visuals.updateTheme({ [type === 'piece' ? 'pieceStyle' : 'boardStyle']: value });
+}
