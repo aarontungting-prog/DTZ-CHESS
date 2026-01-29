@@ -2,8 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
+import { Chess4P } from './chess_4p_rules.js';
 
-// ⚠️⚠️⚠️ 請換成你的 Firebase Config ⚠️⚠️⚠️
+// 請確認這裡是你自己的 Config
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -15,70 +16,26 @@ const firebaseConfig = {
     measurementId: "G-0EMJ4W2KLS"
 };
 
-// --- 4人棋核心邏輯 (內嵌版，防止檔案遺失) ---
-class Chess4P {
-    constructor() {
-        this.board = []; 
-        this.colors = ['red', 'blue', 'yellow', 'green']; 
-        this.turnIndex = 0; 
-        this.initBoard();
-    }
-    initBoard() {
-        for(let r=0; r<14; r++) this.board[r] = new Array(14).fill(null);
-        const dead = [{r:[0,3], c:[0,3]}, {r:[0,3], c:[11,14]}, {r:[11,14], c:[0,3]}, {r:[11,14], c:[11,14]}];
-        for(let z of dead) for(let r=z.r[0]; r<z.r[1]; r++) for(let c=z.c[0]; c<z.c[1]; c++) this.board[r][c] = 'X';
-        this.setupPieces();
-    }
-    setupPieces() {
-        const p = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r']; 
-        this.place('red', 13, 12, false, p, 'row');
-        this.place('blue', 0, 1, false, p, 'col');
-        this.place('yellow', 0, 1, true, p, 'row');
-        this.place('green', 13, 12, true, p, 'col');
-    }
-    place(col, back, pawn, rev, list, mode) {
-        const pcs = rev ? [...list].reverse() : list;
-        for(let i=0; i<8; i++) {
-            let rB = mode==='row'? back : 3+i, cB = mode==='row'? 3+i : back;
-            let rP = mode==='row'? pawn : 3+i, cP = mode==='row'? 3+i : pawn;
-            this.board[rB][cB] = { type: pcs[i], color: col };
-            this.board[rP][cP] = { type: 'p', color: col };
-        }
-    }
-    turn() { return this.colors[this.turnIndex]; }
-    move(from, to) {
-        const piece = this.board[from.r][from.c];
-        const target = this.board[to.r][to.c];
-        if (!piece || piece.color !== this.turn() || target === 'X' || (target && target.color === piece.color)) return null;
-        this.board[to.r][to.c] = piece;
-        this.board[from.r][from.c] = null;
-        this.turnIndex = (this.turnIndex + 1) % 4;
-        return { from, to, color: piece.color };
-    }
-    getBoard() { return this.board; }
-}
-
-// --- 遊戲主邏輯 ---
 let app, db, auth, currentUser, gameId, game, game4p;
 let currentGameMode = '2p';
 let selectedSquare = null;
 let isGuestLoginIntent = false;
 
 export function initGame() {
-    console.log("🚀 InitGame Started");
-    setupUIListeners(); // 1. 先綁定按鈕
+    console.log("🚀 System Launching...");
+    setupUIListeners(); // 先綁按鈕，確保有點擊反應
 
     // 初始化引擎
     if(window.Chess) game = new window.Chess();
     game4p = new Chess4P();
 
-    // 啟動 3D (安全模式)
+    // 啟動 3D
     try {
         Visuals.init3D(null, handleSquareClick);
         Visuals.setLoginMode(true);
-    } catch(e) { console.error("3D Error", e); }
+    } catch(e) { console.error("3D Fail", e); }
 
-    // 初始化 Firebase
+    // 連線 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
@@ -89,6 +46,7 @@ export function initGame() {
             if(loading) loading.style.display = 'none';
 
             if (user) {
+                // 如果是自動登入的訪客 -> 踢出
                 if (user.isAnonymous && !isGuestLoginIntent) {
                     signOut(auth); return;
                 }
@@ -102,13 +60,12 @@ export function initGame() {
                 document.getElementById('auth-modal').style.display = 'flex';
                 document.getElementById('ui').style.display = 'none';
                 Visuals.setLoginMode(true);
-                isGuestLoginIntent = false;
                 // 重置按鈕
                 const btn = document.getElementById('guest-btn');
                 if(btn) { btn.innerText="訪客登入"; btn.disabled=false; }
             }
         });
-    } catch(e) { alert("Firebase Error: " + e.message); }
+    } catch(e) { alert("Firebase Config Error: " + e.message); }
     
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 500);
 }
@@ -148,7 +105,6 @@ function setupUIListeners() {
     if(seedInput) seedInput.oninput = (e) => document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${e.target.value}`;
 }
 
-// 簡單功能實作
 async function handleLogin() {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
@@ -174,11 +130,9 @@ function checkUserProfile(user) {
         } else {
             const d = snap.val();
             document.getElementById('user-name').innerText = d.name;
-            document.getElementById('user-elo').innerText = d.elo;
             const seed = d.avatarSeed || d.name;
-            const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-            document.getElementById('hud-avatar').src = url;
-            document.getElementById('my-avatar').src = url;
+            document.getElementById('hud-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+            document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
         }
     });
 }
@@ -197,7 +151,7 @@ function saveSettings() {
     });
 }
 
-// 房間與遊戲
+// 遊戲邏輯區
 function createRoom() {
     gameId = Math.floor(Math.random()*9000+1000).toString();
     set(ref(db, 'games/'+gameId), {
@@ -257,16 +211,17 @@ function toggleLobby(inGame) {
     document.getElementById('btn-leave').style.display = inGame ? 'block' : 'none';
 }
 
-// 模式切換與點擊
 export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
     if(mode === '4p') {
         game4p = new Chess4P();
         Visuals.syncBoardVisuals(game4p, true);
+        document.getElementById('room-display').innerText = "4人模式 (預覽)";
     } else {
         game.reset();
         Visuals.syncBoardVisuals(game);
+        document.getElementById('room-display').innerText = "狀態：閒置中";
     }
 }
 
