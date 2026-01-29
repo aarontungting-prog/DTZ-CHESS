@@ -1,10 +1,11 @@
+// 使用 CDN 網址，確保瀏覽器可以直接執行 (不要改動這些網址)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
 import { Chess4P } from './chess_4p_rules.js';
 
-// 請使用你的 Firebase Config
+// ✨ 這就是你剛剛提供的 Config，我已經填好了 ✨
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -30,34 +31,38 @@ let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pi
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
-// ✨ 關鍵修正：手動登入標記 ✨
-let isManualLogin = false;
+// ✨ 訪客登入意圖標記 (解決無限登出問題) ✨
+let isGuestLoginIntent = false;
 
 export function initGame() {
-    console.log("Game Logic Initializing...");
+    console.log("Initializing Game Logic...");
     
     // 1. 初始化引擎
     if (window.Chess) { game = new window.Chess(); } 
-    game4p = new Chess4P();
+    // 嘗試載入四人棋，若檔案缺失則忽略
+    try { game4p = new Chess4P(); } catch(e) { console.warn("Chess4P load failed", e); }
 
-    // 2. 優先綁定按鈕，確保有點擊反應
+    // 2. 優先綁定按鈕
     setupUIListeners();
 
+    // 3. 初始化 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
+        console.log("Firebase Connected: chess-1885a");
     } catch(e) { 
         console.error("Firebase Init Error:", e);
-        alert("Firebase 連線失敗");
+        alert("Firebase 連線失敗，請檢查網路！");
     }
 
+    // 4. 初始化 3D (隔離錯誤)
     try {
         Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
         Visuals.setLoginMode(true);
     } catch(e) { console.error("3D Init Error:", e); }
 
-    // 3. 監聽登入狀態
+    // 5. 監聽登入狀態
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
@@ -66,8 +71,8 @@ export function initGame() {
             console.log("User detected:", user.uid);
             
             // 邏輯：如果是訪客，且沒有手動點擊按鈕 (代表是重新整理)，則登出
-            if (user.isAnonymous && !isManualLogin) {
-                console.log("Auto-login detected for guest, signing out...");
+            if (user.isAnonymous && !isGuestLoginIntent) {
+                console.log("Auto-login guest detected, signing out...");
                 signOut(auth);
                 return;
             }
@@ -78,13 +83,13 @@ export function initGame() {
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
-            console.log("No user.");
+            console.log("No user signed in.");
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
             Visuals.setLoginMode(true);
             resetAuthForm();
-            isManualLogin = false;
+            isGuestLoginIntent = false;
         }
     });
 
@@ -107,16 +112,20 @@ function setupUIListeners() {
     if(guestBtn) {
         guestBtn.onclick = () => {
             console.log("Guest login clicked.");
-            guestBtn.innerText = "🚀 進入中...";
+            guestBtn.innerText = "🚀 連線中...";
             guestBtn.disabled = true;
-            isManualLogin = true; // 標記為手動登入
+            isGuestLoginIntent = true; // 標記為手動操作
             
             signInAnonymously(auth).catch((error) => {
                 console.error("Guest Login Failed:", error);
-                alert("訪客登入失敗：" + error.message);
+                let msg = "登入失敗：" + error.message;
+                if(error.code === 'auth/operation-not-allowed') {
+                    msg = "錯誤：請到 Firebase Console -> Authentication -> Sign-in method 開啟「匿名 (Anonymous)」登入功能！";
+                }
+                alert(msg);
                 guestBtn.innerText = "訪客登入";
                 guestBtn.disabled = false;
-                isManualLogin = false;
+                isGuestLoginIntent = false;
             });
         };
     }
@@ -130,20 +139,30 @@ function setupUIListeners() {
     });
     bind('btn-save-custom', saveUserSettings);
     bind('btn-random-avatar', randomizeAvatar);
+    bind('btn-close-custom', window.closeAllMenus); // 確保有關閉面板的按鈕綁定
 
     const fileInput = document.getElementById('avatar-upload');
     if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
-    document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
+    
+    // 模式切換
+    const btn2p = document.getElementById('mode-2p');
+    const btn4p = document.getElementById('mode-4p');
+    if(btn2p) btn2p.onclick = () => window.switchMode('2p');
+    if(btn4p) btn4p.onclick = () => window.switchMode('4p');
+
+    // 頭像輸入
+    const seedInput = document.getElementById('avatar-seed');
+    if(seedInput) seedInput.oninput = (e) => updateAvatarPreview(e.target.value, null);
 }
 
-// ... (以下為標準功能，包含 4P 整合) ...
+// ... (以下標準功能保持不變) ...
 
 export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
 
     if (mode === '4p') {
-        game4p = new Chess4P(); 
+        if(!game4p) game4p = new Chess4P(); 
         Visuals.syncBoardVisuals(game4p, true); 
         updateStatusHUD();
         document.getElementById('btn-create').style.display = 'none';
@@ -187,6 +206,7 @@ function handleSquareClick(sq) {
 
     if(isOnline && game.turn() !== playerColor) return;
     const p = game.get(sq);
+    
     if(!selectedSquare) {
         if(p && p.color === game.turn()) {
             if(!isOnline || (isOnline && p.color === playerColor)) {
@@ -536,6 +556,7 @@ function resetAuthForm() {
     document.getElementById('auth-action-btn').innerText = "進入世界";
     document.getElementById('auth-error').innerText = "";
     
+    // 重置按鈕狀態
     const guestBtn = document.getElementById('guest-btn');
     if(guestBtn) {
         guestBtn.innerText = "訪客登入";
