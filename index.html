@@ -12,8 +12,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
     }
     </script>
@@ -42,7 +42,6 @@
 </div>
 
 <div id="ui" style="display:none;">
-    
     <div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
 
     <div id="menu-panel" class="hud-container">
@@ -54,9 +53,7 @@
                     <span id="user-rank" class="rank-badge rank-bronze">銅牌</span>
                 </div>
             </div>
-            <div class="elo-text">
-                戰力積分 (ELO): <span id="user-elo">0</span>
-            </div>
+            <div class="elo-text">戰力積分: <span id="user-elo">0</span></div>
             <button id="btn-custom" class="custom-btn">🛠️ 個人化設定</button>
         </div>
 
@@ -66,17 +63,13 @@
                 <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1 經典</button>
                 <button id="mode-4p" class="mode-btn" onclick="switchMode('4p')">4人 混戰</button>
             </div>
-
             <div class="lobby-title">對戰大廳</div>
             <div id="room-display" class="room-status">狀態：閒置中</div>
-            
             <div id="lobby-buttons">
                 <button id="btn-create" class="game-btn">創建房間 (執白)</button>
                 <button id="btn-join" class="game-btn join-btn">加入房間 (執黑)</button>
             </div>
-
             <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff; color:white; margin-top:10px;">退出房間 / 結束連線</button>
-            
             <div class="separator"></div>
             <button id="btn-logout" class="logout-btn">登出</button>
         </div>
@@ -96,7 +89,7 @@
     <div class="custom-section">
         <h3>👤 指揮官識別證</h3>
         <div class="avatar-preview-container" onclick="triggerAvatarUpload()">
-            <img id="my-avatar" src="" alt="Avatar" class="avatar-img">
+            <img id="my-avatar" src="" class="avatar-img">
             <div id="my-frame" class="avatar-frame"></div>
             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
             <div id="avatar-hint">更換圖片</div>
@@ -110,69 +103,56 @@
         <label>顯示暱稱:</label>
         <input type="text" id="edit-name" class="custom-input">
     </div>
-
     <div class="custom-section">
         <h3>♟️ 棋子模型</h3>
         <div class="skin-grid" id="piece-skin-grid">
-            <div class="skin-item selected" onclick="previewSkin('piece', 'neon', this)"><div class="skin-icon">💠</div><div class="skin-name">電馭霓虹</div></div>
-            <div class="skin-item" onclick="previewSkin('piece', 'classic', this)"><div class="skin-icon">♟️</div><div class="skin-name">經典實體</div></div>
+            <div class="skin-item selected" data-val="neon" onclick="previewSkin('piece','neon',this)"><div class="skin-icon">💠</div><div class="skin-name">電馭霓虹</div></div>
+            <div class="skin-item" data-val="classic" onclick="previewSkin('piece','classic',this)"><div class="skin-icon">♟️</div><div class="skin-name">經典實體</div></div>
             <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
         </div>
         <input type="hidden" id="selected-piece-style" value="neon">
     </div>
-
     <div class="custom-section">
         <h3>🔲 戰場材質</h3>
         <div class="skin-grid" id="board-skin-grid">
-            <div class="skin-item selected" onclick="previewSkin('board', 'neon', this)"><div class="skin-icon">🌌</div><div class="skin-name">全息投影</div></div>
+            <div class="skin-item selected" data-val="neon" onclick="previewSkin('board','neon',this)"><div class="skin-icon">🌌</div><div class="skin-name">全息投影</div></div>
             <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
         </div>
         <input type="hidden" id="selected-board-style" value="neon">
     </div>
-    
     <button id="btn-save-custom" class="game-btn save-btn">保存並套用</button>
     <button onclick="closeAllMenus()" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
 </div>
 
 <script type="module">
     import { initGame, triggerAvatarUpload, previewStyle, switchGameMode } from './game_logic.js';
-    
-    // 全局變數綁定
     window.triggerAvatarUpload = triggerAvatarUpload; 
-    window.switchMode = function(mode) {
+    window.switchMode = (m) => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`mode-${mode}`).classList.add('active');
-        switchGameMode(mode);
-    }
-    window.previewSkin = function(type, value, element) {
-        if(element.classList.contains('locked')) return;
-        const grid = document.getElementById(`${type}-skin-grid`);
-        const items = grid.getElementsByClassName('skin-item');
-        for(let item of items) item.classList.remove('selected');
-        element.classList.add('selected');
-        document.getElementById(`selected-${type}-style`).value = value;
-        previewStyle(type, value);
-    }
-
-    // 確保頁面載入後執行初始化
-    window.onload = () => { 
-        console.log("Window loaded.");
-        initGame(); 
+        document.getElementById('mode-'+m).classList.add('active');
+        switchGameMode(m);
     };
-
-    window.toggleMenu = function() {
-        const panel = document.getElementById('menu-panel');
-        panel.classList.toggle('mobile-visible');
-        const backdrop = document.getElementById('menu-backdrop');
-        if(panel.classList.contains('mobile-visible')) backdrop.classList.add('active');
-        else backdrop.classList.remove('active');
-    }
-
-    window.closeAllMenus = function() {
+    window.previewSkin = (t, v, el) => {
+        if(el.classList.contains('locked')) return;
+        const grid = document.getElementById(`${t}-skin-grid`);
+        for(let item of grid.children) item.classList.remove('selected');
+        el.classList.add('selected');
+        document.getElementById(`selected-${t}-style`).value = v;
+        previewStyle(t, v);
+    };
+    window.onload = () => { initGame(); };
+    window.toggleMenu = () => {
+        const p = document.getElementById('menu-panel');
+        p.classList.toggle('mobile-visible');
+        const b = document.getElementById('menu-backdrop');
+        if(p.classList.contains('mobile-visible')) b.classList.add('active');
+        else b.classList.remove('active');
+    };
+    window.closeAllMenus = () => {
         document.getElementById('custom-panel').classList.remove('active');
         document.getElementById('menu-panel').classList.remove('mobile-visible');
         if(window.innerWidth <= 600) document.getElementById('menu-backdrop').classList.remove('active');
-    }
+    };
 </script>
 </body>
 </html>
