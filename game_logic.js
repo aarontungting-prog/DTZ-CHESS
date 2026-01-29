@@ -3,7 +3,7 @@ import { getDatabase, ref, set, get, update, onValue, off, remove } from "https:
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
 
-// ⚠️⚠️⚠️ 記得換成你的 Config ⚠️⚠️⚠️
+// ⚠️⚠️⚠️ 記得填入你的 Firebase Config ⚠️⚠️⚠️
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -88,14 +88,20 @@ export function initGame() {
                 currentUser = user;
                 document.getElementById('auth-modal').style.display = 'none';
                 document.getElementById('ui').style.display = 'block';
-                // 登入後才啟動 3D，避免資源搶佔
-                Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
+                // ✨ 修正順序：登入成功後才初始化 3D ✨
+                if(!Visuals.isInitialized()) {
+                    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
+                }
                 Visuals.setLoginMode(false);
                 checkUserProfile(user);
             } else {
                 currentUser = null;
                 document.getElementById('auth-modal').style.display = 'flex';
                 document.getElementById('ui').style.display = 'none';
+                // 未登入時也啟動 3D 讓他轉
+                if(!Visuals.isInitialized()) {
+                    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
+                }
                 Visuals.setLoginMode(true);
                 const btn = document.getElementById('guest-btn');
                 if(btn) { btn.innerText="訪客登入"; btn.disabled=false; }
@@ -245,6 +251,7 @@ function sendMove(move) {
 function leaveRoom() {
     gameId = null; isOnline = false;
     game.reset(); Visuals.syncBoardVisuals(game);
+    Visuals.moveCamera({x:0, y:60, z:100});
     toggleLobby(false);
 }
 
@@ -257,7 +264,7 @@ export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
     if(mode === '4p') {
-        game4p = new Chess4P();
+        if(!game4p) game4p = new Chess4P();
         Visuals.syncBoardVisuals(game4p, true);
         document.getElementById('room-display').innerText = "4人模式 (單機)";
     } else {
@@ -277,7 +284,6 @@ function handleSquareClick(sq) {
         }
         return;
     }
-    // 2P
     if(isOnline && game.turn() !== playerColor) return;
     if(!selectedSquare) {
         const p = game.get(sq);
