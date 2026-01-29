@@ -2,9 +2,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
+// ⚠️ 重要：請確保你的資料夾內有 chess_4p_rules.js，否則這裡會報錯導致整個網頁當機
 import { Chess4P } from './chess_4p_rules.js';
 
-// 請務必確認這裡換成你自己的 Firebase Config，否則會無法登入！
+// ⚠️⚠️⚠️ 請換成你自己的 Firebase Config ⚠️⚠️⚠️
+// 如果使用這組預設的，可能會因為過期或多人使用而導致「卡在進入中」
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -26,41 +28,59 @@ let game = null;
 let game4p = null;
 let currentGameMode = '2p';
 let selectedSquare = null;
+let isGuestLoginIntent = false; 
 let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pieceStyle: "neon", boardStyle: "neon" };
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
-// ✨ 關鍵修正：手動登入標記 ✨
-let isManualLogin = false;
-
 export function initGame() {
-    console.log("Initializing Game Logic...");
-    if (window.Chess) { game = new window.Chess(); } 
-    game4p = new Chess4P();
+    console.log("Game Logic Initializing...");
 
+    // 1. 綁定按鈕 (最優先，確保按鈕有點擊反應)
+    setupUIListeners();
+    
+    // 2. 初始化引擎
+    if (window.Chess) { game = new window.Chess(); } 
+    else { console.error("Chess.js 遺失！"); }
+    
+    try {
+        game4p = new Chess4P();
+    } catch(e) {
+        console.error("四人棋模組載入失敗:", e);
+        alert("缺少 chess_4p_rules.js 檔案，請檢查！");
+    }
+
+    // 3. 初始化 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
+        console.log("Firebase initialized.");
     } catch(e) { 
         console.error("Firebase Init Error:", e);
-        alert("資料庫連線失敗，請檢查網路。");
+        alert("Firebase 連線失敗，請檢查 Config 是否正確！");
+        return; // 停止執行
     }
 
-    // 優先綁定 UI (修復按鈕失效)
-    setupUIListeners();
-
-    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
-    Visuals.setLoginMode(true);
-
+    // 4. 初始化 3D
+    try {
+        Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
+        Visuals.setLoginMode(true);
+    } catch(e) {
+        console.error("3D Error:", e);
+    }
+    
+    // 5. 監聽登入狀態
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            // ✨ 邏輯修正：如果是訪客，且不是手動登入 (即重新整理)，則登出 ✨
-            if (user.isAnonymous && !isManualLogin) {
-                console.log("偵測到自動登入的訪客，強制登出...");
+            console.log("偵測到使用者:", user.uid);
+            
+            // 邏輯：如果是訪客，且不是剛按下的(重新整理)，則登出
+            if (user.isAnonymous && !isGuestLoginIntent) {
+                console.log("非手動訪客，執行登出重置...");
                 signOut(auth);
                 return;
             }
@@ -71,22 +91,24 @@ export function initGame() {
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
+            console.log("未登入狀態");
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
             Visuals.setLoginMode(true);
             resetAuthForm();
-            isManualLogin = false; // 重置標記
+            isGuestLoginIntent = false;
         }
     });
 
-    setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 100);
+    setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 500);
 }
 
 function setupUIListeners() {
     const bind = (id, fn) => {
         const el = document.getElementById(id);
         if(el) el.onclick = fn;
+        else console.warn("找不到按鈕:", id);
     };
 
     bind('btn-create', createRoom);
@@ -94,23 +116,41 @@ function setupUIListeners() {
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     
-    // ✨ 訪客按鈕修復 ✨
+    // ✨ 訪客按鈕 (含逾時保護) ✨
     const guestBtn = document.getElementById('guest-btn');
     if(guestBtn) {
         guestBtn.onclick = () => {
-            console.log("訪客按鈕被點擊");
-            guestBtn.innerText = "🚀 進入中...";
-            guestBtn.disabled = true; // 防止重複點擊
+            console.log("點擊訪客登入...");
+            guestBtn.innerText = "🚀 連線中...";
+            guestBtn.disabled = true; // 鎖定按鈕
             
-            isManualLogin = true; // 標記為手動登入
+            isGuestLoginIntent = true; 
             
-            signInAnonymously(auth).catch((error) => {
-                console.error("Guest login failed:", error);
-                alert("訪客登入失敗：" + error.message);
-                guestBtn.innerText = "訪客登入";
-                guestBtn.disabled = false;
-                isManualLogin = false;
-            });
+            // 設定 10 秒逾時，如果卡住就重置
+            const timeOut = setTimeout(() => {
+                if(guestBtn.disabled) {
+                    alert("連線逾時 (Timeout)。\n請檢查網路，或 Firebase 設定是否正確。");
+                    guestBtn.innerText = "訪客登入";
+                    guestBtn.disabled = false;
+                    isGuestLoginIntent = false;
+                }
+            }, 10000);
+
+            signInAnonymously(auth)
+                .then(() => {
+                    clearTimeout(timeOut); // 登入成功，清除計時器
+                })
+                .catch((error) => {
+                    clearTimeout(timeOut);
+                    console.error("Guest Login Error:", error);
+                    let msg = "登入失敗：" + error.code;
+                    if(error.code === 'auth/operation-not-allowed') msg = "請到 Firebase Console 開啟「匿名登入」功能！";
+                    alert(msg);
+                    
+                    guestBtn.innerText = "訪客登入";
+                    guestBtn.disabled = false;
+                    isGuestLoginIntent = false;
+                });
         };
     }
 
@@ -152,14 +192,14 @@ function setupUIListeners() {
     }
 }
 
-// ... (其餘邏輯保持不變，包含 createRoom, joinRoom 等) ...
+// ... (以下邏輯保持標準版，確保功能正常) ...
 
 export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
 
     if (mode === '4p') {
-        game4p = new Chess4P(); 
+        if(!game4p) game4p = new Chess4P(); 
         Visuals.syncBoardVisuals(game4p, true); 
         updateStatusHUD();
         document.getElementById('btn-create').style.display = 'none';
