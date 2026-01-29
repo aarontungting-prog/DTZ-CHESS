@@ -2,11 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
-// ⚠️ 重要：請確保你的資料夾內有 chess_4p_rules.js，否則這裡會報錯導致整個網頁當機
 import { Chess4P } from './chess_4p_rules.js';
 
-// ⚠️⚠️⚠️ 請換成你自己的 Firebase Config ⚠️⚠️⚠️
-// 如果使用這組預設的，可能會因為過期或多人使用而導致「卡在進入中」
+// 請使用你的 Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -28,59 +26,48 @@ let game = null;
 let game4p = null;
 let currentGameMode = '2p';
 let selectedSquare = null;
-let isGuestLoginIntent = false; 
 let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pieceStyle: "neon", boardStyle: "neon" };
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
+// ✨ 關鍵修正：手動登入標記 ✨
+let isManualLogin = false;
+
 export function initGame() {
     console.log("Game Logic Initializing...");
-
-    // 1. 綁定按鈕 (最優先，確保按鈕有點擊反應)
-    setupUIListeners();
     
-    // 2. 初始化引擎
+    // 1. 初始化引擎
     if (window.Chess) { game = new window.Chess(); } 
-    else { console.error("Chess.js 遺失！"); }
-    
-    try {
-        game4p = new Chess4P();
-    } catch(e) {
-        console.error("四人棋模組載入失敗:", e);
-        alert("缺少 chess_4p_rules.js 檔案，請檢查！");
-    }
+    game4p = new Chess4P();
 
-    // 3. 初始化 Firebase
+    // 2. 優先綁定按鈕，確保有點擊反應
+    setupUIListeners();
+
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
-        console.log("Firebase initialized.");
     } catch(e) { 
         console.error("Firebase Init Error:", e);
-        alert("Firebase 連線失敗，請檢查 Config 是否正確！");
-        return; // 停止執行
+        alert("Firebase 連線失敗");
     }
 
-    // 4. 初始化 3D
     try {
         Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
         Visuals.setLoginMode(true);
-    } catch(e) {
-        console.error("3D Error:", e);
-    }
-    
-    // 5. 監聽登入狀態
+    } catch(e) { console.error("3D Init Error:", e); }
+
+    // 3. 監聽登入狀態
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            console.log("偵測到使用者:", user.uid);
+            console.log("User detected:", user.uid);
             
-            // 邏輯：如果是訪客，且不是剛按下的(重新整理)，則登出
-            if (user.isAnonymous && !isGuestLoginIntent) {
-                console.log("非手動訪客，執行登出重置...");
+            // 邏輯：如果是訪客，且沒有手動點擊按鈕 (代表是重新整理)，則登出
+            if (user.isAnonymous && !isManualLogin) {
+                console.log("Auto-login detected for guest, signing out...");
                 signOut(auth);
                 return;
             }
@@ -91,13 +78,13 @@ export function initGame() {
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
-            console.log("未登入狀態");
+            console.log("No user.");
             currentUser = null;
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
             Visuals.setLoginMode(true);
             resetAuthForm();
-            isGuestLoginIntent = false;
+            isManualLogin = false;
         }
     });
 
@@ -108,7 +95,6 @@ function setupUIListeners() {
     const bind = (id, fn) => {
         const el = document.getElementById(id);
         if(el) el.onclick = fn;
-        else console.warn("找不到按鈕:", id);
     };
 
     bind('btn-create', createRoom);
@@ -116,90 +102,48 @@ function setupUIListeners() {
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     
-    // ✨ 訪客按鈕 (含逾時保護) ✨
+    // 訪客按鈕修復
     const guestBtn = document.getElementById('guest-btn');
     if(guestBtn) {
         guestBtn.onclick = () => {
-            console.log("點擊訪客登入...");
-            guestBtn.innerText = "🚀 連線中...";
-            guestBtn.disabled = true; // 鎖定按鈕
+            console.log("Guest login clicked.");
+            guestBtn.innerText = "🚀 進入中...";
+            guestBtn.disabled = true;
+            isManualLogin = true; // 標記為手動登入
             
-            isGuestLoginIntent = true; 
-            
-            // 設定 10 秒逾時，如果卡住就重置
-            const timeOut = setTimeout(() => {
-                if(guestBtn.disabled) {
-                    alert("連線逾時 (Timeout)。\n請檢查網路，或 Firebase 設定是否正確。");
-                    guestBtn.innerText = "訪客登入";
-                    guestBtn.disabled = false;
-                    isGuestLoginIntent = false;
-                }
-            }, 10000);
-
-            signInAnonymously(auth)
-                .then(() => {
-                    clearTimeout(timeOut); // 登入成功，清除計時器
-                })
-                .catch((error) => {
-                    clearTimeout(timeOut);
-                    console.error("Guest Login Error:", error);
-                    let msg = "登入失敗：" + error.code;
-                    if(error.code === 'auth/operation-not-allowed') msg = "請到 Firebase Console 開啟「匿名登入」功能！";
-                    alert(msg);
-                    
-                    guestBtn.innerText = "訪客登入";
-                    guestBtn.disabled = false;
-                    isGuestLoginIntent = false;
-                });
+            signInAnonymously(auth).catch((error) => {
+                console.error("Guest Login Failed:", error);
+                alert("訪客登入失敗：" + error.message);
+                guestBtn.innerText = "訪客登入";
+                guestBtn.disabled = false;
+                isManualLogin = false;
+            });
         };
     }
 
     bind('btn-logout', handleLogout); 
     bind('forgot-pw', handleForgotPassword);
-    
     bind('btn-custom', () => {
         document.getElementById('custom-panel').classList.add('active');
-        if(currentUser && currentUser.isAnonymous) {
-            document.getElementById('guest-avatar-controls').style.display = 'block';
-        } else {
-            document.getElementById('guest-avatar-controls').style.display = 'none';
-        }
+        if(currentUser && currentUser.isAnonymous) document.getElementById('guest-avatar-controls').style.display = 'block';
+        else document.getElementById('guest-avatar-controls').style.display = 'none';
     });
-
-    bind('btn-close-custom', window.closeAllMenus);
     bind('btn-save-custom', saveUserSettings);
     bind('btn-random-avatar', randomizeAvatar);
-    
-    document.getElementById('mode-2p').onclick = () => window.switchMode('2p');
-    document.getElementById('mode-4p').onclick = () => window.switchMode('4p');
 
     const fileInput = document.getElementById('avatar-upload');
     if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
-    
     document.getElementById('avatar-seed').oninput = (e) => updateAvatarPreview(e.target.value, null);
-
-    const pieceGrid = document.getElementById('piece-skin-grid');
-    if(pieceGrid) {
-        pieceGrid.querySelectorAll('.skin-item:not(.locked)').forEach(item => {
-            item.onclick = () => window.previewSkin('piece', item.dataset.val, item);
-        });
-    }
-    const boardGrid = document.getElementById('board-skin-grid');
-    if(boardGrid) {
-        boardGrid.querySelectorAll('.skin-item:not(.locked)').forEach(item => {
-            item.onclick = () => window.previewSkin('board', item.dataset.val, item);
-        });
-    }
 }
 
-// ... (以下邏輯保持標準版，確保功能正常) ...
+// ... (以下為標準功能，包含 4P 整合) ...
 
 export function switchGameMode(mode) {
     currentGameMode = mode;
     Visuals.setGameMode(mode);
 
     if (mode === '4p') {
-        if(!game4p) game4p = new Chess4P(); 
+        game4p = new Chess4P(); 
         Visuals.syncBoardVisuals(game4p, true); 
         updateStatusHUD();
         document.getElementById('btn-create').style.display = 'none';
@@ -243,7 +187,6 @@ function handleSquareClick(sq) {
 
     if(isOnline && game.turn() !== playerColor) return;
     const p = game.get(sq);
-    
     if(!selectedSquare) {
         if(p && p.color === game.turn()) {
             if(!isOnline || (isOnline && p.color === playerColor)) {
