@@ -1,18 +1,75 @@
-body { margin: 0; background: #111; overflow: hidden; color: white; font-family: sans-serif; }
-canvas { display: block; }
-#ui, #auth-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-.auth-box { pointer-events: auto; background: #222; padding: 30px; border: 1px solid #00e5ff; border-radius: 10px; width: 300px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-.auth-input { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #444; color: white; box-sizing: border-box;}
-button { width: 100%; padding: 10px; margin-top: 5px; background: #00e5ff; border: none; cursor: pointer; pointer-events: auto; font-weight: bold; }
-.guest-btn { background: transparent; color: #aaa; border: 1px solid #444; }
-.hud-container { position: absolute; top: 20px; left: 20px; width: 250px; pointer-events: auto; }
-.hud-box { background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; border: 1px solid #444; }
-.game-btn { margin-top: 5px; }
-.mode-btn { width: 48%; background: #333; color: #888; }
-.mode-btn.active { background: #00e5ff; color: black; }
-#mobile-menu-btn { display: none; pointer-events: auto; position: absolute; bottom: 20px; left: 20px; background: #222; color: #00e5ff; padding: 10px; border-radius: 50%; border: 2px solid #00e5ff; width: 40px; height: 40px; justify-content: center; align-items: center; }
+body { margin: 0; overflow: hidden; background: #000; font-family: 'Microsoft JhengHei', sans-serif; color: white; touch-action: none; }
+canvas { position: absolute; top: 0; left: 0; z-index: 0; }
+#ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+.hud, .hud-container, #mobile-menu-btn { pointer-events: auto; }
+
+/* 自檢系統樣式 */
+#system-status {
+    position: fixed; top: 0; left: 0; background: rgba(0,0,0,0.8); 
+    padding: 10px; font-size: 10px; z-index: 9999; color: #aaa;
+    border-bottom-right-radius: 8px; pointer-events: none;
+}
+.status-item { margin-top: 2px; }
+.status-item.pending { color: #ffff00; }
+.status-item.ok { color: #00ff00; }
+.status-item.error { color: #ff0055; font-weight: bold; }
+
+/* UI 排版 */
+.hud-container { position: absolute; top: 20px; left: 20px; width: 260px; display: flex; flex-direction: column; gap: 15px; }
+.hud-box { background: rgba(0,0,0,0.85); border: 1px solid #444; border-radius: 8px; padding: 20px; backdrop-filter: blur(2px); }
+.user-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.name-text { font-weight: bold; font-size: 16px; color: #fff; }
+.elo-text { font-size: 12px; color: #888; }
+.elo-text span { color: #00e5ff; }
+.custom-btn { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #ccc; border-radius: 6px; cursor: pointer; }
+.custom-btn:hover { background: #333; color: #fff; }
+
+.lobby-title { color: #aaa; font-size: 12px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 8px; }
+.room-status { font-size: 14px; color: #00ff00; margin-bottom: 12px; font-weight: bold; }
+.logout-btn { background: transparent; color: #666; border: none; width: 100%; cursor: pointer; font-size: 12px; }
+
+#status-panel { top: 20px; right: 20px; text-align: right; background: linear-gradient(to left, rgba(0,255,255,0.1), rgba(0,0,0,0)); padding: 15px; border-right: 3px solid #00e5ff; }
+h1 { margin: 0; font-size: 1.2rem; color: #00e5ff; }
+#turn-txt { font-size: 1.5rem; font-weight: 900; }
+
+/* 登入視窗 */
+#auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+.auth-box { background: rgba(15,15,20,0.95); border: 1px solid #00e5ff; padding: 30px; border-radius: 12px; width: 300px; text-align: center; box-shadow: 0 0 50px rgba(0,229,255,0.3); }
+.auth-input { width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box; }
+.auth-btn { width: 100%; padding: 12px; margin-top: 15px; background: #00e5ff; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+.guest-btn { width: 100%; padding: 10px; margin-top: 10px; background: transparent; color: #aaa; border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 6px; }
+#nickname-container { display: none; }
+.forgot-link { display: block; margin-top: 15px; font-size: 12px; color: #aaa; cursor: pointer; }
+
+/* 側邊面板 */
+.side-panel { position: fixed; top: 0; left: 0; bottom: 0; width: 320px; background: rgba(12,12,18,0.98); border-right: 1px solid #00e5ff; transform: translateX(-105%); transition: 0.3s; z-index: 1200; padding: 25px; pointer-events: auto; }
+.side-panel.active { transform: translateX(0); }
+.custom-section { margin-bottom: 30px; }
+.avatar-preview-container { width: 100px; height: 100px; margin: 0 auto 15px; background: #111; border-radius: 12px; overflow: hidden; border: 2px solid #333; cursor: pointer; position: relative; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+#avatar-hint { position: absolute; bottom: 0; width: 100%; text-align: center; background: rgba(0,0,0,0.7); font-size: 10px; color: #fff; }
+.skin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.skin-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
+.skin-item.selected { border-color: #00e5ff; background: rgba(0,229,255,0.1); }
+.skin-item.locked { opacity: 0.5; cursor: not-allowed; }
+.game-btn { background: #00e5ff; color: #000; border: none; padding: 10px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 5px;}
+.join-btn { background: #ff0055; color: #fff; }
+.mode-btn { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: #888; cursor: pointer; border-radius: 4px; }
+.mode-btn.active { background: #00e5ff; color: #000; font-weight: bold; }
+
+#menu-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; pointer-events: auto; }
+#menu-backdrop.active { display: block; }
+#loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; color: #00e5ff; z-index: 1500; font-weight: bold; }
+#footer-watermark { position: absolute; bottom: 10px; width: 100%; text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; }
+.mini-avatar { width: 45px; height: 45px; border-radius: 8px; border: 2px solid #333; object-fit: cover; }
+
 @media (max-width: 600px) {
-    #mobile-menu-btn { display: flex; }
-    .hud-container { display: none; } /* 手機版暫時隱藏面板，避免擋住 */
-    .hud-container.mobile-visible { display: block; bottom: 80px; top: auto; }
+    #mobile-menu-btn { display: flex; position: absolute; bottom: 30px; left: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #00e5ff; border-radius: 50%; color: #00e5ff; justify-content: center; align-items: center; z-index: 3000; font-weight: bold; cursor: pointer; pointer-events: auto; }
+    .hud-container { width: 100%; position: fixed; top: auto; bottom: 0; left: 0; transform: translateY(110%); z-index: 2500; transition: 0.3s; padding: 10px 20px 90px 20px; background: rgba(10,10,15,0.95); border-top: 2px solid #00e5ff; pointer-events: auto; box-sizing: border-box;}
+    .hud-container.mobile-visible { transform: translateY(0); }
+    .hud-box { background: transparent; border: none; box-shadow: none; padding: 0; margin-bottom: 10px; }
+    .profile-box { border-bottom: 1px solid #333; padding-bottom: 10px; }
+    #status-panel { top: 15px; left: 50%; transform: translateX(-50%); width: auto; background: rgba(0,0,0,0.6); border-radius: 30px; padding: 5px 20px; white-space: nowrap; right: auto; z-index: 2000; }
+    #status-panel h1 { display: none; }
+    .side-panel { width: 90%; }
 }
