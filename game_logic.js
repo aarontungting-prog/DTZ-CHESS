@@ -1,11 +1,9 @@
-// 使用 CDN 網址，確保瀏覽器可以直接執行 (不要改動這些網址)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, off, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
-import { Chess4P } from './chess_4p_rules.js';
 
-// ✨ 這就是你剛剛提供的 Config，我已經填好了 ✨
+// ⚠️⚠️⚠️ 請換成你的 Firebase Config ⚠️⚠️⚠️
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -17,662 +15,300 @@ const firebaseConfig = {
     measurementId: "G-0EMJ4W2KLS"
 };
 
-let app, db, auth;
-let currentUser = null;
-let gameId = null;
-let playerColor = 'w';
-let isOnline = false;
-let isProcessing = false;
-let game = null;
-let game4p = null;
+// --- 4人棋核心邏輯 (內嵌版，防止檔案遺失) ---
+class Chess4P {
+    constructor() {
+        this.board = []; 
+        this.colors = ['red', 'blue', 'yellow', 'green']; 
+        this.turnIndex = 0; 
+        this.initBoard();
+    }
+    initBoard() {
+        for(let r=0; r<14; r++) this.board[r] = new Array(14).fill(null);
+        const dead = [{r:[0,3], c:[0,3]}, {r:[0,3], c:[11,14]}, {r:[11,14], c:[0,3]}, {r:[11,14], c:[11,14]}];
+        for(let z of dead) for(let r=z.r[0]; r<z.r[1]; r++) for(let c=z.c[0]; c<z.c[1]; c++) this.board[r][c] = 'X';
+        this.setupPieces();
+    }
+    setupPieces() {
+        const p = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r']; 
+        this.place('red', 13, 12, false, p, 'row');
+        this.place('blue', 0, 1, false, p, 'col');
+        this.place('yellow', 0, 1, true, p, 'row');
+        this.place('green', 13, 12, true, p, 'col');
+    }
+    place(col, back, pawn, rev, list, mode) {
+        const pcs = rev ? [...list].reverse() : list;
+        for(let i=0; i<8; i++) {
+            let rB = mode==='row'? back : 3+i, cB = mode==='row'? 3+i : back;
+            let rP = mode==='row'? pawn : 3+i, cP = mode==='row'? 3+i : pawn;
+            this.board[rB][cB] = { type: pcs[i], color: col };
+            this.board[rP][cP] = { type: 'p', color: col };
+        }
+    }
+    turn() { return this.colors[this.turnIndex]; }
+    move(from, to) {
+        const piece = this.board[from.r][from.c];
+        const target = this.board[to.r][to.c];
+        if (!piece || piece.color !== this.turn() || target === 'X' || (target && target.color === piece.color)) return null;
+        this.board[to.r][to.c] = piece;
+        this.board[from.r][from.c] = null;
+        this.turnIndex = (this.turnIndex + 1) % 4;
+        return { from, to, color: piece.color };
+    }
+    getBoard() { return this.board; }
+}
+
+// --- 遊戲主邏輯 ---
+let app, db, auth, currentUser, gameId, game, game4p;
 let currentGameMode = '2p';
 let selectedSquare = null;
-let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pieceStyle: "neon", boardStyle: "neon" };
-let lastCursorUpdate = 0;
-let lastCameraUpdate = 0;
-
-// ✨ 訪客登入意圖標記 (解決無限登出問題) ✨
 let isGuestLoginIntent = false;
 
 export function initGame() {
-    console.log("Initializing Game Logic...");
-    
-    // 1. 初始化引擎
-    if (window.Chess) { game = new window.Chess(); } 
-    // 嘗試載入四人棋，若檔案缺失則忽略
-    try { game4p = new Chess4P(); } catch(e) { console.warn("Chess4P load failed", e); }
+    console.log("🚀 InitGame Started");
+    setupUIListeners(); // 1. 先綁定按鈕
 
-    // 2. 優先綁定按鈕
-    setupUIListeners();
+    // 初始化引擎
+    if(window.Chess) game = new window.Chess();
+    game4p = new Chess4P();
 
-    // 3. 初始化 Firebase
+    // 啟動 3D (安全模式)
+    try {
+        Visuals.init3D(null, handleSquareClick);
+        Visuals.setLoginMode(true);
+    } catch(e) { console.error("3D Error", e); }
+
+    // 初始化 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
-        console.log("Firebase Connected: chess-1885a");
-    } catch(e) { 
-        console.error("Firebase Init Error:", e);
-        alert("Firebase 連線失敗，請檢查網路！");
-    }
-
-    // 4. 初始化 3D (隔離錯誤)
-    try {
-        Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
-        Visuals.setLoginMode(true);
-    } catch(e) { console.error("3D Init Error:", e); }
-
-    // 5. 監聽登入狀態
-    onAuthStateChanged(auth, (user) => {
-        const loadingEl = document.getElementById('loading');
-        if(loadingEl) loadingEl.style.display = 'none';
         
-        if (user) {
-            console.log("User detected:", user.uid);
-            
-            // 邏輯：如果是訪客，且沒有手動點擊按鈕 (代表是重新整理)，則登出
-            if (user.isAnonymous && !isGuestLoginIntent) {
-                console.log("Auto-login guest detected, signing out...");
-                signOut(auth);
-                return;
+        onAuthStateChanged(auth, (user) => {
+            const loading = document.getElementById('loading');
+            if(loading) loading.style.display = 'none';
+
+            if (user) {
+                if (user.isAnonymous && !isGuestLoginIntent) {
+                    signOut(auth); return;
+                }
+                currentUser = user;
+                document.getElementById('auth-modal').style.display = 'none';
+                document.getElementById('ui').style.display = 'block';
+                Visuals.setLoginMode(false);
+                checkUserProfile(user);
+            } else {
+                currentUser = null;
+                document.getElementById('auth-modal').style.display = 'flex';
+                document.getElementById('ui').style.display = 'none';
+                Visuals.setLoginMode(true);
+                isGuestLoginIntent = false;
+                // 重置按鈕
+                const btn = document.getElementById('guest-btn');
+                if(btn) { btn.innerText="訪客登入"; btn.disabled=false; }
             }
-
-            currentUser = user;
-            document.getElementById('auth-modal').style.display = 'none';
-            document.getElementById('ui').style.display = 'block';
-            Visuals.setLoginMode(false);
-            checkAndCreateUserProfile(user);
-        } else {
-            console.log("No user signed in.");
-            currentUser = null;
-            document.getElementById('auth-modal').style.display = 'flex';
-            document.getElementById('ui').style.display = 'none';
-            Visuals.setLoginMode(true);
-            resetAuthForm();
-            isGuestLoginIntent = false;
-        }
-    });
-
+        });
+    } catch(e) { alert("Firebase Error: " + e.message); }
+    
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 500);
 }
 
 function setupUIListeners() {
-    const bind = (id, fn) => {
-        const el = document.getElementById(id);
-        if(el) el.onclick = fn;
-    };
-
-    bind('btn-create', createRoom);
-    bind('btn-join', joinRoom);
-    bind('btn-leave', leaveRoom);
-    bind('auth-action-btn', handleLogin);
+    const click = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
     
-    // 訪客按鈕修復
-    const guestBtn = document.getElementById('guest-btn');
-    if(guestBtn) {
-        guestBtn.onclick = () => {
-            console.log("Guest login clicked.");
-            guestBtn.innerText = "🚀 連線中...";
-            guestBtn.disabled = true;
-            isGuestLoginIntent = true; // 標記為手動操作
-            
-            signInAnonymously(auth).catch((error) => {
-                console.error("Guest Login Failed:", error);
-                let msg = "登入失敗：" + error.message;
-                if(error.code === 'auth/operation-not-allowed') {
-                    msg = "錯誤：請到 Firebase Console -> Authentication -> Sign-in method 開啟「匿名 (Anonymous)」登入功能！";
-                }
-                alert(msg);
-                guestBtn.innerText = "訪客登入";
-                guestBtn.disabled = false;
-                isGuestLoginIntent = false;
-            });
-        };
-    }
-
-    bind('btn-logout', handleLogout); 
-    bind('forgot-pw', handleForgotPassword);
-    bind('btn-custom', () => {
-        document.getElementById('custom-panel').classList.add('active');
-        if(currentUser && currentUser.isAnonymous) document.getElementById('guest-avatar-controls').style.display = 'block';
-        else document.getElementById('guest-avatar-controls').style.display = 'none';
+    click('btn-create', createRoom);
+    click('btn-join', joinRoom);
+    click('btn-leave', leaveRoom);
+    click('auth-action-btn', handleLogin);
+    click('btn-logout', () => signOut(auth));
+    
+    // 訪客按鈕
+    click('guest-btn', () => {
+        const btn = document.getElementById('guest-btn');
+        btn.innerText = "連線中...";
+        btn.disabled = true;
+        isGuestLoginIntent = true;
+        signInAnonymously(auth).catch(e => {
+            alert("登入失敗: " + e.message);
+            btn.innerText = "訪客登入";
+            btn.disabled = false;
+            isGuestLoginIntent = false;
+        });
     });
-    bind('btn-save-custom', saveUserSettings);
-    bind('btn-random-avatar', randomizeAvatar);
-    bind('btn-close-custom', window.closeAllMenus); // 確保有關閉面板的按鈕綁定
 
-    const fileInput = document.getElementById('avatar-upload');
-    if(fileInput) fileInput.addEventListener('change', handleAvatarFileSelect);
+    click('btn-custom', () => document.getElementById('custom-panel').classList.add('active'));
+    click('btn-save-custom', saveSettings);
+    click('btn-random-avatar', () => {
+        const seed = Math.random().toString(36).substring(7);
+        document.getElementById('avatar-seed').value = seed;
+        document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+    });
     
-    // 模式切換
-    const btn2p = document.getElementById('mode-2p');
-    const btn4p = document.getElementById('mode-4p');
-    if(btn2p) btn2p.onclick = () => window.switchMode('2p');
-    if(btn4p) btn4p.onclick = () => window.switchMode('4p');
-
-    // 頭像輸入
     const seedInput = document.getElementById('avatar-seed');
-    if(seedInput) seedInput.oninput = (e) => updateAvatarPreview(e.target.value, null);
+    if(seedInput) seedInput.oninput = (e) => document.getElementById('my-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${e.target.value}`;
 }
 
-// ... (以下標準功能保持不變) ...
-
-export function switchGameMode(mode) {
-    currentGameMode = mode;
-    Visuals.setGameMode(mode);
-
-    if (mode === '4p') {
-        if(!game4p) game4p = new Chess4P(); 
-        Visuals.syncBoardVisuals(game4p, true); 
-        updateStatusHUD();
-        document.getElementById('btn-create').style.display = 'none';
-        document.getElementById('btn-join').style.display = 'none';
-        document.getElementById('room-display').innerText = "4人模式 (單機預覽)";
-        document.getElementById('room-display').style.color = "#ffff00";
-    } else {
-        game.reset();
-        Visuals.syncBoardVisuals(game, false);
-        updateStatusHUD();
-        document.getElementById('btn-create').style.display = 'block';
-        document.getElementById('btn-join').style.display = 'block';
-        document.getElementById('room-display').innerText = "狀態：閒置中";
-        document.getElementById('room-display').style.color = "#fff";
-    }
-}
-
-function handleSquareClick(sq) {
-    if(isProcessing) return;
-
-    if (currentGameMode === '4p') {
-        if (!selectedSquare) {
-            const p = game4p.board[sq.r][sq.c];
-            if (p && p.color === game4p.turn()) selectedSquare = sq;
+// 簡單功能實作
+async function handleLogin() {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    if(!email || !pass) return alert("請輸入帳密");
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+        if(e.code.includes('user-not-found')) {
+             try { await createUserWithEmailAndPassword(auth, email, pass); }
+             catch(err) { alert(err.message); }
         } else {
-            const result = game4p.move(selectedSquare, sq);
-            if (result) {
-                Visuals.animateMove({
-                    from: {r: result.from.r, c: result.from.c},
-                    to: {r: result.to.r, c: result.to.c},
-                    color: result.color
-                }, () => {
-                    Visuals.syncBoardVisuals(game4p, true);
-                    updateStatusHUD();
-                });
-            }
-            selectedSquare = null;
+            alert(e.message);
         }
-        return;
     }
+}
 
-    if(isOnline && game.turn() !== playerColor) return;
-    const p = game.get(sq);
-    
-    if(!selectedSquare) {
-        if(p && p.color === game.turn()) {
-            if(!isOnline || (isOnline && p.color === playerColor)) {
-                selectedSquare = sq;
-                const validMoves = game.moves({square: sq, verbose: true});
-                Visuals.highlightSquare(sq, validMoves);
-            }
-        }
-    } else {
-        if(p && p.color === game.turn()) {
-            selectedSquare = sq;
-            const validMoves = game.moves({square: sq, verbose: true});
-            Visuals.highlightSquare(sq, validMoves);
-            return;
-        }
-        const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
-        if(move) {
-            isProcessing = true;
-            Visuals.animateMove(move, () => {
-                Visuals.syncBoardVisuals(game, false);
-                updateStatusHUD();
-                if(!isOnline) {
-                    if(game.turn() === 'b') setTimeout(makeRandomAI, 500);
-                    else isProcessing = false;
-                }
-            });
-            if(isOnline) sendMove(move);
-            selectedSquare = null;
+function checkUserProfile(user) {
+    const userRef = ref(db, 'users/' + user.uid);
+    get(userRef).then(snap => {
+        if(!snap.exists()) {
+            const name = user.isAnonymous ? "訪客" : user.email.split('@')[0];
+            set(userRef, { name: name, elo: 0 });
         } else {
-            selectedSquare = null;
-            Visuals.clearHighlights();
+            const d = snap.val();
+            document.getElementById('user-name').innerText = d.name;
+            document.getElementById('user-elo').innerText = d.elo;
+            const seed = d.avatarSeed || d.name;
+            const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+            document.getElementById('hud-avatar').src = url;
+            document.getElementById('my-avatar').src = url;
         }
-    }
-}
-
-function updateStatusHUD(){
-    const t = document.getElementById('turn-txt');
-    if (currentGameMode === '4p') {
-        const turn = game4p.turn(); 
-        const names = {'red': '紅方', 'blue': '藍方', 'yellow': '黃方', 'green': '綠方'};
-        const colors = {'red': '#ff3333', 'blue': '#3333ff', 'yellow': '#ffff33', 'green': '#33ff33'};
-        t.innerText = `${names[turn]} 回合`;
-        t.style.color = colors[turn];
-        return;
-    }
-    const turn = game.turn();
-    if(isOnline){
-        t.innerText = turn==='w' ? "白方回合" : "黑方回合";
-        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
-    } else {
-        t.innerText = turn==='w' ? "藍方回合" : "電腦回合";
-        t.style.color = turn==='w' ? "#00e5ff" : "#ff0055";
-    }
-}
-
-function handleCameraUpdate(camData) {
-    if (!isOnline || !gameId || !currentUser) return;
-    const now = Date.now();
-    if (now - lastCameraUpdate > 200) {
-        update(ref(db, `games/${gameId}/${playerColor}/camera`), {
-            x: camData.x, y: camData.y, z: camData.z
-        });
-        lastCameraUpdate = now;
-    }
-}
-
-function setupGameListeners() {
-    onValue(ref(db, 'games/' + gameId), (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-        if (data.status === 'playing' && !data.winner && document.getElementById('turn-txt').innerText.includes("等待")) {
-            if (data.black) {
-                const oppName = playerColor === 'w' ? data.black.name : data.white.name;
-                document.getElementById('opponent-info').innerText = `VS: ${oppName}`;
-                document.getElementById('room-display').innerText = `房間號：${gameId} (對戰中)`;
-                if(playerColor === 'w') alert(`對手 ${data.black.name} 已加入！`);
-                updateStatusHUD();
-            }
-        }
-        if (data.fen !== game.fen()) {
-            game.load(data.fen);
-            Visuals.syncBoardVisuals(game);
-            updateStatusHUD();
-            if (game.turn() === playerColor) isProcessing = false;
-        }
-        if (data.winner) handleGameOver(data.winner);
-    });
-
-    const opponentColor = playerColor === 'w' ? 'b' : 'w';
-    onValue(ref(db, `games/${gameId}/${opponentColor}/camera`), (snapshot) => {
-        const pos = snapshot.val();
-        if (pos) Visuals.updateOpponentGhost(pos);
     });
 }
 
-function handleLogout() {
-    if (!currentUser) return;
-    if (currentUser.isAnonymous) {
-        const confirmLogout = confirm("訪客登出後，您的戰績將會被刪除。確定要登出嗎？");
-        if (!confirmLogout) return;
-        remove(ref(db, 'users/' + currentUser.uid))
-            .then(() => signOut(auth))
-            .catch(() => signOut(auth));
-    } else {
-        signOut(auth);
-    }
+function saveSettings() {
+    if(!currentUser) return;
+    const name = document.getElementById('edit-name').value;
+    const seed = document.getElementById('avatar-seed').value;
+    const updates = {};
+    if(name) updates.name = name;
+    if(seed) updates.avatarSeed = seed;
+    update(ref(db, 'users/'+currentUser.uid), updates).then(() => {
+        alert("已保存");
+        checkUserProfile(currentUser);
+        window.closeAllMenus();
+    });
 }
 
-function leaveRoom() {
-    if (!gameId) return;
-    const confirmLeave = confirm("確定要退出房間嗎？");
-    if (!confirmLeave) return;
-
-    off(ref(db, 'games/' + gameId));
-    off(ref(db, `games/${gameId}/w/camera`));
-    off(ref(db, `games/${gameId}/b/camera`));
-
-    gameId = null;
-    isOnline = false;
-    game.reset();
-    Visuals.syncBoardVisuals(game);
-    Visuals.moveCamera({x: 0, y: 60, z: 100});
-    Visuals.updateOpponentGhost(null);
-    toggleLobbyUI(false);
-}
-
-function toggleLobbyUI(isPlaying) {
-    const lobbyBtns = document.getElementById('lobby-buttons');
-    const leaveBtn = document.getElementById('btn-leave');
-    
-    if (isPlaying) {
-        lobbyBtns.style.display = 'none';
-        leaveBtn.style.display = 'block';
-    } else {
-        lobbyBtns.style.display = 'block';
-        leaveBtn.style.display = 'none';
-        document.getElementById('room-display').innerText = '狀態：閒置中';
-        document.getElementById('room-display').style.color = '#fff';
-        document.getElementById('opponent-info').innerText = '對手: ---';
-    }
-}
-
+// 房間與遊戲
 function createRoom() {
-    if (!currentUser) { alert("請先登入"); return; }
-    game.reset(); 
-    Visuals.syncBoardVisuals(game); 
-    
-    gameId = Math.floor(1000 + Math.random() * 9000).toString();
-    console.log("正在創建房間:", gameId);
-    
-    document.getElementById('room-display').innerHTML = `房間號碼：<span style="color:#00e5ff; font-size:16px;">${gameId}</span><br>等待對手加入...`;
-    document.getElementById('opponent-info').innerText = "等待對手...";
-    toggleLobbyUI(true);
-    
-    get(ref(db, 'users/' + currentUser.uid)).then(snap => {
-        const userData = snap.val() || { name: "Player", elo: 0 };
-        
-        set(ref(db, 'games/' + gameId), {
-            fen: game.fen(), 
-            turn: 'w',
-            white: { uid: currentUser.uid, elo: userData.elo, name: userData.name },
-            black: null, 
-            status: 'waiting'
-        }).then(() => {
-            playerColor = 'w'; 
-            isOnline = true;
-            setupGameListeners();
-            Visuals.moveCamera({x: 0, y: 60, z: 100}); 
-            alert(`房間已建立！號碼：${gameId}`);
-        }).catch(err => {
-            console.error(err);
-            alert("網路錯誤，無法建立房間");
-            leaveRoom();
-        });
+    gameId = Math.floor(Math.random()*9000+1000).toString();
+    set(ref(db, 'games/'+gameId), {
+        fen: game.fen(), turn: 'w',
+        white: currentUser.uid, status: 'waiting'
+    }).then(() => {
+        playerColor = 'w'; isOnline = true;
+        setupGameListener();
+        document.getElementById('room-display').innerText = "房間: " + gameId;
+        toggleLobby(true);
+        Visuals.moveCamera({x:0, y:60, z:100});
     });
 }
 
 function joinRoom() {
-    const id = prompt('請輸入房間號碼:');
+    const id = prompt("輸入房間號:");
     if(!id) return;
-    
-    get(ref(db, 'games/' + id)).then((snapshot) => {
-        if (snapshot.exists()) {
-            const gameData = snapshot.val();
-            if(gameData.status !== 'waiting') { alert("房間已滿或遊戲已結束"); return; }
-            
-            gameId = id; 
-            game.reset(); 
+    get(ref(db, 'games/'+id)).then(snap => {
+        if(snap.exists() && snap.val().status === 'waiting') {
+            gameId = id;
+            update(ref(db, 'games/'+id), { black: currentUser.uid, status: 'playing' });
+            playerColor = 'b'; isOnline = true;
+            setupGameListener();
+            document.getElementById('room-display').innerText = "房間: " + gameId;
+            toggleLobby(true);
+            Visuals.moveCamera({x:0, y:60, z:-100});
+        } else alert("房間無效");
+    });
+}
+
+function setupGameListener() {
+    onValue(ref(db, 'games/'+gameId), snap => {
+        const d = snap.val();
+        if(!d) return;
+        if(d.fen !== game.fen()) {
+            game.load(d.fen);
             Visuals.syncBoardVisuals(game);
-            toggleLobbyUI(true);
-
-            const myInfo = { 
-                uid: currentUser.uid, 
-                elo: userSettings.elo || 0, 
-                name: userSettings.name || "Player" 
-            };
-
-            update(ref(db, 'games/' + gameId), {
-                black: myInfo,
-                status: 'playing'
-            }).then(() => {
-                playerColor = 'b'; isOnline = true;
-                setupGameListeners();
-                document.getElementById('room-display').innerText = `房間號：${gameId} (對戰中)`;
-                document.getElementById('opponent-info').innerText = `VS: ${gameData.white.name}`;
-                Visuals.moveCamera({x: 0, y: 60, z: -100}); 
-                game.load(gameData.fen);
-                Visuals.syncBoardVisuals(game);
-                updateStatusHUD();
-            });
-        } else { alert("房間不存在"); }
-    });
-}
-
-function handleMouseMove(point) {
-    if (!isOnline || !gameId || !currentUser) return;
-    const now = Date.now();
-    if (now - lastCursorUpdate > 150) {
-        update(ref(db, `games/${gameId}/${playerColor}/cursor`), {
-            x: point.x, y: point.y, z: point.z
-        });
-        lastCursorUpdate = now;
-    }
-}
-
-export function previewStyle(type, value) {
-    const tempSettings = {};
-    if (type === 'piece') tempSettings.pieceStyle = value;
-    if (type === 'board') tempSettings.boardStyle = value;
-    Visuals.updateTheme(tempSettings);
-}
-
-export function triggerAvatarUpload() {
-    if (currentUser && !currentUser.isAnonymous) {
-        document.getElementById('avatar-upload').click();
-    } else {
-        alert("訪客請使用隨機代碼，或註冊以解鎖上傳功能。");
-    }
-}
-
-function handleAvatarFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024) { alert("圖片請小於 1MB"); return; }
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        const base64 = evt.target.result;
-        updateAvatarPreview(null, base64);
-        userSettings.tempAvatarImage = base64; 
-    };
-    reader.readAsDataURL(file);
-}
-
-function randomizeAvatar() {
-    const randomSeed = Math.random().toString(36).substring(7);
-    document.getElementById('avatar-seed').value = randomSeed;
-    updateAvatarPreview(randomSeed, null);
-}
-
-function updateAvatarPreview(seed, base64) {
-    const imgEl = document.getElementById('my-avatar');
-    if (base64) {
-        imgEl.src = base64;
-    } else {
-        const s = seed || userSettings.avatarSeed;
-        imgEl.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${s}`;
-    }
-}
-
-function saveUserSettings() {
-    if (!currentUser) return;
-    const newName = document.getElementById('edit-name').value.trim();
-    const newSettings = {
-        name: newName || userSettings.name,
-        pieceStyle: document.getElementById('selected-piece-style').value,
-        boardStyle: document.getElementById('selected-board-style').value
-    };
-
-    if (currentUser.isAnonymous) {
-        newSettings.avatarSeed = document.getElementById('avatar-seed').value;
-    } else if (userSettings.tempAvatarImage) {
-        newSettings.avatarImage = userSettings.tempAvatarImage;
-    }
-
-    update(ref(db, 'users/' + currentUser.uid), newSettings).then(() => {
-        alert("設定已保存！");
-        userSettings = { ...userSettings, ...newSettings };
-        delete userSettings.tempAvatarImage;
-        loadUserProfile();
-        document.getElementById('custom-panel').classList.remove('active');
-    });
-}
-
-function checkAndCreateUserProfile(user) {
-    const userRef = ref(db, 'users/' + user.uid);
-    get(userRef).then((snapshot) => {
-        if (!snapshot.exists()) {
-            const nickEl = document.getElementById('nickname');
-            const inputName = nickEl ? nickEl.value.trim() : "";
-            const name = inputName || (user.isAnonymous ? `訪客_${user.uid.substring(0,4)}` : user.email.split('@')[0]);
-            
-            set(userRef, {
-                name: name, email: user.email || "guest", elo: 0, wins: 0, losses: 0
-            }).then(loadUserProfile);
-        } else {
-            loadUserProfile();
-        }
-    });
-}
-
-function loadUserProfile() {
-    if (!currentUser) return;
-    onValue(ref(db, 'users/' + currentUser.uid), (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            userSettings = { ...userSettings, ...data };
-            document.getElementById('user-name').innerText = data.name;
-            document.getElementById('edit-name').value = data.name;
-            document.getElementById('user-elo').innerText = data.elo;
-            const seed = data.avatarSeed || data.name;
-            const avatarUrl = data.avatarImage ? data.avatarImage : `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-            document.getElementById('hud-avatar').src = avatarUrl;
-            document.getElementById('my-avatar').src = avatarUrl;
-            if(!data.avatarImage) document.getElementById('avatar-seed').value = seed;
-            updateRankBadge(data.elo);
-            if(data.pieceStyle) document.getElementById('selected-piece-style').value = data.pieceStyle;
-            if(data.boardStyle) document.getElementById('selected-board-style').value = data.boardStyle;
-            Visuals.updateTheme(userSettings);
-        }
-    });
-}
-
-function updateRankBadge(elo) {
-    const badge = document.getElementById('user-rank');
-    badge.className = 'rank-badge';
-    if (elo < 200) { badge.innerText = "新手 NOVICE"; badge.classList.add('rank-bronze'); }
-    else if (elo < 500) { badge.innerText = "銅牌 BRONZE"; badge.classList.add('rank-bronze'); }
-    else if (elo < 1000) { badge.innerText = "銀牌 SILVER"; badge.classList.add('rank-silver'); }
-    else if (elo < 1500) { badge.innerText = "金牌 GOLD"; badge.classList.add('rank-gold'); }
-    else if (elo < 2000) { badge.innerText = "鑽石 DIAMOND"; badge.classList.add('rank-diamond'); }
-    else { badge.innerText = "霓虹宗師"; badge.classList.add('rank-master'); }
-}
-
-function resetAuthForm() {
-    isRegistering = false;
-    document.getElementById('nickname-container').style.display = 'none';
-    document.getElementById('auth-action-btn').innerText = "進入世界";
-    document.getElementById('auth-error').innerText = "";
-    
-    // 重置按鈕狀態
-    const guestBtn = document.getElementById('guest-btn');
-    if(guestBtn) {
-        guestBtn.innerText = "訪客登入";
-        guestBtn.disabled = false;
-    }
-}
-
-async function handleLogin() {
-    const emailEl = document.getElementById('email');
-    const passEl = document.getElementById('password');
-    const errorMsg = document.getElementById('auth-error');
-    if(!emailEl || !passEl) return;
-    const email = emailEl.value.trim();
-    const password = passEl.value.trim();
-    if(!email || !password) { errorMsg.innerText = "請輸入帳號密碼"; return; }
-    if(!email.includes('@')) { errorMsg.innerText = "Email 格式不正確"; return; }
-
-    if (isRegistering) {
-        const nickname = document.getElementById('nickname').value.trim();
-        if(!nickname) { errorMsg.innerText = "請輸入您的暱稱"; return; }
-        errorMsg.innerText = "註冊中...";
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-        } catch (error) { handleAuthError(error); }
-        return;
-    }
-
-    errorMsg.innerText = "驗證身分中...";
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
-            isRegistering = true;
-            document.getElementById('nickname-container').style.display = 'block'; 
-            document.getElementById('auth-action-btn').innerText = "確認註冊"; 
-            errorMsg.innerText = "歡迎新指揮官，請設定暱稱。";
-            errorMsg.style.color = "#00ff00"; 
-        } else {
-            handleAuthError(error);
-        }
-    }
-}
-
-function handleAuthError(error) {
-    const errorMsg = document.getElementById('auth-error');
-    errorMsg.style.color = "#ff0055";
-    let msg = error.message;
-    if(msg.includes("weak-password")) msg = "密碼太弱";
-    if(msg.includes("email-already-in-use")) msg = "此信箱已被註冊";
-    errorMsg.innerText = msg;
-    console.error("Auth Error:", error);
-}
-
-async function handleForgotPassword() {
-    const email = document.getElementById('email').value.trim();
-    const errorMsg = document.getElementById('auth-error');
-    if(!email || !email.includes('@')) {
-        errorMsg.innerText = "請先輸入 Email";
-        return;
-    }
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert(`密碼重設信已發送至 ${email}`);
-    } catch (error) {
-        errorMsg.innerText = "發送失敗：" + error.message;
-    }
-}
-
-function handleGameOver(winnerColor) {
-    isProcessing = true; 
-    let msg = winnerColor === playerColor ? "勝利！" : "戰敗...";
-    alert(msg);
-    const t = document.getElementById('turn-txt');
-    t.innerText = winnerColor === 'w' ? "白方勝利" : "黑方勝利";
-    t.style.color = "#ffff00";
-}
-
-function calculateELO(winnerColor) {
-    get(ref(db, 'games/' + gameId)).then(snap => {
-        const data = snap.val();
-        if(data.calculated) return; 
-        if(playerColor === 'w') {
-            const K = 32; 
-            const expectW = 1 / (1 + Math.pow(10, (data.black.elo - data.white.elo) / 400));
-            const expectB = 1 / (1 + Math.pow(10, (data.white.elo - data.black.elo) / 400));
-            const newWElo = Math.round(data.white.elo + K * ((winnerColor === 'w' ? 1 : 0) - expectW));
-            const newBElo = Math.round(data.black.elo + K * ((winnerColor === 'b' ? 1 : 0) - expectB));
-            update(ref(db, 'users/' + data.white.uid), { elo: newWElo });
-            update(ref(db, 'users/' + data.black.uid), { elo: newBElo });
-            update(ref(db, 'games/' + gameId), { calculated: true });
         }
     });
 }
 
 function sendMove(move) {
-    if (!isOnline) return;
-    const nextFen = game.fen();
-    let updateData = { fen: nextFen, turn: game.turn(), lastMove: move };
-    if (game.in_checkmate()) {
-        const winnerColor = game.turn() === 'w' ? 'b' : 'w'; 
-        updateData.winner = winnerColor;
-        updateData.status = 'finished';
-        calculateELO(winnerColor);
+    if(isOnline) {
+        update(ref(db, 'games/'+gameId), { fen: game.fen(), turn: game.turn() });
     }
-    update(ref(db, 'games/' + gameId), updateData);
-    isProcessing = false;
 }
 
-function makeRandomAI(){
-    const ms = game.moves();
-    if(ms.length === 0) return;
-    const m = ms[Math.floor(Math.random() * ms.length)];
-    game.move(m);
-    Visuals.animateMove(game.history({verbose:true}).pop(), () => {
-        Visuals.syncBoardVisuals(game);
-        updateStatusHUD();
-        isProcessing = false;
-    });
+function leaveRoom() {
+    gameId = null; isOnline = false;
+    game.reset(); Visuals.syncBoardVisuals(game);
+    Visuals.moveCamera({x:0, y:60, z:100});
+    toggleLobby(false);
 }
+
+function toggleLobby(inGame) {
+    document.getElementById('lobby-buttons').style.display = inGame ? 'none' : 'block';
+    document.getElementById('btn-leave').style.display = inGame ? 'block' : 'none';
+}
+
+// 模式切換與點擊
+export function switchGameMode(mode) {
+    currentGameMode = mode;
+    Visuals.setGameMode(mode);
+    if(mode === '4p') {
+        game4p = new Chess4P();
+        Visuals.syncBoardVisuals(game4p, true);
+    } else {
+        game.reset();
+        Visuals.syncBoardVisuals(game);
+    }
+}
+
+function handleSquareClick(sq) {
+    if(currentGameMode === '4p') {
+        if(!selectedSquare) selectedSquare = sq;
+        else {
+            const res = game4p.move(selectedSquare, sq);
+            if(res) Visuals.animateMove({from: res.from, to: res.to, color: res.color}, () => Visuals.syncBoardVisuals(game4p, true));
+            selectedSquare = null;
+        }
+        return;
+    }
+    // 2P
+    if(isOnline && game.turn() !== playerColor) return;
+    if(!selectedSquare) {
+        const p = game.get(sq);
+        if(p && p.color === game.turn()) {
+            selectedSquare = sq;
+            Visuals.highlightSquare(sq, game.moves({square:sq, verbose:true}));
+        }
+    } else {
+        const move = game.move({from: selectedSquare, to: sq, promotion: 'q'});
+        if(move) {
+            Visuals.animateMove(move, () => {
+                Visuals.syncBoardVisuals(game);
+                sendMove(move);
+                if(!isOnline && game.turn() === 'b') setTimeout(makeRandomAI, 500);
+            });
+        }
+        selectedSquare = null;
+        Visuals.clearHighlights();
+    }
+}
+
+function makeRandomAI() {
+    const ms = game.moves();
+    if(ms.length) {
+        game.move(ms[Math.floor(Math.random()*ms.length)]);
+        Visuals.animateMove(game.history({verbose:true}).pop(), () => Visuals.syncBoardVisuals(game));
+    }
+}
+
+// 觸發上傳
+export function triggerAvatarUpload() { document.getElementById('avatar-upload').click(); }
