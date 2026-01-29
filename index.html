@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>霓虹西洋棋：DTZ 最終版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -20,7 +21,7 @@
 </head>
 <body>
 
-<div id="loading">系統初始化中...</div>
+<div id="loading">系統載入中...</div>
 
 <div id="auth-modal">
     <div class="auth-box">
@@ -42,8 +43,7 @@
 </div>
 
 <div id="ui" style="display:none;">
-    
-    <div id="mobile-menu-btn">☰ 選單</div>
+    <div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
 
     <div id="menu-panel" class="hud-container">
         <div class="hud-box profile-box">
@@ -63,8 +63,8 @@
         <div class="hud-box action-box">
             <div class="lobby-title">遊戲模式</div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="mode-2p" class="mode-btn active">1v1 經典</button>
-                <button id="mode-4p" class="mode-btn">4人 混戰</button>
+                <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1 經典</button>
+                <button id="mode-4p" class="mode-btn" onclick="switchMode('4p')">4人 混戰</button>
             </div>
 
             <div class="lobby-title">對戰大廳</div>
@@ -90,12 +90,12 @@
     <div id="footer-watermark">Made by DTZ</div>
 </div>
 
-<div id="menu-backdrop"></div>
+<div id="menu-backdrop" onclick="closeAllMenus()"></div>
 <div id="custom-panel" class="side-panel">
     <h2>個人化設定</h2>
     <div class="custom-section">
         <h3>👤 指揮官識別證</h3>
-        <div class="avatar-preview-container" id="avatar-container">
+        <div class="avatar-preview-container" onclick="triggerAvatarUpload()">
             <img id="my-avatar" src="" alt="Avatar" class="avatar-img">
             <div id="my-frame" class="avatar-frame"></div>
             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
@@ -114,8 +114,8 @@
     <div class="custom-section">
         <h3>♟️ 棋子模型</h3>
         <div class="skin-grid" id="piece-skin-grid">
-            <div class="skin-item selected" data-val="neon"><div class="skin-icon">💠</div><div class="skin-name">電馭霓虹</div></div>
-            <div class="skin-item" data-val="classic"><div class="skin-icon">♟️</div><div class="skin-name">經典實體</div></div>
+            <div class="skin-item selected" onclick="previewSkin('piece', 'neon', this)"><div class="skin-icon">💠</div><div class="skin-name">電馭霓虹</div></div>
+            <div class="skin-item" onclick="previewSkin('piece', 'classic', this)"><div class="skin-icon">♟️</div><div class="skin-name">經典實體</div></div>
             <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
         </div>
         <input type="hidden" id="selected-piece-style" value="neon">
@@ -124,22 +124,54 @@
     <div class="custom-section">
         <h3>🔲 戰場材質</h3>
         <div class="skin-grid" id="board-skin-grid">
-            <div class="skin-item selected" data-val="neon"><div class="skin-icon">🌌</div><div class="skin-name">全息投影</div></div>
+            <div class="skin-item selected" onclick="previewSkin('board', 'neon', this)"><div class="skin-icon">🌌</div><div class="skin-name">全息投影</div></div>
             <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
         </div>
         <input type="hidden" id="selected-board-style" value="neon">
     </div>
     
     <button id="btn-save-custom" class="game-btn save-btn">保存並套用</button>
-    <button id="btn-close-custom" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
+    <button onclick="closeAllMenus()" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
 </div>
 
 <script type="module">
-    import { initGame } from './game_logic.js';
+    import { initGame, triggerAvatarUpload, previewStyle, switchGameMode } from './game_logic.js';
+    window.triggerAvatarUpload = triggerAvatarUpload; 
+    
+    window.switchMode = function(mode) {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`mode-${mode}`).classList.add('active');
+        switchGameMode(mode);
+    }
+
+    window.previewSkin = function(type, value, element) {
+        if(element.classList.contains('locked')) return;
+        const grid = document.getElementById(`${type}-skin-grid`);
+        const items = grid.getElementsByClassName('skin-item');
+        for(let item of items) item.classList.remove('selected');
+        element.classList.add('selected');
+        document.getElementById(`selected-${type}-style`).value = value;
+        previewStyle(type, value);
+    }
+
+    // 確保資源載入後執行
     window.onload = () => { 
-        console.log("System Start.");
         initGame(); 
     };
+
+    window.toggleMenu = function() {
+        const panel = document.getElementById('menu-panel');
+        panel.classList.toggle('mobile-visible');
+        const backdrop = document.getElementById('menu-backdrop');
+        if(panel.classList.contains('mobile-visible')) backdrop.classList.add('active');
+        else backdrop.classList.remove('active');
+    }
+
+    window.closeAllMenus = function() {
+        document.getElementById('custom-panel').classList.remove('active');
+        document.getElementById('menu-panel').classList.remove('mobile-visible');
+        if(window.innerWidth <= 600) document.getElementById('menu-backdrop').classList.remove('active');
+    }
 </script>
 </body>
 </html>
