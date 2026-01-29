@@ -4,7 +4,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 import * as Visuals from './visuals.js';
 import { Chess4P } from './chess_4p_rules.js';
 
-// 請確認這組 Config 是你自己的，如果是用我的測試用 Config，可能會因為多人使用而受限
+// 請務必確認這裡換成你自己的 Firebase Config，否則會無法登入！
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -30,71 +30,63 @@ let userSettings = { avatarSeed: "Bot", avatarImage: null, name: "Commander", pi
 let lastCursorUpdate = 0;
 let lastCameraUpdate = 0;
 
+// ✨ 關鍵修正：手動登入標記 ✨
+let isManualLogin = false;
+
 export function initGame() {
-    console.log("Game Logic Initializing...");
-    
-    // 1. 初始化遊戲引擎
+    console.log("Initializing Game Logic...");
     if (window.Chess) { game = new window.Chess(); } 
     game4p = new Chess4P();
 
-    // 2. 初始化 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
-        console.log("Firebase initialized successfully.");
     } catch(e) { 
         console.error("Firebase Init Error:", e);
-        alert("Firebase 初始化失敗，請檢查 Console");
+        alert("資料庫連線失敗，請檢查網路。");
     }
 
-    // 3. 綁定按鈕 (不管 3D 有沒有載入，先綁定按鈕)
+    // 優先綁定 UI (修復按鈕失效)
     setupUIListeners();
 
-    // 4. 初始化 3D
     Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
     Visuals.setLoginMode(true);
 
-    // 5. 監聽登入狀態
     onAuthStateChanged(auth, (user) => {
         const loadingEl = document.getElementById('loading');
         if(loadingEl) loadingEl.style.display = 'none';
         
         if (user) {
-            console.log("登入成功，使用者 ID:", user.uid);
+            // ✨ 邏輯修正：如果是訪客，且不是手動登入 (即重新整理)，則登出 ✨
+            if (user.isAnonymous && !isManualLogin) {
+                console.log("偵測到自動登入的訪客，強制登出...");
+                signOut(auth);
+                return;
+            }
+
             currentUser = user;
-            
-            // 切換介面
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
-            
-            // 停止旋轉，載入資料
             Visuals.setLoginMode(false);
             checkAndCreateUserProfile(user);
         } else {
-            console.log("未登入 / 已登出");
             currentUser = null;
-            
-            // 顯示登入框
             document.getElementById('auth-modal').style.display = 'flex';
             document.getElementById('ui').style.display = 'none';
-            
-            // 開始旋轉
             Visuals.setLoginMode(true);
             resetAuthForm();
+            isManualLogin = false; // 重置標記
         }
     });
 
-    setTimeout(() => { 
-        if(game) Visuals.syncBoardVisuals(game); 
-    }, 500);
+    setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 100);
 }
 
 function setupUIListeners() {
     const bind = (id, fn) => {
         const el = document.getElementById(id);
         if(el) el.onclick = fn;
-        else console.warn("按鈕未找到:", id);
     };
 
     bind('btn-create', createRoom);
@@ -102,30 +94,23 @@ function setupUIListeners() {
     bind('btn-leave', leaveRoom);
     bind('auth-action-btn', handleLogin);
     
-    // --- 訪客登入按鈕 ---
+    // ✨ 訪客按鈕修復 ✨
     const guestBtn = document.getElementById('guest-btn');
     if(guestBtn) {
         guestBtn.onclick = () => {
-            console.log("點擊訪客登入...");
-            guestBtn.innerText = "連線中...";
+            console.log("訪客按鈕被點擊");
+            guestBtn.innerText = "🚀 進入中...";
+            guestBtn.disabled = true; // 防止重複點擊
             
-            signInAnonymously(auth)
-                .then(() => {
-                    console.log("訪客登入 API 呼叫成功");
-                })
-                .catch((error) => {
-                    console.error("訪客登入失敗:", error);
-                    guestBtn.innerText = "訪客登入"; // 重置文字
-                    
-                    // 錯誤處理彈窗
-                    let msg = "登入失敗: " + error.code;
-                    if(error.code === 'auth/operation-not-allowed') {
-                        msg = "錯誤：請到 Firebase Console 開啟「匿名登入 (Anonymous)」功能！";
-                    } else if (error.code === 'auth/network-request-failed') {
-                        msg = "網路錯誤：請檢查您的網路連線，或防火牆設定。";
-                    }
-                    alert(msg);
-                });
+            isManualLogin = true; // 標記為手動登入
+            
+            signInAnonymously(auth).catch((error) => {
+                console.error("Guest login failed:", error);
+                alert("訪客登入失敗：" + error.message);
+                guestBtn.innerText = "訪客登入";
+                guestBtn.disabled = false;
+                isManualLogin = false;
+            });
         };
     }
 
@@ -134,9 +119,11 @@ function setupUIListeners() {
     
     bind('btn-custom', () => {
         document.getElementById('custom-panel').classList.add('active');
-        const guestControls = document.getElementById('guest-avatar-controls');
-        if(currentUser && currentUser.isAnonymous) guestControls.style.display = 'block';
-        else guestControls.style.display = 'none';
+        if(currentUser && currentUser.isAnonymous) {
+            document.getElementById('guest-avatar-controls').style.display = 'block';
+        } else {
+            document.getElementById('guest-avatar-controls').style.display = 'none';
+        }
     });
 
     bind('btn-close-custom', window.closeAllMenus);
@@ -165,60 +152,7 @@ function setupUIListeners() {
     }
 }
 
-// 一般登入邏輯
-async function handleLogin() {
-    const emailEl = document.getElementById('email');
-    const passEl = document.getElementById('password');
-    const errorMsg = document.getElementById('auth-error');
-    
-    if(!emailEl || !passEl) return;
-    const email = emailEl.value.trim();
-    const password = passEl.value.trim();
-    
-    if(!email || !password) { 
-        errorMsg.innerText = "請輸入帳號密碼"; return; 
-    }
-
-    if (isRegistering) {
-        const nickname = document.getElementById('nickname').value.trim();
-        if(!nickname) { errorMsg.innerText = "請輸入您的暱稱"; return; }
-        errorMsg.innerText = "註冊中...";
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            // 註冊成功會自動觸發 onAuthStateChanged
-        } catch (error) { handleAuthError(error); }
-        return;
-    }
-
-    errorMsg.innerText = "登入中...";
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-            // 切換為註冊模式
-            isRegistering = true;
-            document.getElementById('nickname-container').style.display = 'block'; 
-            document.getElementById('auth-action-btn').innerText = "確認註冊"; 
-            errorMsg.innerText = "初次見面？請輸入暱稱來註冊。";
-            errorMsg.style.color = "#00ff00"; 
-        } else {
-            handleAuthError(error);
-        }
-    }
-}
-
-function handleAuthError(error) {
-    const errorMsg = document.getElementById('auth-error');
-    errorMsg.style.color = "#ff0055";
-    let msg = error.message;
-    if(error.code === 'auth/operation-not-allowed') msg = "請到 Firebase 開啟 Email 登入功能！";
-    if(error.code === 'auth/email-already-in-use') msg = "此信箱已被註冊";
-    if(error.code === 'auth/weak-password') msg = "密碼太弱 (至少6位)";
-    errorMsg.innerText = msg;
-    console.error("Auth Error:", error);
-}
-
-// ... (以下為標準遊戲邏輯，保持不變) ...
+// ... (其餘邏輯保持不變，包含 createRoom, joinRoom 等) ...
 
 export function switchGameMode(mode) {
     currentGameMode = mode;
@@ -626,6 +560,52 @@ function resetAuthForm() {
     }
 }
 
+async function handleLogin() {
+    const emailEl = document.getElementById('email');
+    const passEl = document.getElementById('password');
+    const errorMsg = document.getElementById('auth-error');
+    if(!emailEl || !passEl) return;
+    const email = emailEl.value.trim();
+    const password = passEl.value.trim();
+    if(!email || !password) { errorMsg.innerText = "請輸入帳號密碼"; return; }
+    if(!email.includes('@')) { errorMsg.innerText = "Email 格式不正確"; return; }
+
+    if (isRegistering) {
+        const nickname = document.getElementById('nickname').value.trim();
+        if(!nickname) { errorMsg.innerText = "請輸入您的暱稱"; return; }
+        errorMsg.innerText = "註冊中...";
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+        } catch (error) { handleAuthError(error); }
+        return;
+    }
+
+    errorMsg.innerText = "驗證身分中...";
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
+            isRegistering = true;
+            document.getElementById('nickname-container').style.display = 'block'; 
+            document.getElementById('auth-action-btn').innerText = "確認註冊"; 
+            errorMsg.innerText = "歡迎新指揮官，請設定暱稱。";
+            errorMsg.style.color = "#00ff00"; 
+        } else {
+            handleAuthError(error);
+        }
+    }
+}
+
+function handleAuthError(error) {
+    const errorMsg = document.getElementById('auth-error');
+    errorMsg.style.color = "#ff0055";
+    let msg = error.message;
+    if(msg.includes("weak-password")) msg = "密碼太弱";
+    if(msg.includes("email-already-in-use")) msg = "此信箱已被註冊";
+    errorMsg.innerText = msg;
+    console.error("Auth Error:", error);
+}
+
 async function handleForgotPassword() {
     const email = document.getElementById('email').value.trim();
     const errorMsg = document.getElementById('auth-error');
@@ -639,4 +619,56 @@ async function handleForgotPassword() {
     } catch (error) {
         errorMsg.innerText = "發送失敗：" + error.message;
     }
+}
+
+function handleGameOver(winnerColor) {
+    isProcessing = true; 
+    let msg = winnerColor === playerColor ? "勝利！" : "戰敗...";
+    alert(msg);
+    const t = document.getElementById('turn-txt');
+    t.innerText = winnerColor === 'w' ? "白方勝利" : "黑方勝利";
+    t.style.color = "#ffff00";
+}
+
+function calculateELO(winnerColor) {
+    get(ref(db, 'games/' + gameId)).then(snap => {
+        const data = snap.val();
+        if(data.calculated) return; 
+        if(playerColor === 'w') {
+            const K = 32; 
+            const expectW = 1 / (1 + Math.pow(10, (data.black.elo - data.white.elo) / 400));
+            const expectB = 1 / (1 + Math.pow(10, (data.white.elo - data.black.elo) / 400));
+            const newWElo = Math.round(data.white.elo + K * ((winnerColor === 'w' ? 1 : 0) - expectW));
+            const newBElo = Math.round(data.black.elo + K * ((winnerColor === 'b' ? 1 : 0) - expectB));
+            update(ref(db, 'users/' + data.white.uid), { elo: newWElo });
+            update(ref(db, 'users/' + data.black.uid), { elo: newBElo });
+            update(ref(db, 'games/' + gameId), { calculated: true });
+        }
+    });
+}
+
+function sendMove(move) {
+    if (!isOnline) return;
+    const nextFen = game.fen();
+    let updateData = { fen: nextFen, turn: game.turn(), lastMove: move };
+    if (game.in_checkmate()) {
+        const winnerColor = game.turn() === 'w' ? 'b' : 'w'; 
+        updateData.winner = winnerColor;
+        updateData.status = 'finished';
+        calculateELO(winnerColor);
+    }
+    update(ref(db, 'games/' + gameId), updateData);
+    isProcessing = false;
+}
+
+function makeRandomAI(){
+    const ms = game.moves();
+    if(ms.length === 0) return;
+    const m = ms[Math.floor(Math.random() * ms.length)];
+    game.move(m);
+    Visuals.animateMove(game.history({verbose:true}).pop(), () => {
+        Visuals.syncBoardVisuals(game);
+        updateStatusHUD();
+        isProcessing = false;
+    });
 }
