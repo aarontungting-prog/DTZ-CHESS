@@ -93,6 +93,7 @@ export function initGame() {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
+        updateStatus('status-firebase', "✅ Firebase 連線成功", "ok");
         
         onAuthStateChanged(auth, (user) => {
             document.getElementById('loading').style.display = 'none';
