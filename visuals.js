@@ -23,28 +23,22 @@ const MAT = {
 };
 
 const GEO = {
-    cyl: new THREE.CylinderGeometry(0.35, 0.35, 1, 32),
-    box: new THREE.BoxGeometry(0.8, 0.8, 0.8),
+    cyl: new THREE.CylinderGeometry(0.35, 0.35, 1, 16),
     tile: new THREE.BoxGeometry(1, 0.2, 1),
     sphere: new THREE.SphereGeometry(0.3)
 };
 
-// Update status UI helper
-function updateStatus(id, msg, type) {
-    const el = document.getElementById(id);
-    if(el) {
-        el.innerText = msg;
-        el.className = `status-item ${type}`;
-    }
+export function isInitialized() {
+    return !!scene;
 }
 
 export function init3D(container, onClick, onCam) {
-    if(scene) return; // Prevent double initialization
-    
+    if(scene) return; // 防止重複初始化
+
     try {
-        console.log("3D Engine: Initializing...");
+        console.log("3D Starting...");
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a2e); 
+        scene.background = new THREE.Color(0x1a1a2e);
 
         camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
         camera.position.set(0, 15, 12);
@@ -80,15 +74,10 @@ export function init3D(container, onClick, onCam) {
             if(intersects.length > 0 && onClick) onClick(intersects[0].object.userData.sq);
         });
         
-        // Create initial board only after scene is ready
         createBoard2P();
         animate();
-        
-        updateStatus('status-3d', "✅ 3D 運作正常", "ok");
-
     } catch(e) {
-        console.error("3D Init Failed:", e);
-        updateStatus('status-3d', "❌ 3D 啟動失敗", "error");
+        console.error("3D Init Failed", e);
     }
 }
 
@@ -99,37 +88,21 @@ function animate() {
     if(renderer && scene && camera) renderer.render(scene, camera);
 }
 
+// ✨✨ 這裡加了防禦，保證 scene 存在才執行 ✨✨
 export function setGameMode(mode) {
-    if(!scene) return; // ⚠️ Safety Check
-
+    if(!scene) return;
     is4P = (mode === '4p');
-    
-    // Clear scene objects safely
     for(let k in tilesMap) scene.remove(tilesMap[k]);
     for(let k in piecesMap) scene.remove(piecesMap[k]);
     tilesMap = {}; piecesMap = {};
-    
-    // Remove board base
-    const toRemove = [];
-    scene.traverse(child => {
-        if(child.userData && child.userData.isBoardBase) toRemove.push(child);
-    });
-    toRemove.forEach(obj => scene.remove(obj));
-
     if(is4P) { createBoard4P(); camera.position.set(0, 25, 20); }
     else { createBoard2P(); camera.position.set(0, 15, 12); }
 }
 
 function createBoard2P() {
-    if(!scene) return; // ⚠️ Safety Check
+    if(!scene) return;
     const matW = currentSettings.boardStyle === 'neon' ? MAT.tileNeonW : MAT.tileW;
     const matB = currentSettings.boardStyle === 'neon' ? MAT.tileNeonB : MAT.tileB;
-    
-    const base = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 9), MAT.boardBase || MAT.black);
-    base.position.y = -0.25;
-    base.userData.isBoardBase = true;
-    scene.add(base);
-
     for(let r=0; r<8; r++) {
         for(let c=0; c<8; c++) {
             const sq = String.fromCharCode(97+c)+(8-r);
@@ -143,16 +116,10 @@ function createBoard2P() {
 }
 
 function createBoard4P() {
-    if(!scene) return; // ⚠️ Safety Check
+    if(!scene) return;
     const size = 14, offset = size/2 - 0.5;
     const matW = currentSettings.boardStyle === 'neon' ? MAT.tileNeonW : MAT.tileW;
     const matB = currentSettings.boardStyle === 'neon' ? MAT.tileNeonB : MAT.tileB;
-
-    const base = new THREE.Mesh(new THREE.BoxGeometry(15, 0.5, 15), MAT.boardBase || MAT.black);
-    base.position.y = -0.25;
-    base.userData.isBoardBase = true;
-    scene.add(base);
-
     for(let r=0; r<size; r++) {
         for(let c=0; c<size; c++) {
             if((r<3||r>10) && (c<3||c>10)) continue;
@@ -165,15 +132,12 @@ function createBoard4P() {
     }
 }
 
-export function syncBoardVisuals(gameInstance, is4pMode) {
-    if(!scene) return; // ⚠️ Safety Check
-    
+export function syncBoardVisuals(gameInstance, is4P=false) {
+    if(!scene) return; // ⚠️ 防禦
     for(let k in piecesMap) scene.remove(piecesMap[k]);
     piecesMap = {};
 
     if(is4P) {
-        if(!gameInstance || !gameInstance.getBoard) return;
-        
         const b = gameInstance.getBoard();
         const size=14, offset=size/2-0.5;
         for(let r=0; r<size; r++) {
@@ -188,8 +152,6 @@ export function syncBoardVisuals(gameInstance, is4pMode) {
             }
         }
     } else {
-        if(!gameInstance || !gameInstance.board) return;
-
         const b = gameInstance.board();
         for(let r=0; r<8; r++) {
             for(let c=0; c<8; c++) {
@@ -222,17 +184,11 @@ function createPiece(type, color) {
     if(type === 'p') {
         const head = new THREE.Mesh(GEO.sphere, mat);
         head.position.y = 0.6; g.add(head);
-    } else if (type === 'k' || type === 'q') {
-        const head = new THREE.Mesh(GEO.box, mat);
-        head.scale.set(0.5,0.5,0.5);
-        head.position.y = 0.8; g.add(head);
     }
     return g;
 }
 
 export function animateMove(move, cb) {
-    if(!scene) { if(cb) cb(); return; } // ⚠️ Safety Check
-
     let p, tPos;
     if(move.from.r !== undefined) { 
         p = piecesMap[`${move.from.r},${move.from.c}`];
@@ -241,7 +197,6 @@ export function animateMove(move, cb) {
         p = piecesMap[move.from];
         tPos = tilesMap[move.to]?.position;
     }
-    
     if(p && tPos) {
         if(window.TWEEN) new TWEEN.Tween(p.position).to({x:tPos.x, z:tPos.z}, 200).onComplete(cb).start();
         else { p.position.set(tPos.x, 0.6, tPos.z); cb(); }
@@ -250,17 +205,6 @@ export function animateMove(move, cb) {
 
 export function highlightSquare(sq) {
     if(!scene) return;
-    const matW = currentSettings.boardStyle === 'neon' ? MAT.tileNeonW : MAT.tileW;
-    const matB = currentSettings.boardStyle === 'neon' ? MAT.tileNeonB : MAT.tileB;
-    
-    for(let k in tilesMap) {
-        if(k.length === 2) {
-             tilesMap[k].material = (k.charCodeAt(0)+k.charCodeAt(1))%2 ? matW : matB;
-        } else {
-             tilesMap[k].material = matB;
-        }
-    }
-
     if(tilesMap[sq]) tilesMap[sq].material = MAT.high;
 }
 
@@ -269,8 +213,9 @@ export function clearHighlights() {
     const matW = currentSettings.boardStyle === 'neon' ? MAT.tileNeonW : MAT.tileW;
     const matB = currentSettings.boardStyle === 'neon' ? MAT.tileNeonB : MAT.tileB;
     for(let k in tilesMap) {
-        if(k.length === 2) tilesMap[k].material = (k.charCodeAt(0)+k.charCodeAt(1))%2 ? matW : matB;
-        else tilesMap[k].material = matB;
+        // 簡單重置
+        if(k.indexOf(',')>-1) tilesMap[k].material = matB; // 4p 簡化
+        else tilesMap[k].material = (k.charCodeAt(0)+k.charCodeAt(1))%2 ? matW : matB;
     }
 }
 
@@ -294,8 +239,8 @@ export function updateOpponentGhost(pos) {
     opponentCursorMesh.position.copy(pos);
 }
 
-export function moveCamera(pos) { 
+export function moveCamera(pos) {
     if(!camera) return;
-    if(window.TWEEN) new TWEEN.Tween(camera.position).to(pos, 1000).start(); 
-    else camera.position.set(pos.x, pos.y, pos.z); 
+    if(window.TWEEN) new TWEEN.Tween(camera.position).to(pos, 1000).start();
+    else camera.position.copy(pos);
 }
