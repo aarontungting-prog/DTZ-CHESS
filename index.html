@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>霓虹西洋棋：絕對啟動版</title>
+    <title>霓虹西洋棋：防禦版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     
@@ -12,27 +12,15 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://esm.sh/three@0.160.0",
-            "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/"
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
     }
-    </script>
-    
-    <script>
-        window.onerror = function(msg, url, line) {
-            const box = document.getElementById('error-box');
-            if(box) {
-                box.style.display = 'block';
-                box.innerHTML += `❌ ${msg} <br><small>${line}</small><hr>`;
-            }
-            document.getElementById('loading').style.display = 'none';
-        }
     </script>
 </head>
 <body>
 
-<div id="loading">正在建構幾何世界...<br><small>若卡住請檢查網路</small></div>
-<div id="error-box" style="display:none; position:fixed; top:0; left:0; width:100%; height:auto; background:rgba(20,0,0,0.9); color:#ff5555; z-index:9999; padding:20px; font-size:12px; border-bottom:2px solid red;"></div>
+<div id="loading">系統初始化中...</div>
 
 <div id="auth-modal">
     <div class="auth-box">
@@ -49,6 +37,7 @@
 
 <div id="ui" style="display:none;">
     <div id="mobile-menu-btn" onclick="toggleMenu()">☰</div>
+    
     <div id="menu-panel" class="hud-container">
         <div class="hud-box profile-box">
             <div class="user-card-header">
@@ -59,6 +48,7 @@
             </div>
             <button id="btn-custom" class="custom-btn">設定</button>
         </div>
+
         <div class="hud-box action-box">
             <div style="display:flex; gap:5px; margin-bottom:10px;">
                 <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1</button>
@@ -71,9 +61,11 @@
             <button id="btn-logout" class="logout-btn">登出</button>
         </div>
     </div>
+
     <div id="status-panel" class="hud">
         <h1>NEON CHESS</h1>
         <div id="turn-txt">等待對戰</div>
+        <div id="opponent-info" style="font-size: 12px; color: #aaa;">對手: ---</div>
     </div>
 </div>
 
@@ -100,7 +92,6 @@
 <script type="module">
     import { initGame, switchGameMode, triggerAvatarUpload, previewStyle } from './game_logic.js';
     
-    // 全局綁定，確保 HTML onclick 能抓到
     window.switchMode = (m) => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mode-'+m).classList.add('active');
@@ -115,7 +106,7 @@
     }
     window.triggerAvatarUpload = triggerAvatarUpload;
     
-    window.onload = () => initGame();
+    window.onload = () => { initGame(); };
 
     window.toggleMenu = () => {
         const p = document.getElementById('menu-panel');
