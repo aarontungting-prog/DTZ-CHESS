@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>霓虹西洋棋：最終修復版</title>
+    <title>霓虹西洋棋：極速版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     
@@ -17,22 +17,10 @@
         }
     }
     </script>
-
-    <script>
-        window.onerror = function(msg, url, line) {
-            const box = document.getElementById('error-box');
-            if(box) {
-                box.style.display = 'block';
-                box.innerHTML += `❌ ${msg} <br><small>${url}:${line}</small><hr>`;
-            }
-        }
-    </script>
 </head>
 <body>
 
-<div id="loading">系統載入中...<br><small>(若卡住超過 5 秒請截圖)</small></div>
-
-<div id="error-box" style="display:none; position:fixed; top:0; left:0; width:100%; height:auto; background:rgba(20,0,0,0.95); color:#ff5555; z-index:9999; padding:20px; font-size:12px; border-bottom:2px solid red;"></div>
+<div id="loading">系統連線中...</div>
 
 <div id="auth-modal">
     <div class="auth-box">
@@ -41,7 +29,6 @@
         <div id="email-login-form">
             <input type="email" id="email" class="auth-input" placeholder="電子信箱">
             <input type="password" id="password" class="auth-input" placeholder="密碼">
-            <div id="nickname-container"><input type="text" id="nickname" class="auth-input" placeholder="設定暱稱"></div>
             <button id="auth-action-btn" class="auth-btn">進入世界</button>
         </div>
         <button id="guest-btn" class="guest-btn">訪客登入</button>
@@ -49,89 +36,47 @@
 </div>
 
 <div id="ui" style="display:none;">
-    <div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
+    <div id="mobile-menu-btn" onclick="toggleMenu()">☰</div>
     <div id="menu-panel" class="hud-container">
-        <div class="hud-box profile-box">
-            <div class="user-card-header">
-                <img id="hud-avatar" src="" class="mini-avatar">
-                <div class="user-info"><span id="user-name" class="name-text">Player</span></div>
-            </div>
-            <button id="btn-custom" class="custom-btn">🛠️ 設定</button>
-        </div>
-        <div class="hud-box action-box">
+        <div class="hud-box">
+            <div style="color:#00e5ff; font-weight:bold; margin-bottom:10px;">指揮官面板</div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1</button>
-                <button id="mode-4p" class="mode-btn" onclick="switchMode('4p')">4人</button>
+                <button id="mode-2p" class="mode-btn active">1v1</button>
+                <button id="mode-4p" class="mode-btn">4人</button>
             </div>
-            <div id="room-display" class="room-status">狀態：閒置中</div>
+            <div id="room-display" style="color:#0f0; font-size:12px; margin-bottom:5px;">狀態：閒置</div>
             <button id="btn-create" class="game-btn">創建房間</button>
             <button id="btn-join" class="game-btn join-btn">加入房間</button>
-            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff;">退出</button>
-            <div class="separator"></div>
-            <button id="btn-logout" class="logout-btn">登出</button>
+            <button id="btn-leave" class="game-btn" style="display:none; background:#555;">退出</button>
+            <button id="btn-logout" class="logout-btn" style="margin-top:15px;">登出</button>
         </div>
     </div>
-    <div id="status-panel" class="hud">
-        <h1>NEON CHESS</h1>
-        <div id="turn-txt">等待對戰</div>
-        <div id="opponent-info" style="font-size: 12px; color: #aaa;">對手: ---</div>
+    <div id="status-panel" class="hud" style="top:20px; right:20px; text-align:right;">
+        <h1 style="margin:0; color:#00e5ff;">NEON CHESS</h1>
+        <div id="turn-txt" style="font-size:24px; font-weight:bold;">等待開始</div>
     </div>
-</div>
-
-<div id="menu-backdrop" onclick="closeAllMenus()"></div>
-<div id="custom-panel" class="side-panel">
-    <h2>設定</h2>
-    <div class="custom-section">
-        <input type="text" id="avatar-seed" class="custom-input" placeholder="輸入代碼">
-        <img id="my-avatar" src="" class="mini-avatar" style="width:60px; height:60px;">
-        <button id="btn-save-custom" class="game-btn">保存</button>
-    </div>
-    <div class="custom-section">
-        <h3>模型風格</h3>
-        <div class="skin-grid" id="piece-skin-grid">
-            <div class="skin-item selected" data-val="neon" onclick="previewSkin('piece','neon',this)"><div class="skin-icon">💠</div>霓虹</div>
-            <div class="skin-item" data-val="classic" onclick="previewSkin('piece','classic',this)"><div class="skin-icon">♟️</div>經典</div>
-        </div>
-        <input type="hidden" id="selected-piece-style" value="neon">
-        <input type="hidden" id="selected-board-style" value="neon">
-    </div>
-    <button onclick="closeAllMenus()" class="game-btn" style="background:#333;">關閉</button>
 </div>
 
 <script type="module">
-    import { initGame, switchGameMode, triggerAvatarUpload, previewStyle } from './game_logic.js';
+    import { initGame, switchGameMode } from './game_logic.js';
     
-    // 全域綁定
+    // 全局變數綁定 (防止按鈕找不到函式)
     window.switchMode = (m) => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mode-'+m).classList.add('active');
         switchGameMode(m);
-    }
-    window.previewSkin = (t, v, el) => {
-        const grid = document.getElementById(`${t}-skin-grid`);
-        if(!grid) return;
-        for(let item of grid.children) item.classList.remove('selected');
-        el.classList.add('selected');
-        document.getElementById(`selected-${t}-style`).value = v;
-        previewStyle(t, v);
-    }
-    window.triggerAvatarUpload = triggerAvatarUpload;
-    
+    };
+
     window.toggleMenu = () => {
         const p = document.getElementById('menu-panel');
-        p.classList.toggle('mobile-visible');
-        const b = document.getElementById('menu-backdrop');
-        if(p.classList.contains('mobile-visible')) b.classList.add('active');
-        else b.classList.remove('active');
-    }
-    window.closeAllMenus = () => {
-        document.getElementById('custom-panel').classList.remove('active');
-        document.getElementById('menu-panel').classList.remove('mobile-visible');
-        document.getElementById('menu-backdrop').classList.remove('active');
-    }
+        p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+    };
 
-    // 啟動遊戲
-    window.onload = () => initGame();
+    // 確保只執行一次
+    if (!window.gameInitialized) {
+        window.gameInitialized = true;
+        window.onload = initGame;
+    }
 </script>
 </body>
 </html>
