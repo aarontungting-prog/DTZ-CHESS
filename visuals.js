@@ -1,12 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Sky } from 'three/addons/objects/Sky.js';
 
 let scene, camera, renderer, controls, raycaster, mouse;
 let tilesMap = {}, piecesMap = {};
 let currentGameMode = '2p';
 
-// 簡單材質
+// 簡單材質 (保證不出錯)
 const MAT = {
     white: new THREE.MeshStandardMaterial({color: 0xeeeeff}),
     black: new THREE.MeshStandardMaterial({color: 0x333333}),
@@ -20,14 +19,13 @@ const MAT = {
 };
 
 const GEO = {
-    box: new THREE.BoxGeometry(0.8, 1, 0.8),
     cyl: new THREE.CylinderGeometry(0.4, 0.4, 1, 16),
     tile: new THREE.BoxGeometry(1, 0.2, 1)
 };
 
 export function init3D(container, onClick) {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x222222);
+    scene.background = new THREE.Color(0x222222); // 深灰背景，確保不是黑的
 
     camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
     camera.position.set(0, 20, 20);
@@ -39,7 +37,7 @@ export function init3D(container, onClick) {
     const light = new THREE.DirectionalLight(0xffffff, 1.5);
     light.position.set(10, 20, 10);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
+    scene.add(new THREE.AmbientLight(0x606060));
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 0);
@@ -53,7 +51,6 @@ export function init3D(container, onClick) {
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // 觸控事件
     window.addEventListener('touchstart', (e) => handleInput(e.touches[0], onClick), {passive:false});
     window.addEventListener('mousedown', (e) => handleInput(e, onClick));
 
@@ -67,7 +64,10 @@ function handleInput(e, cb) {
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(Object.values(tilesMap));
-    if(intersects.length > 0 && cb) cb(intersects[0].object.userData.sq);
+    if(intersects.length > 0 && cb) {
+        // 回傳座標給邏輯層
+        cb(intersects[0].object.userData.sq);
+    }
 }
 
 function animate() {
@@ -77,15 +77,18 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-export function setLoginMode(enabled) {
-    controls.autoRotate = enabled;
-}
+export function setLoginMode(enabled) { controls.autoRotate = enabled; }
 
 export function setGameMode(mode) {
     currentGameMode = mode;
     clearScene();
-    if(mode === '4p') createBoard4P();
-    else createBoard2P();
+    if(mode === '4p') {
+        createBoard4P();
+        camera.position.set(0, 30, 30);
+    } else {
+        createBoard2P();
+        camera.position.set(0, 20, 20);
+    }
 }
 
 function clearScene() {
@@ -100,7 +103,7 @@ function createBoard2P() {
             const sq = String.fromCharCode(97+c)+(8-r);
             const t = new THREE.Mesh(GEO.tile, (r+c)%2? MAT.tileW : MAT.tileB);
             t.position.set(c-3.5, 0, r-3.5);
-            t.userData = { sq: sq };
+            t.userData = { sq: sq }; // 綁定座標
             scene.add(t);
             tilesMap[sq] = t;
         }
@@ -112,15 +115,14 @@ function createBoard4P() {
     const offset = size/2 - 0.5;
     for(let r=0; r<size; r++) {
         for(let c=0; c<size; c++) {
-            if((r<3 || r>10) && (c<3 || c>10)) continue; // 挖空角落
+            if((r<3 || r>10) && (c<3 || c>10)) continue; 
             const t = new THREE.Mesh(GEO.tile, (r+c)%2? MAT.tileW : MAT.tileB);
             t.position.set(c-offset, 0, offset-r);
-            t.userData = { sq: {r,c} };
+            t.userData = { sq: {r,c} }; // 綁定座標物件
             scene.add(t);
             tilesMap[`${r},${c}`] = t;
         }
     }
-    camera.position.set(0, 30, 30);
 }
 
 export function syncBoardVisuals(gameInstance, is4P=false) {
@@ -159,18 +161,33 @@ export function syncBoardVisuals(gameInstance, is4P=false) {
 }
 
 export function animateMove(move, cb) {
-    // 簡單位移
-    const p = piecesMap[move.from];
-    const t = tilesMap[move.to];
-    if(p && t) {
-        p.position.x = t.position.x;
-        p.position.z = t.position.z;
+    let p, tPos;
+    // 判斷移動類型 (2P字串 vs 4P物件)
+    if(typeof move.from === 'string') { // 2P
+        p = piecesMap[move.from];
+        tPos = tilesMap[move.to].position;
+    } else { // 4P
+        p = piecesMap[`${move.from.r},${move.from.c}`];
+        tPos = tilesMap[`${move.to.r},${move.to.c}`].position;
     }
-    if(cb) cb();
+
+    if(p && tPos) {
+        if(window.TWEEN) {
+            new TWEEN.Tween(p.position).to({x:tPos.x, z:tPos.z}, 200)
+                .onComplete(cb).start();
+        } else {
+            p.position.set(tPos.x, 0.6, tPos.z);
+            cb();
+        }
+    } else if(cb) cb();
 }
 
-export function highlightSquare(sq) { /* 暫略 */ }
+// 佔位符函式，防止報錯
+export function highlightSquare(sq) {}
 export function clearHighlights() {}
 export function updateOpponentGhost() {}
-export function moveCamera(pos) { camera.position.set(pos.x, pos.y, pos.z); }
+export function moveCamera(pos) { 
+    if(window.TWEEN) new TWEEN.Tween(camera.position).to(pos, 1000).start();
+    else camera.position.set(pos.x, pos.y, pos.z); 
+}
 export function updateTheme() {}
