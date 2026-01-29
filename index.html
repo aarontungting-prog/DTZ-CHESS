@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>霓虹西洋棋：DTZ 最終版</title>
+    <title>霓虹西洋棋：除錯安全模式</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     
@@ -17,130 +17,91 @@
         }
     }
     </script>
+
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errBox = document.getElementById('debug-console');
+            if(errBox) {
+                errBox.style.display = 'block';
+                errBox.innerHTML += `<p style="color:#ff5555;">❌ Error: ${message} <br> <small>at ${source}:${lineno}</small></p>`;
+            }
+            // 隱藏 Loading
+            document.getElementById('loading').style.display = 'none';
+        };
+    </script>
 </head>
 <body>
 
-<div id="loading">系統初始化中...</div>
+<div id="loading">系統初始化中...<br><small>如果卡在這裡，請檢查 Console</small></div>
+
+<div id="debug-console" style="display:none; position:fixed; top:0; left:0; width:100%; height:50%; background:rgba(0,0,0,0.9); color:#fff; overflow:auto; z-index:9999; padding:20px; font-family:monospace; border-bottom:2px solid red;">
+    <h3>⚠️ 系統偵測到錯誤</h3>
+</div>
 
 <div id="auth-modal">
     <div class="auth-box">
         <h2>DTZ CHESS</h2>
         <div id="auth-error" style="color:#ff0055; font-size:12px; margin-bottom:10px;"></div>
-        
         <div id="email-login-form">
             <input type="email" id="email" class="auth-input" placeholder="電子信箱">
             <input type="password" id="password" class="auth-input" placeholder="密碼">
-            <div id="nickname-container">
-                <input type="text" id="nickname" class="auth-input" placeholder="設定您的暱稱">
-            </div>
+            <div id="nickname-container"><input type="text" id="nickname" class="auth-input" placeholder="暱稱"></div>
             <button id="auth-action-btn" class="auth-btn">進入世界</button>
-            <div class="forgot-link" id="forgot-pw">忘記密碼？</div>
         </div>
-        
         <button id="guest-btn" class="guest-btn">訪客登入</button>
     </div>
 </div>
 
 <div id="ui" style="display:none;">
-    <div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
-
+    <div id="mobile-menu-btn" onclick="toggleMenu()">☰</div>
     <div id="menu-panel" class="hud-container">
         <div class="hud-box profile-box">
             <div class="user-card-header">
-                <img id="hud-avatar" src="" class="mini-avatar">
+                <img id="hud-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Commander" class="mini-avatar">
                 <div class="user-info">
                     <span id="user-name" class="name-text">Player</span>
-                    <span id="user-rank" class="rank-badge rank-bronze">銅牌</span>
                 </div>
             </div>
-            <div class="elo-text">戰力積分: <span id="user-elo">0</span></div>
-            <button id="btn-custom" class="custom-btn">🛠️ 個人化設定</button>
+            <button id="btn-custom" class="custom-btn">個人設定</button>
         </div>
-
         <div class="hud-box action-box">
-            <div class="lobby-title">遊戲模式</div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1 經典</button>
-                <button id="mode-4p" class="mode-btn" onclick="switchMode('4p')">4人 混戰</button>
+                <button id="mode-2p" class="mode-btn active" onclick="switchMode('2p')">1v1</button>
+                <button id="mode-4p" class="mode-btn" onclick="switchMode('4p')">4人</button>
             </div>
-            <div class="lobby-title">對戰大廳</div>
             <div id="room-display" class="room-status">狀態：閒置中</div>
-            <div id="lobby-buttons">
-                <button id="btn-create" class="game-btn">創建房間 (執白)</button>
-                <button id="btn-join" class="game-btn join-btn">加入房間 (執黑)</button>
-            </div>
-            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff; color:white; margin-top:10px;">退出房間 / 結束連線</button>
-            <div class="separator"></div>
+            <button id="btn-create" class="game-btn">創建房間</button>
+            <button id="btn-join" class="game-btn join-btn">加入房間</button>
+            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff;">退出</button>
             <button id="btn-logout" class="logout-btn">登出</button>
         </div>
     </div>
-
     <div id="status-panel" class="hud">
-        <h1>NEON CHESS</h1>
         <div id="turn-txt">等待對戰</div>
-        <div id="opponent-info" style="font-size: 12px; color: #aaa; margin-top:5px;">對手: ---</div>
     </div>
-    <div id="footer-watermark">Made by DTZ</div>
 </div>
 
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 <div id="custom-panel" class="side-panel">
-    <h2>個人化設定</h2>
+    <h2>設定</h2>
     <div class="custom-section">
-        <h3>👤 指揮官識別證</h3>
-        <div class="avatar-preview-container" onclick="triggerAvatarUpload()">
-            <img id="my-avatar" src="" class="avatar-img">
-            <div id="my-frame" class="avatar-frame"></div>
-            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-            <div id="avatar-hint">更換圖片</div>
-        </div>
-        <div id="guest-avatar-controls">
-            <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                <input type="text" id="avatar-seed" class="custom-input" placeholder="輸入代碼" style="margin:0;">
-                <button id="btn-random-avatar" class="small-btn">🎲 隨機</button>
-            </div>
-        </div>
-        <label>顯示暱稱:</label>
-        <input type="text" id="edit-name" class="custom-input">
+        <input type="text" id="avatar-seed" class="custom-input" placeholder="輸入代碼更換頭像">
+        <button id="btn-random-avatar" class="small-btn">隨機頭像</button>
     </div>
-    <div class="custom-section">
-        <h3>♟️ 棋子模型</h3>
-        <div class="skin-grid" id="piece-skin-grid">
-            <div class="skin-item selected" data-val="neon" onclick="previewSkin('piece','neon',this)"><div class="skin-icon">💠</div><div class="skin-name">電馭霓虹</div></div>
-            <div class="skin-item" data-val="classic" onclick="previewSkin('piece','classic',this)"><div class="skin-icon">♟️</div><div class="skin-name">經典實體</div></div>
-            <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
-        </div>
-        <input type="hidden" id="selected-piece-style" value="neon">
-    </div>
-    <div class="custom-section">
-        <h3>🔲 戰場材質</h3>
-        <div class="skin-grid" id="board-skin-grid">
-            <div class="skin-item selected" data-val="neon" onclick="previewSkin('board','neon',this)"><div class="skin-icon">🌌</div><div class="skin-name">全息投影</div></div>
-            <div class="skin-item locked"><div class="skin-icon">🔒</div><div class="skin-name">敬請期待</div></div>
-        </div>
-        <input type="hidden" id="selected-board-style" value="neon">
-    </div>
-    <button id="btn-save-custom" class="game-btn save-btn">保存並套用</button>
-    <button onclick="closeAllMenus()" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
+    <button onclick="closeAllMenus()" class="game-btn" style="margin-top:20px;">關閉</button>
 </div>
 
 <script type="module">
-    import { initGame, triggerAvatarUpload, previewStyle, switchGameMode } from './game_logic.js';
-    window.triggerAvatarUpload = triggerAvatarUpload; 
+    import { initGame, switchGameMode, triggerAvatarUpload } from './game_logic.js';
+    
     window.switchMode = (m) => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mode-'+m).classList.add('active');
         switchGameMode(m);
     };
-    window.previewSkin = (t, v, el) => {
-        if(el.classList.contains('locked')) return;
-        const grid = document.getElementById(`${t}-skin-grid`);
-        for(let item of grid.children) item.classList.remove('selected');
-        el.classList.add('selected');
-        document.getElementById(`selected-${t}-style`).value = v;
-        previewStyle(t, v);
-    };
+
     window.onload = () => { initGame(); };
+
     window.toggleMenu = () => {
         const p = document.getElementById('menu-panel');
         p.classList.toggle('mobile-visible');
@@ -148,6 +109,7 @@
         if(p.classList.contains('mobile-visible')) b.classList.add('active');
         else b.classList.remove('active');
     };
+
     window.closeAllMenus = () => {
         document.getElementById('custom-panel').classList.remove('active');
         document.getElementById('menu-panel').classList.remove('mobile-visible');
