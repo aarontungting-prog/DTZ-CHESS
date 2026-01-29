@@ -1,155 +1,38 @@
-/* =========================================
-   1. 全域設定
-   ========================================= */
 body { 
     margin: 0; padding: 0; overflow: hidden; 
-    background: #000; 
-    font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif; 
+    background: #0f0f1a; /* 改成深藍色，如果 3D 掛了至少知道 CSS 有載入 */
+    font-family: sans-serif; 
     touch-action: none; color: white; 
 }
-
-/* 3D 畫布在最底層 */
-canvas { position: absolute; top: 0; left: 0; z-index: 0; outline: none; }
-
-/* UI 層覆蓋其上，但 pointer-events: none 讓點擊穿透 */
+canvas { position: absolute; top: 0; left: 0; z-index: 0; }
 #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
-
-/* 讓按鈕可點擊 */
 .hud, .hud-container, #mobile-menu-btn { pointer-events: auto; }
-
-/* HUD 容器 */
-.hud-container {
-    position: absolute; top: 20px; left: 20px; 
-    display: flex; flex-direction: column; gap: 15px;
-    width: 260px;
-}
-
-.hud-box {
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid #444; border-radius: 8px; padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(2px);
-}
-
-.user-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.name-text { font-weight: bold; font-size: 16px; color: #fff; display: block; }
-.elo-text { font-size: 12px; color: #888; margin-bottom: 10px; }
-.elo-text span { color: #00e5ff; font-weight: bold; }
-.custom-btn { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #ccc; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-.custom-btn:hover { background: #333; color: #fff; border-color: #666; }
-
-.lobby-title { color: #aaa; font-size: 12px; letter-spacing: 1px; margin-bottom: 8px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; text-transform: uppercase; }
-.room-status { font-size: 14px; color: #00ff00; margin-bottom: 12px; font-weight: bold; text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
-.separator { height: 1px; background: #333; margin: 12px 0; }
-.logout-btn { background: transparent; color: #666; border: none; font-size: 12px; width: 100%; cursor: pointer; }
-
-/* 模式切換按鈕 */
-.mode-btn { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: #888; cursor: pointer; border-radius: 4px; font-size: 12px; transition: 0.3s; }
-.mode-btn.active { background: #00e5ff; color: #000; font-weight: bold; border-color: #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
-
-/* 狀態面板 */
-#status-panel { top: 20px; right: 20px; text-align: right; background: linear-gradient(to left, rgba(0, 255, 255, 0.1), rgba(0,0,0,0)); padding: 15px; border-right: 3px solid #00e5ff; }
-h1 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; color: #00e5ff; margin-bottom: 5px; }
-#turn-txt { font-size: 1.5rem; font-weight: 900; color: #fff; }
-
-/* 手機漢堡按鈕 (電腦版隱藏) */
+.hud-container { position: absolute; top: 20px; left: 20px; width: 260px; display: flex; flex-direction: column; gap: 10px; }
+.hud-box { background: rgba(0,0,0,0.8); border: 1px solid #444; border-radius: 8px; padding: 15px; }
 #mobile-menu-btn { display: none; }
-
-/* 登入視窗 */
-#auth-modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4); z-index: 2000; 
-    display: flex; justify-content: center; align-items: center; 
-    pointer-events: auto; backdrop-filter: blur(3px);
-}
-.auth-box {
-    background: rgba(15, 15, 20, 0.95); border: 1px solid #00e5ff;
-    padding: 30px; border-radius: 12px; width: 300px;
-    text-align: center; box-shadow: 0 0 50px rgba(0, 229, 255, 0.3);
-}
-.auth-box h2 { color: #00e5ff; margin-top: 0; margin-bottom: 20px; }
-.auth-input { width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-.auth-input:focus { border-color: #00e5ff; outline: none; background: rgba(0,0,0,0.8); }
-.auth-btn { width: 100%; padding: 12px; margin-top: 15px; background: #00e5ff; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; font-size: 16px; }
-.guest-btn { width: 100%; padding: 10px; margin-top: 10px; background: transparent; color: #aaa; border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; font-size: 14px; }
-#nickname-container { display: none; }
-.forgot-link { display: block; margin-top: 15px; color: #aaa; font-size: 12px; cursor: pointer; }
-
-/* 側邊面板 */
-.side-panel {
-    position: fixed; top: 0; left: 0; bottom: 0; width: 320px;
-    background: rgba(12, 12, 18, 0.98); border-right: 1px solid #00e5ff;
-    box-shadow: 10px 0 50px rgba(0, 0, 0, 0.8);
-    transform: translateX(-105%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1200; padding: 25px; overflow-y: auto; pointer-events: auto;
-}
+#auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+.auth-box { background: #1a1a20; border: 1px solid #00e5ff; padding: 30px; border-radius: 12px; width: 300px; text-align: center; }
+.auth-input { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; box-sizing: border-box;}
+button { width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; }
+.auth-btn { background: #00e5ff; color: #000; }
+.game-btn { background: #00e5ff; color: #000; }
+.guest-btn { background: transparent; color: #aaa; border: 1px solid #444; }
+.mode-btn { background: #222; color: #888; border: 1px solid #444; flex: 1; }
+.mode-btn.active { background: #00e5ff; color: #000; }
+.logout-btn { background: transparent; color: #666; margin-top: 10px; }
+#status-panel { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 30px; text-align: right; }
+#loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; color: #00e5ff; z-index: 3000; flex-direction: column;}
+.side-panel { position: fixed; top: 0; left: 0; bottom: 0; width: 300px; background: #111; transform: translateX(-105%); transition: 0.3s; z-index: 1200; padding: 20px; }
 .side-panel.active { transform: translateX(0); }
-.side-panel h2 { color: #00e5ff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; font-size: 20px; }
-.custom-section { margin-bottom: 30px; }
-.custom-section h3 { font-size: 14px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-
-/* 頭像 UI */
-.avatar-preview-container { width: 100px; height: 100px; margin: 0 auto 15px auto; position: relative; border-radius: 12px; background: #111; cursor: pointer; border: 2px solid #333; overflow: hidden; }
-.avatar-img { width: 100%; height: 100%; object-fit: cover; }
-#avatar-hint { position: absolute; bottom: 0; width: 100%; text-align: center; background: rgba(0,0,0,0.7); font-size: 10px; padding: 3px 0; color: #fff; transform: translateY(100%); transition: 0.3s; }
-.avatar-preview-container:hover #avatar-hint { transform: translateY(0); }
-.avatar-frame { position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border-radius: 12px; border: 3px solid transparent; pointer-events: none; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-.skin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
-.skin-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
-.skin-item:hover { background: #222; border-color: #666; }
-.skin-item.selected { border-color: #00e5ff; background: rgba(0, 229, 255, 0.1); box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
-.skin-item.locked { opacity: 0.5; cursor: not-allowed; }
-.skin-icon { font-size: 24px; margin-bottom: 5px; }
-.skin-name { font-size: 10px; color: #aaa; }
-.skin-item.selected .skin-name { color: #00e5ff; font-weight: bold; }
-
-/* 遮罩 */
-#menu-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; pointer-events: auto; }
+.mini-avatar { width: 40px; height: 40px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+#menu-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; }
 #menu-backdrop.active { display: block; }
-#loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; color: #00e5ff; font-weight: bold; z-index: 1500; }
-#footer-watermark { position: absolute; bottom: 10px; width: 100%; text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; }
-.mini-avatar { width: 45px; height: 45px; border-radius: 8px; border: 2px solid #333; object-fit: cover; }
-.custom-input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-.custom-input:focus { border-color: #00e5ff; }
-.small-btn { background: #333; border: 1px solid #555; color: #fff; cursor: pointer; border-radius: 4px; padding: 8px 12px; font-size: 12px; white-space: nowrap;}
-.save-btn { margin-top: 20px; }
-.frame-bronze { border-color: #cd7f32; } .frame-silver { border-color: #c0c0c0; box-shadow: 0 0 10px #c0c0c0; } .frame-gold { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; } .frame-diamond { border-color: #b9f2ff; box-shadow: 0 0 20px #b9f2ff, inset 0 0 10px #b9f2ff; } .frame-master { border-color: #ff0055; box-shadow: 0 0 25px #ff0055, inset 0 0 15px #ff0055; animation: pulse 2s infinite; } @keyframes pulse { 0% { box-shadow: 0 0 20px #ff0055; } 50% { box-shadow: 0 0 40px #ff0055; } 100% { box-shadow: 0 0 20px #ff0055; } }
-button.game-btn { background: #00e5ff; color: #000; border: none; padding: 10px; margin-top: 8px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.3s; border-radius: 4px; }
-button.join-btn { background: #ff0055; color: #fff; }
-button.game-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.avatar-preview-container { width: 80px; height: 80px; margin: 0 auto; background: #000; border-radius: 10px; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; }
 
-/* =========================================
-   手機版專用設定
-   ========================================= */
 @media (max-width: 600px) {
-    #mobile-menu-btn { 
-        display: flex; position: absolute; bottom: 30px; left: 20px; 
-        width: 50px; height: 50px; background: rgba(0,0,0,0.8); 
-        border: 2px solid #00e5ff; border-radius: 50%; color: #00e5ff; 
-        justify-content: center; align-items: center; font-size: 14px; 
-        cursor: pointer; z-index: 3000; pointer-events: auto; 
-        box-shadow: 0 0 15px rgba(0,229,255,0.5); font-weight: bold;
-        user-select: none; -webkit-tap-highlight-color: transparent;
-    }
-
-    .hud-container { 
-        display: flex; width: 100%; box-sizing: border-box; 
-        position: fixed; top: auto; bottom: 0; left: 0;
-        transform: translateY(110%); z-index: 2500; 
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 10px 20px 90px 20px; 
-        background: rgba(10, 10, 15, 0.95); border-top: 2px solid #00e5ff;
-        pointer-events: auto;
-    }
-
+    #mobile-menu-btn { display: flex; position: absolute; bottom: 30px; left: 20px; width: 50px; height: 50px; background: #000; border: 2px solid #00e5ff; border-radius: 50%; color: #00e5ff; justify-content: center; align-items: center; z-index: 3000; font-size: 20px; }
+    .hud-container { width: 100%; padding: 20px; bottom: 0; top: auto; left: 0; background: #111; border-top: 2px solid #00e5ff; transform: translateY(110%); transition: 0.3s; z-index: 2500; }
     .hud-container.mobile-visible { transform: translateY(0); }
-    .hud-box { background: transparent; border: none; box-shadow: none; padding: 0; margin-bottom: 10px; }
-    .profile-box { border-bottom: 1px solid #333; padding-bottom: 10px; }
-    
-    #status-panel { 
-        top: 15px; left: 50%; transform: translateX(-50%); width: auto; 
-        background: rgba(0,0,0,0.6); border-radius: 30px; padding: 5px 20px; 
-        white-space: nowrap; right: auto; border: 1px solid #333; z-index: 2000;
-    }
-    #status-panel h1 { display: none; }
-    .side-panel { width: 90%; }
+    #status-panel { top: 15px; left: 50%; transform: translateX(-50%); width: auto; right: auto; white-space: nowrap; }
 }
