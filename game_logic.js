@@ -3,7 +3,7 @@ import { getDatabase, ref, set, get, update, onValue, off, remove } from "https:
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import * as Visuals from './visuals.js';
 
-// ⚠️⚠️⚠️ 記得填入你的 Firebase Config ⚠️⚠️⚠️
+// ⚠️⚠️⚠️ 記得換成你的 Config ⚠️⚠️⚠️
 const firebaseConfig = {
     apiKey: "AIzaSyCxPppnUG864v3E2j1OzykzFmhLpsEJCSE",
     authDomain: "chess-1885a.firebaseapp.com",
@@ -65,21 +65,38 @@ let isGuestLoginIntent = false;
 let userSettings = { pieceStyle: 'neon', boardStyle: 'neon' };
 let lastCameraUpdate = 0;
 
+// 自檢更新
+function setStatus(id, color) {
+    const el = document.getElementById(id);
+    if(el) { el.classList.remove('yellow','green','red'); el.classList.add(color); }
+}
+
 export function initGame() {
-    console.log("🚀 Init...");
+    console.log("🚀 InitGame Started");
     setupUIListeners();
 
     if(window.Chess) game = new window.Chess();
     game4p = new Chess4P();
 
+    // 啟動 3D
+    try {
+        Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
+        Visuals.setLoginMode(true);
+        setStatus('status-3d', 'green');
+    } catch(e) { 
+        console.error("3D Error", e); 
+        setStatus('status-3d', 'red');
+    }
+
+    // 連線 Firebase
     try {
         app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         auth = getAuth(app);
         
         onAuthStateChanged(auth, (user) => {
-            const loading = document.getElementById('loading');
-            if(loading) loading.style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            setStatus('status-net', 'green');
 
             if (user) {
                 if (user.isAnonymous && !isGuestLoginIntent) {
@@ -88,26 +105,21 @@ export function initGame() {
                 currentUser = user;
                 document.getElementById('auth-modal').style.display = 'none';
                 document.getElementById('ui').style.display = 'block';
-                // ✨ 修正順序：登入成功後才初始化 3D ✨
-                if(!Visuals.isInitialized()) {
-                    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
-                }
                 Visuals.setLoginMode(false);
                 checkUserProfile(user);
             } else {
                 currentUser = null;
                 document.getElementById('auth-modal').style.display = 'flex';
                 document.getElementById('ui').style.display = 'none';
-                // 未登入時也啟動 3D 讓他轉
-                if(!Visuals.isInitialized()) {
-                    Visuals.init3D(null, handleSquareClick, handleCameraUpdate);
-                }
                 Visuals.setLoginMode(true);
                 const btn = document.getElementById('guest-btn');
                 if(btn) { btn.innerText="訪客登入"; btn.disabled=false; }
             }
         });
-    } catch(e) { alert("Firebase Error: " + e.message); }
+    } catch(e) { 
+        setStatus('status-net', 'red');
+        alert("Firebase Error: " + e.message); 
+    }
     
     setTimeout(() => { if(game) Visuals.syncBoardVisuals(game); }, 500);
 }
@@ -217,7 +229,7 @@ function joinRoom() {
             document.getElementById('room-display').innerText = "房間: " + gameId;
             toggleLobby(true);
             Visuals.moveCamera({x:0, y:60, z:-100});
-        } else alert("無效房間");
+        } else alert("房間無效");
     });
 }
 
@@ -284,6 +296,7 @@ function handleSquareClick(sq) {
         }
         return;
     }
+    // 2P
     if(isOnline && game.turn() !== playerColor) return;
     if(!selectedSquare) {
         const p = game.get(sq);
