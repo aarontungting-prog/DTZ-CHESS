@@ -2,9 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>霓虹西洋棋：DTZ 最終版</title>
+    <title>Neon Chess Online</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -13,111 +12,35 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
     }
     </script>
 </head>
 <body>
 
-<div id="loading">正在載入霓虹世界...</div>
+    <div id="loading">NEON WORLD INITIALIZING...</div>
 
-<div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
-<div id="menu-backdrop" onclick="closeAllMenus()"></div>
+    <div id="mobile-menu-btn" onclick="toggleMenu()">☰</div>
+    <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 
-<div id="custom-panel" class="side-panel">
-    <h2>個人化設定</h2>
-    
-    <div class="custom-section">
-        <h3>👤 指揮官識別證</h3>
-        <div class="avatar-preview-container" onclick="triggerAvatarUpload()">
-            <img id="my-avatar" src="" alt="Avatar" class="avatar-img">
-            <div id="my-frame" class="avatar-frame"></div>
-            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-            <div id="avatar-hint">更換圖片</div>
-        </div>
-        <div id="guest-avatar-controls">
-            <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                <input type="text" id="avatar-seed" class="custom-input" placeholder="輸入代碼" style="margin:0;">
-                <button id="btn-random-avatar" class="small-btn">🎲 隨機</button>
-            </div>
-        </div>
-        <label>顯示暱稱:</label>
-        <input type="text" id="edit-name" class="custom-input">
-    </div>
-
-    <div class="custom-section">
-        <h3>♟️ 棋子模型 (Skins)</h3>
-        <div class="skin-grid" id="piece-skin-grid">
-            <div class="skin-item selected" onclick="previewSkin('piece', 'neon', this)">
-                <div class="skin-icon">💠</div>
-                <div class="skin-name">電馭霓虹</div>
-            </div>
-            <div class="skin-item" onclick="previewSkin('piece', 'classic', this)">
-                <div class="skin-icon">♟️</div>
-                <div class="skin-name">經典實體</div>
-            </div>
-            <div class="skin-item locked">
-                <div class="skin-icon">🔒</div>
-                <div class="skin-name">敬請期待</div>
-            </div>
-        </div>
-        <input type="hidden" id="selected-piece-style" value="neon">
-    </div>
-
-    <div class="custom-section">
-        <h3>🔲 戰場材質 (Map)</h3>
-        <div class="skin-grid" id="board-skin-grid">
-            <div class="skin-item selected" onclick="previewSkin('board', 'neon', this)">
-                <div class="skin-icon">🌌</div>
-                <div class="skin-name">全息投影</div>
-            </div>
-            <div class="skin-item locked">
-                <div class="skin-icon">🔒</div>
-                <div class="skin-name">敬請期待</div>
-            </div>
-        </div>
-        <input type="hidden" id="selected-board-style" value="neon">
-    </div>
-    
-    <button id="btn-save-custom" class="game-btn save-btn">保存並套用</button>
-    <button onclick="closeAllMenus()" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
-</div>
-
-<div id="auth-modal">
-    <div class="auth-box">
-        <h2>DTZ CHESS</h2>
-        <div id="auth-error" style="color:#ff0055; font-size:12px; margin-bottom:10px;"></div>
-        
-        <div id="email-login-form">
-            <input type="email" id="email" class="auth-input" placeholder="電子信箱">
-            <input type="password" id="password" class="auth-input" placeholder="密碼">
-            <div id="nickname-container">
-                <input type="text" id="nickname" class="auth-input" placeholder="設定您的暱稱">
-            </div>
-            <button id="auth-action-btn" class="auth-btn">進入世界</button>
-            <div class="forgot-link" id="forgot-pw">忘記密碼？</div>
-        </div>
-        
-        <button id="guest-btn" class="guest-btn">訪客登入</button>
-    </div>
-</div>
-
-<div id="ui" style="display:none;">
     <div id="menu-panel" class="hud-container">
+        
+        <div class="hud-header">
+            <h1>NEON CHESS</h1>
+            <div id="connection-status">🟢 連線正常</div>
+        </div>
+
         <div class="hud-box profile-box">
             <div class="user-card-header">
-                <img id="hud-avatar" src="" class="mini-avatar">
+                <img id="hud-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="mini-avatar">
                 <div class="user-info">
-                    <span id="user-name" class="name-text">Player</span>
-                    <span id="user-rank" class="rank-badge rank-bronze">銅牌</span>
+                    <span id="user-name" class="name-text">指揮官</span>
+                    <span id="user-rank" class="rank-badge rank-bronze">新手</span>
                 </div>
             </div>
-            <div class="elo-text">
-                戰力積分 (ELO): <span id="user-elo">0</span>
-            </div>
-            <button id="btn-custom" class="custom-btn">🛠️ 個人化設定</button>
+            <div class="elo-text">ELO: <span id="user-elo">1000</span></div>
         </div>
 
         <div class="hud-box action-box">
@@ -125,64 +48,62 @@
             <div id="room-display" class="room-status">狀態：閒置中</div>
             
             <div id="lobby-buttons">
-                <button id="btn-create" class="game-btn">創建房間 (執白)</button>
-                <button id="btn-join" class="game-btn join-btn">加入房間 (執黑)</button>
+                <button id="btn-create" class="game-btn">創建房間 (白棋)</button>
+                <button id="btn-join" class="game-btn join-btn">加入房間 (黑棋)</button>
             </div>
 
-            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff; color:white; margin-top:10px;">退出房間 / 結束連線</button>
+            <button id="btn-leave" class="game-btn leave-btn" style="display:none;">退出房間</button>
             
             <div class="separator"></div>
-            <button id="btn-logout" class="logout-btn">登出</button>
+            <button id="btn-logout" class="logout-btn">登出系統</button>
+        </div>
+
+        <div id="game-status-box" class="hud-box" style="margin-top: auto;">
+            <div class="lobby-title">戰況</div>
+            <div id="turn-txt" style="font-size: 1.2em; font-weight: bold;">等待開始</div>
+            <div id="opponent-info" style="color: #888; font-size: 0.9em;">VS: ---</div>
+        </div>
+        
+        <div id="footer-watermark">Developed by DTZ</div>
+    </div>
+
+    <div id="auth-modal">
+        <div class="auth-box">
+            <h2>NEON LINK</h2>
+            <div id="auth-error"></div>
+            <div id="email-login-form">
+                <input type="email" id="email" class="auth-input" placeholder="電子信箱">
+                <input type="password" id="password" class="auth-input" placeholder="密碼">
+                <div id="nickname-container" style="display:none;">
+                    <input type="text" id="nickname" class="auth-input" placeholder="設定您的暱稱">
+                </div>
+                <button id="auth-action-btn" class="auth-btn">進入系統</button>
+                <div class="forgot-link" id="forgot-pw">忘記密碼？</div>
+            </div>
+            <button id="guest-btn" class="guest-btn">訪客登入</button>
         </div>
     </div>
 
-    <div id="status-panel" class="hud">
-        <h1>NEON CHESS</h1>
-        <div id="turn-txt">等待對戰</div>
-        <div id="opponent-info" style="font-size: 12px; color: #aaa; margin-top:5px;">對手: ---</div>
-    </div>
-    <div id="footer-watermark">Made by DTZ</div>
-</div>
-
-<script type="module">
-    import { initGame, triggerAvatarUpload, previewStyle } from './game_logic.js';
-    window.triggerAvatarUpload = triggerAvatarUpload; 
-
-    window.previewSkin = function(type, value, element) {
-        if(element.classList.contains('locked')) return;
-        const grid = document.getElementById(`${type}-skin-grid`);
-        const items = grid.getElementsByClassName('skin-item');
-        for(let item of items) item.classList.remove('selected');
-        element.classList.add('selected');
-        document.getElementById(`selected-${type}-style`).value = value;
-        previewStyle(type, value);
-    }
-
-    window.onload = () => { initGame(); };
-
-    window.toggleMenu = function() {
-        const panel = document.getElementById('menu-panel');
-        // 使用 classList.toggle 切換 CSS 的 mobile-visible
-        panel.classList.toggle('mobile-visible');
+    <script type="module">
+        import { initGame } from './game_logic.js';
         
-        // 如果選單打開，顯示背景遮罩
-        const backdrop = document.getElementById('menu-backdrop');
-        if(panel.classList.contains('mobile-visible')) {
-            backdrop.classList.add('active');
-        } else {
-            backdrop.classList.remove('active');
-        }
-    }
+        window.onload = () => { initGame(); };
 
-    window.closeAllMenus = function() {
-        document.getElementById('custom-panel').classList.remove('active');
-        // 如果是手機，關閉選單時也要收回抽屜
-        if(window.innerWidth <= 600) {
+        window.toggleMenu = function() {
+            const panel = document.getElementById('menu-panel');
+            panel.classList.toggle('mobile-visible');
+            const backdrop = document.getElementById('menu-backdrop');
+            if(panel.classList.contains('mobile-visible')) {
+                backdrop.classList.add('active');
+            } else {
+                backdrop.classList.remove('active');
+            }
+        }
+
+        window.closeAllMenus = function() {
             document.getElementById('menu-backdrop').classList.remove('active');
             document.getElementById('menu-panel').classList.remove('mobile-visible');
         }
-    }
-</script>
+    </script>
 </body>
 </html>
-
