@@ -2,197 +2,187 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>霓虹西洋棋：安心睡眠版</title>
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        #info {
-            position: absolute; top: 10px; left: 10px; color: #00e5ff;
-            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px;
-            pointer-events: none; border: 1px solid #00e5ff;
-        }
-        h1 { margin: 0 0 10px 0; font-size: 18px; }
-        p { margin: 5px 0; font-size: 14px; color: #ccc; }
-        button {
-            pointer-events: auto; padding: 8px 15px; background: #333; 
-            color: white; border: 1px solid #555; cursor: pointer; margin-top: 10px;
-        }
-        button:hover { background: #00e5ff; color: black; }
-    </style>
+    <title>霓虹西洋棋：DTZ 最終版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
         }
+    }
     </script>
 </head>
 <body>
 
-<div id="info">
-    <h1>霓虹四人棋 (展示模式)</h1>
-    <p>狀態：離線運作中 ✅</p>
-    <p>說明：這是一個純視覺演示，證明架構可行。</p>
-    <p>操作：滑鼠左鍵旋轉，右鍵平移，滾輪縮放。</p>
-    <div style="pointer-events: auto;">
-        <button onclick="window.switchMode(false)">切換 2人</button>
-        <button onclick="window.switchMode(true)">切換 4人</button>
+<div id="loading">正在載入霓虹世界...</div>
+
+<div id="mobile-menu-btn" onclick="toggleMenu()">☰ 選單</div>
+<div id="menu-backdrop" onclick="closeAllMenus()"></div>
+
+<div id="custom-panel" class="side-panel">
+    <h2>個人化設定</h2>
+    
+    <div class="custom-section">
+        <h3>👤 指揮官識別證</h3>
+        <div class="avatar-preview-container" onclick="triggerAvatarUpload()">
+            <img id="my-avatar" src="" alt="Avatar" class="avatar-img">
+            <div id="my-frame" class="avatar-frame"></div>
+            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+            <div id="avatar-hint">更換圖片</div>
+        </div>
+        <div id="guest-avatar-controls">
+            <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                <input type="text" id="avatar-seed" class="custom-input" placeholder="輸入代碼" style="margin:0;">
+                <button id="btn-random-avatar" class="small-btn">🎲 隨機</button>
+            </div>
+        </div>
+        <label>顯示暱稱:</label>
+        <input type="text" id="edit-name" class="custom-input">
+    </div>
+
+    <div class="custom-section">
+        <h3>♟️ 棋子模型 (Skins)</h3>
+        <div class="skin-grid" id="piece-skin-grid">
+            <div class="skin-item selected" onclick="previewSkin('piece', 'neon', this)">
+                <div class="skin-icon">💠</div>
+                <div class="skin-name">電馭霓虹</div>
+            </div>
+            <div class="skin-item" onclick="previewSkin('piece', 'classic', this)">
+                <div class="skin-icon">♟️</div>
+                <div class="skin-name">經典實體</div>
+            </div>
+            <div class="skin-item locked">
+                <div class="skin-icon">🔒</div>
+                <div class="skin-name">敬請期待</div>
+            </div>
+        </div>
+        <input type="hidden" id="selected-piece-style" value="neon">
+    </div>
+
+    <div class="custom-section">
+        <h3>🔲 戰場材質 (Map)</h3>
+        <div class="skin-grid" id="board-skin-grid">
+            <div class="skin-item selected" onclick="previewSkin('board', 'neon', this)">
+                <div class="skin-icon">🌌</div>
+                <div class="skin-name">全息投影</div>
+            </div>
+            <div class="skin-item locked">
+                <div class="skin-icon">🔒</div>
+                <div class="skin-name">敬請期待</div>
+            </div>
+        </div>
+        <input type="hidden" id="selected-board-style" value="neon">
+    </div>
+    
+    <button id="btn-save-custom" class="game-btn save-btn">保存並套用</button>
+    <button onclick="closeAllMenus()" class="game-btn" style="background:#333; margin-top:10px;">關閉面板</button>
+</div>
+
+<div id="auth-modal">
+    <div class="auth-box">
+        <h2>DTZ CHESS</h2>
+        <div id="auth-error" style="color:#ff0055; font-size:12px; margin-bottom:10px;"></div>
+        
+        <div id="email-login-form">
+            <input type="email" id="email" class="auth-input" placeholder="電子信箱">
+            <input type="password" id="password" class="auth-input" placeholder="密碼">
+            <div id="nickname-container">
+                <input type="text" id="nickname" class="auth-input" placeholder="設定您的暱稱">
+            </div>
+            <button id="auth-action-btn" class="auth-btn">進入世界</button>
+            <div class="forgot-link" id="forgot-pw">忘記密碼？</div>
+        </div>
+        
+        <button id="guest-btn" class="guest-btn">訪客登入</button>
     </div>
 </div>
 
+<div id="ui" style="display:none;">
+    <div id="menu-panel" class="hud-container">
+        <div class="hud-box profile-box">
+            <div class="user-card-header">
+                <img id="hud-avatar" src="" class="mini-avatar">
+                <div class="user-info">
+                    <span id="user-name" class="name-text">Player</span>
+                    <span id="user-rank" class="rank-badge rank-bronze">銅牌</span>
+                </div>
+            </div>
+            <div class="elo-text">
+                戰力積分 (ELO): <span id="user-elo">0</span>
+            </div>
+            <button id="btn-custom" class="custom-btn">🛠️ 個人化設定</button>
+        </div>
+
+        <div class="hud-box action-box">
+            <div class="lobby-title">對戰大廳</div>
+            <div id="room-display" class="room-status">狀態：閒置中</div>
+            
+            <div id="lobby-buttons">
+                <button id="btn-create" class="game-btn">創建房間 (執白)</button>
+                <button id="btn-join" class="game-btn join-btn">加入房間 (執黑)</button>
+            </div>
+
+            <button id="btn-leave" class="game-btn" style="display:none; background:#0088ff; color:white; margin-top:10px;">退出房間 / 結束連線</button>
+            
+            <div class="separator"></div>
+            <button id="btn-logout" class="logout-btn">登出</button>
+        </div>
+    </div>
+
+    <div id="status-panel" class="hud">
+        <h1>NEON CHESS</h1>
+        <div id="turn-txt">等待對戰</div>
+        <div id="opponent-info" style="font-size: 12px; color: #aaa; margin-top:5px;">對手: ---</div>
+    </div>
+    <div id="footer-watermark">Made by DTZ</div>
+</div>
+
 <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { initGame, triggerAvatarUpload, previewStyle } from './game_logic.js';
+    window.triggerAvatarUpload = triggerAvatarUpload; 
 
-    // --- 變數 ---
-    let scene, camera, renderer, controls;
-    let tiles = [];
-    let pieces = [];
-
-    // --- 材質 ---
-    const MAT = {
-        base: new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.5}),
-        tileW: new THREE.MeshStandardMaterial({color: 0xeeeeee, roughness: 0.2}),
-        tileB: new THREE.MeshStandardMaterial({color: 0x333333, roughness: 0.2}),
-        // 霓虹風
-        neonW: new THREE.MeshStandardMaterial({color: 0x00ffff, emissive: 0x004444}),
-        neonB: new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.1}),
-        // 棋子顏色
-        red: new THREE.MeshStandardMaterial({color: 0xff3333, emissive:0xaa0000, emissiveIntensity:0.2}),
-        blue: new THREE.MeshStandardMaterial({color: 0x3333ff, emissive:0x0000aa, emissiveIntensity:0.2}),
-        yellow: new THREE.MeshStandardMaterial({color: 0xffff00, emissive:0xaaaa00, emissiveIntensity:0.2}),
-        green: new THREE.MeshStandardMaterial({color: 0x00ff00, emissive:0x00aa00, emissiveIntensity:0.2}),
-        white: new THREE.MeshStandardMaterial({color: 0xffffff}),
-        black: new THREE.MeshStandardMaterial({color: 0x222222})
-    };
-
-    // --- 初始化 ---
-    function init() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a10); // 深邃夜空
-        scene.fog = new THREE.FogExp2(0x0a0a10, 0.02);
-
-        camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 20, 15);
-
-        renderer = new THREE.WebGLRenderer({antialias: true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
-
-        // 燈光
-        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambient);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        dirLight.position.set(10, 20, 10);
-        scene.add(dirLight);
-
-        // 預設 4人棋
-        create4PBoard();
-
-        window.addEventListener('resize', onResize);
-        animate();
+    window.previewSkin = function(type, value, element) {
+        if(element.classList.contains('locked')) return;
+        const grid = document.getElementById(`${type}-skin-grid`);
+        const items = grid.getElementsByClassName('skin-item');
+        for(let item of items) item.classList.remove('selected');
+        element.classList.add('selected');
+        document.getElementById(`selected-${type}-style`).value = value;
+        previewStyle(type, value);
     }
 
-    function onResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+    window.onload = () => { initGame(); };
 
-    function clearScene() {
-        tiles.forEach(t => scene.remove(t));
-        pieces.forEach(p => scene.remove(p));
-        tiles = []; pieces = [];
-    }
-
-    // --- 建立 2人棋盤 ---
-    function create2PBoard() {
-        clearScene();
-        // 底板
-        const base = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 9), MAT.base);
-        base.position.y = -0.25;
-        scene.add(base); tiles.push(base);
-
-        for(let r=0; r<8; r++) {
-            for(let c=0; c<8; c++) {
-                const isWhite = (r+c)%2 === 0;
-                const tile = new THREE.Mesh(
-                    new THREE.BoxGeometry(1, 0.2, 1), 
-                    isWhite ? MAT.neonW : MAT.neonB
-                );
-                tile.position.set(c-3.5, 0, r-3.5);
-                scene.add(tile); tiles.push(tile);
-
-                // 簡單擺子
-                if(r < 2) createPiece(c-3.5, r-3.5, MAT.white);
-                if(r > 5) createPiece(c-3.5, r-3.5, MAT.black);
-            }
+    window.toggleMenu = function() {
+        const panel = document.getElementById('menu-panel');
+        // 使用 classList.toggle 切換 CSS 的 mobile-visible
+        panel.classList.toggle('mobile-visible');
+        
+        // 如果選單打開，顯示背景遮罩
+        const backdrop = document.getElementById('menu-backdrop');
+        if(panel.classList.contains('mobile-visible')) {
+            backdrop.classList.add('active');
+        } else {
+            backdrop.classList.remove('active');
         }
-        camera.position.set(0, 15, 12);
     }
 
-    // --- 建立 4人棋盤 ---
-    function create4PBoard() {
-        clearScene();
-        // 底板
-        const base = new THREE.Mesh(new THREE.BoxGeometry(15, 0.5, 15), MAT.base);
-        base.position.y = -0.25;
-        scene.add(base); tiles.push(base);
-
-        const size = 14;
-        const offset = 6.5;
-
-        for(let r=0; r<size; r++) {
-            for(let c=0; c<size; c++) {
-                // 挖空角落 (3x3)
-                if((r<3 || r>10) && (c<3 || c>10)) continue;
-
-                const isWhite = (r+c)%2 === 0;
-                const tile = new THREE.Mesh(
-                    new THREE.BoxGeometry(1, 0.2, 1), 
-                    isWhite ? MAT.neonW : MAT.neonB
-                );
-                tile.position.set(c-offset, 0, offset-r);
-                scene.add(tile); tiles.push(tile);
-
-                // 擺放棋子 (示意)
-                if(r === 1) createPiece(c-offset, offset-r, MAT.blue);  // 上 (藍)
-                if(r === 12) createPiece(c-offset, offset-r, MAT.green); // 下 (綠)
-                if(c === 1) createPiece(c-offset, offset-r, MAT.yellow); // 左 (黃)
-                if(c === 12) createPiece(c-offset, offset-r, MAT.red);   // 右 (紅)
-            }
+    window.closeAllMenus = function() {
+        document.getElementById('custom-panel').classList.remove('active');
+        // 如果是手機，關閉選單時也要收回抽屜
+        if(window.innerWidth <= 600) {
+            document.getElementById('menu-backdrop').classList.remove('active');
+            document.getElementById('menu-panel').classList.remove('mobile-visible');
         }
-        camera.position.set(0, 25, 20);
     }
-
-    function createPiece(x, z, mat) {
-        const geo = new THREE.CylinderGeometry(0.3, 0.3, 1, 16);
-        const piece = new THREE.Mesh(geo, mat);
-        piece.position.set(x, 0.6, z);
-        scene.add(piece);
-        pieces.push(piece);
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-    }
-
-    // 暴露給 HTML 按鈕
-    window.switchMode = (is4P) => {
-        if(is4P) create4PBoard();
-        else create2PBoard();
-    };
-
-    // 啟動
-    init();
-
 </script>
 </body>
 </html>
+
