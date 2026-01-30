@@ -1,1 +1,40 @@
 
+/* 修改：讓選單固定在左側，像一般遊戲大廳 */
+.hud-container {
+    position: fixed; /* 固定定位 */
+    top: 0; 
+    left: 0; 
+    bottom: 0; /* 佔滿高度 */
+    width: 300px; 
+    background: rgba(10, 10, 15, 0.95); /* 深色背景 */
+    border-right: 2px solid #00e5ff; /* 霓虹邊框 */
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px;
+    padding: 20px;
+    z-index: 500;
+}
+
+/* 調整 3D 畫布的位置，不要被左側遮住 */
+canvas {
+    position: absolute;
+    top: 0; 
+    left: 300px; /* 留出左側選單的空間 */
+    width: calc(100% - 300px); /* 剩餘寬度 */
+    height: 100%;
+}
+
+/* 手機版適配：手機版還是維持原本的「抽屜式」比較好操作 */
+@media (max-width: 600px) {
+    canvas { left: 0; width: 100%; }
+    .hud-container { 
+        width: 100%; 
+        height: auto; 
+        top: auto; 
+        bottom: 0; 
+        border-right: none; 
+        border-top: 2px solid #00e5ff;
+        transform: translateY(110%); /* 預設隱藏 */
+    }
+    .hud-container.mobile-visible { transform: translateY(0); }
+}
