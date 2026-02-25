@@ -3,96 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avia WebGL Racer V4 - Mobile Edition</title>
+    <title>Avia Racer PRO - Ultimate Edition</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #87CEEB; user-select: none; -webkit-touch-callout: none; }
+        /* 基礎重置與全螢幕設定 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a2a6c; user-select: none; -webkit-touch-callout: none; }
         #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); }
+        /* UI 畫面共用樣式 */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(20, 30, 48, 0.85); backdrop-filter: blur(10px); color: white; }
         .screen.active { display: flex; }
         .transparent-screen { background: none; backdrop-filter: none; } 
         
-        h1 { font-size: 3rem; color: #2c3e50; text-shadow: 2px 2px 0px #fff; margin-bottom: 10px; text-align: center;}
-        button { margin: 10px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 30px; background: #e74c3c; color: white; cursor: pointer; box-shadow: 0 6px 0 #c0392b; transition: all 0.1s; pointer-events: auto; }
-        button:active { transform: translateY(6px); box-shadow: 0 0 0 #c0392b; }
-        button.green { background: #2ecc71; box-shadow: 0 6px 0 #27ae60; }
+        /* 標題與按鈕 */
+        h1 { font-size: 4rem; color: #fff; text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; margin-bottom: 20px; text-align: center; font-style: italic;}
+        button { margin: 10px; padding: 15px 35px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 8px; background: #e74c3c; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.5); transition: all 0.2s; pointer-events: auto; text-transform: uppercase; letter-spacing: 2px;}
+        button:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(231, 76, 60, 0.5); }
+        button.green { background: #00ffcc; color: #111; box-shadow: 0 4px 15px rgba(0, 255, 204, 0.4); }
+        button.green:active { box-shadow: 0 2px 5px rgba(0, 255, 204, 0.4); }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none;}
         
-        input[type="text"] { padding: 15px; font-size: 1.2rem; border-radius: 15px; border: 2px solid #ccc; text-align: center; margin-bottom: 10px; outline: none; width: 80%; max-width: 300px;}
+        /* 輸入框 */
+        input[type="text"] { padding: 15px; font-size: 1.2rem; border-radius: 8px; border: 2px solid #00ffcc; background: rgba(0,0,0,0.5); color: #00ffcc; text-align: center; margin-bottom: 15px; outline: none; width: 80%; max-width: 300px; transition: box-shadow 0.3s;}
+        input[type="text"]:focus { box-shadow: 0 0 15px rgba(0, 255, 204, 0.5); }
         
-        #hud { position: absolute; top: 20px; left: 20px; color: white; font-size: 1.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; font-family: monospace; display: none;}
+        /* 遊戲內儀表板 (HUD) */
+        #hud, #race-hud { position: absolute; top: 20px; font-size: 1.2rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); pointer-events: none; z-index: 10; display: none; background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);}
+        #hud { left: 20px; color: #00ffcc; font-family: 'Courier New', Courier, monospace; }
+        #race-hud { right: 20px; color: #f1c40f; text-align: right; }
         
-        #builder-panel { position: absolute; bottom: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 20px; display: flex; gap: 10px; pointer-events: auto; z-index: 10; border: 2px solid rgba(255,255,255,0.2); flex-wrap: wrap; justify-content: center; width: 90%; max-width: 500px;}
-        .part-btn { background: #3498db; color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; text-align: center; font-size: 0.9rem;}
+        /* 飛機裝配面板 */
+        #builder-panel { position: absolute; bottom: 30px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; display: flex; gap: 15px; pointer-events: auto; z-index: 10; justify-content: center; flex-wrap: wrap; width: 90%; max-width: 600px; border: 1px solid #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);}
+        .part-btn { background: #2c3e50; border: 1px solid #34495e; color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s;}
+        .part-btn:hover { background: #34495e; border-color: #00ffcc; }
         
-        #controls-hint { position: absolute; bottom: 20px; right: 20px; color: white; text-shadow: 1px 1px 3px black; font-size: 1rem; text-align: right; pointer-events: none; z-index: 10; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; display: none;}
-        #countdown-display { font-size: 6rem; color: #f1c40f; text-shadow: 4px 4px 0 #d35400; display: none; z-index: 20; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: pop 1s infinite; pointer-events: none;}
+        /* 倒數與墜毀特效 */
+        #countdown-display { font-size: 8rem; color: #fff; text-shadow: 0 0 20px #f1c40f, 0 0 40px #f1c40f; display: none; z-index: 20; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: pop 1s infinite; pointer-events: none; font-style: italic;}
         @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+        #crash-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(231,76,60,0.8) 0%, rgba(0,0,0,0.9) 100%); z-index: 30; display: none; justify-content: center; align-items: center; color: white; font-size: 5rem; font-weight: bold; text-shadow: 0 0 20px #000; pointer-events: none; letter-spacing: 5px;}
 
-        /* 手機虛擬按鍵面板 */
-        #touch-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; pointer-events: none; z-index: 15; padding: 0 20px; box-sizing: border-box;}
-        .touch-group { display: flex; gap: 10px; pointer-events: auto; }
-        .touch-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.4); border: 2px solid rgba(255, 255, 255, 0.8); border-radius: 50%; color: white; font-size: 1.5rem; font-weight: bold; display: flex; justify-content: center; align-items: center; user-select: none; }
-        .touch-btn:active { background: rgba(255, 255, 255, 0.8); color: black; }
+        /* 名牌系統 */
+        .nametag { position: absolute; color: #fff; background: rgba(0, 0, 0, 0.7); padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); display: none; z-index: 5; border: 1px solid rgba(255, 255, 255, 0.2); text-shadow: 1px 1px 2px #000;}
+        .ai-tag { color: #ff9999; border-color: rgba(231, 76, 60, 0.5); }
 
-        @media (max-width: 768px) {
-            #controls-hint { display: none !important; } /* 手機隱藏鍵盤提示 */
-            #touch-controls { display: flex !important; } /* 手機顯示虛擬按鍵 */
+        /* 手機虛擬按鍵 */
+        #touch-controls { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; pointer-events: none; z-index: 15; padding: 0 30px; box-sizing: border-box;}
+        .touch-group { display: flex; gap: 15px; pointer-events: auto; }
+        .touch-btn { width: 65px; height: 65px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 1.8rem; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: background 0.1s;}
+        .touch-btn:active { background: rgba(0, 255, 204, 0.4); border-color: #00ffcc; }
+
+        @media (max-width: 768px) { 
+            #touch-controls { display: flex !important; } 
+            h1 { font-size: 2.5rem; }
         }
     </style>
-</head>
-<body>
-    <div id="game-container"></div>
-    <div id="countdown-display">3</div>
 
-    <div id="main-menu" class="screen active">
-        <h1>Avia Racer<br>Mobile Edition</h1>
-        <button onclick="changeScreen('garage')">🔧 進入機庫</button>
-        <div style="background: #ecf0f1; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; width: 80%; max-width: 300px;">
-            <h3>多人連線</h3>
-            <input type="text" id="room-input" placeholder="房間號 (例: 1234)" value="1234"><br>
-            <button class="green" onclick="joinLobby()">加入房間</button>
-        </div>
-    </div>
-
-    <div id="garage" class="screen transparent-screen">
-        <button style="position: absolute; top: 20px; left: 20px; padding: 10px 20px;" onclick="changeScreen('main-menu')">⬅ 返回</button>
-        <div style="position: absolute; top: 80px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; pointer-events: none; font-size: 0.9rem;">
-            速度: <span id="stat-speed">100</span><br>操控: <span id="stat-control">50</span><br>升力: <span id="stat-lift">50</span>
-        </div>
-        <div id="builder-panel">
-            <div class="part-btn" onclick="addPart('wing')">機翼 (+20升力)</div>
-            <div class="part-btn" onclick="addPart('engine')">引擎 (+30速度)</div>
-            <div class="part-btn" onclick="addPart('tail')">尾翼 (+20操控)</div>
-            <div class="part-btn" style="background:#e74c3c;" onclick="resetParts()">重置</div>
-        </div>
-    </div>
-
-    <div id="lobby" class="screen">
-        <h2>房間: <span id="room-name-display"></span></h2>
-        <div id="player-list" style="margin-bottom: 30px; font-size: 1.2rem; background: #ecf0f1; padding: 20px; border-radius: 15px; text-align: center;">連線中...</div>
-        <button class="green" onclick="startCountdown()">準備出發！</button>
-        <button onclick="leaveLobby()">離開房間</button>
-    </div>
-
-    <div id="game-ui" class="screen transparent-screen">
-        <div id="hud">SPD: <span id="speed-display">0</span><br>ALT: <span id="alt-display">0</span></div>
-        <div id="controls-hint">W/S: 俯仰 | A/D: 翻滾<br>Shift: 加速 | Space: 減速</div>
-        
-        <div id="touch-controls">
-            <div class="touch-group" style="flex-direction: column; align-items: center;">
-                <div class="touch-btn" id="btn-up">▲</div>
-                <div style="display:flex; gap: 30px;">
-                    <div class="touch-btn" id="btn-left">◀</div>
-                    <div class="touch-btn" id="btn-right">▶</div>
-                </div>
-                <div class="touch-btn" id="btn-down">▼</div>
-            </div>
-            <div class="touch-group" style="flex-direction: column; justify-content: center; gap: 20px;">
-                <div class="touch-btn" id="btn-boost" style="background: rgba(231, 76, 60, 0.6);">🚀</div>
-                <div class="touch-btn" id="btn-slow" style="background: rgba(52, 152, 219, 0.6);">🛑</div>
-            </div>
-        </div>
-    </div>
     <script type="importmap">
         {
             "imports": {
@@ -102,12 +66,79 @@
             }
         }
     </script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="countdown-display">3</div>
+    <div id="crash-screen">SYSTEM FAILURE</div>
+    <div id="nametag-container"></div> 
 
+    <div id="main-menu" class="screen active">
+        <h1>AVIA RACER<br><span style="font-size: 2rem; color: #00ffcc;">PRO EDITION</span></h1>
+        <input type="text" id="player-name" placeholder="輸入飛行員代號" value="Maverick">
+        <button onclick="changeScreen('garage')">🔧 進入高階機庫</button>
+        <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 12px; margin-top: 20px; text-align: center; width: 80%; max-width: 350px; border: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="margin-top: 0; color: #aaa;">連線競速設定</h3>
+            <input type="text" id="room-input" placeholder="連線頻道 (例: 777)" value="777"><br>
+            <button class="green" onclick="joinLobby()">連線至大廳</button>
+        </div>
+    </div>
+
+    <div id="garage" class="screen transparent-screen">
+        <button style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5);" onclick="changeScreen('main-menu')">⬅ 中止裝配</button>
+        <div style="position: absolute; top: 90px; left: 20px; color: #00ffcc; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; border: 1px solid #00ffcc; font-family: monospace;">
+            <div style="color: #fff; margin-bottom: 5px;">機體性能分析</div>
+            頂速 (SPD): <span id="stat-speed">100</span><br>
+            機動 (CTRL): <span id="stat-control">50</span><br>
+            升力 (LIFT): <span id="stat-lift">50</span>
+        </div>
+        <div id="builder-panel">
+            <div class="part-btn" onclick="addPart('wing')">➕ 高升力機翼</div>
+            <div class="part-btn" onclick="addPart('engine')">➕ 渦輪引擎</div>
+            <div class="part-btn" onclick="addPart('tail')">➕ 碳纖維尾翼</div>
+            <div class="part-btn" style="background:#c0392b; border-color:#e74c3c;" onclick="resetParts()">🔄 重置機體</div>
+        </div>
+    </div>
+
+    <div id="lobby" class="screen">
+        <h2>頻道: <span id="room-name-display" style="color: #00ffcc;"></span></h2>
+        <div id="player-list" style="margin-bottom: 25px; font-size: 1.2rem; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 8px; text-align: left; width: 80%; max-width: 450px; min-height: 150px; border: 1px solid rgba(255,255,255,0.2);"></div>
+        <button id="btn-ready" class="green" onclick="toggleReady()">準備就緒 (READY)</button>
+        <button id="btn-start" style="display: none; background: #f39c12;" onclick="hostStartGame()">啟動賽事 (含AI)</button>
+        <button onclick="leaveLobby()" style="background: transparent; border: 1px solid #fff;">離開頻道</button>
+    </div>
+
+    <div id="game-ui" class="screen transparent-screen">
+        <div id="hud">
+            THRUST: <span id="speed-display">0</span> KN<br>
+            ALT: <span id="alt-display">0</span> FT
+        </div>
+        <div id="race-hud">
+            LAP <span id="lap-display">1</span>/3<br>
+            TARGET: <span id="chk-display">0</span> M
+        </div>
+        
+        <div id="touch-controls">
+            <div class="touch-group" style="flex-direction: column; align-items: center;">
+                <div class="touch-btn" id="btn-up">▲</div>
+                <div style="display:flex; gap: 40px;">
+                    <div class="touch-btn" id="btn-left">◀</div>
+                    <div class="touch-btn" id="btn-right">▶</div>
+                </div>
+                <div class="touch-btn" id="btn-down">▼</div>
+            </div>
+            <div class="touch-group" style="flex-direction: column; justify-content: center; gap: 20px;">
+                <div class="touch-btn" id="btn-boost" style="background: rgba(231, 76, 60, 0.4); border-color: #e74c3c;">🚀</div>
+                <div class="touch-btn" id="btn-slow" style="background: rgba(52, 152, 219, 0.4); border-color: #3498db;">🛑</div>
+            </div>
+        </div>
+    </div>
     <script type="module">
         import * as THREE from 'three';
         import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, set, onValue, onDisconnect, remove } from "firebase/database";
+        import { getDatabase, ref, set, onValue, onDisconnect, remove, update } from "firebase/database";
 
+        // --- Firebase 初始化 ---
         const firebaseConfig = {
             apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
             authDomain: "airplane-game-68f8f.firebaseapp.com",
@@ -117,291 +148,609 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // --- 全域變數狀態 ---
         let currentScreen = 'main-menu';
-        let playerId = "P_" + Math.floor(Math.random() * 9999);
+        let playerId = "P_" + Math.floor(Math.random() * 99999);
+        let playerName = "Maverick";
         let currentRoomId = null; 
+        let isHost = false, isReady = false, isGameActive = false;
+        let myGridIndex = 0; 
         let players = {}; 
-        let isGameActive = false;
+        let aiBots = []; 
 
-        let baseStats = { speed: 100, control: 50, lift: 50 };
+        // 基礎物理與組裝數值
+        let baseStats = { speed: 120, control: 60, lift: 50 };
         let planeStats = { ...baseStats };
         let myPartsList = []; 
 
+        // 賽道航點與起跑格
+        const trackPoints = [
+            new THREE.Vector3(0, 50, -400), new THREE.Vector3(300, 80, -800),
+            new THREE.Vector3(600, 50, -400), new THREE.Vector3(300, 60, 0)
+        ];
+        const spawnGrid = [
+            new THREE.Vector3(0, 20, 80), new THREE.Vector3(40, 20, 120),
+            new THREE.Vector3(-40, 20, 120), new THREE.Vector3(80, 20, 160),
+            new THREE.Vector3(-80, 20, 160), new THREE.Vector3(0, 20, 200)
+        ];
+        let currentTargetIndex = 0; let currentLap = 1;
+
+        // --- Three.js 核心環境設定 ---
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x6dd5ed); 
-        scene.fog = new THREE.FogExp2(0x6dd5ed, 0.002);
+        scene.background = new THREE.Color(0x0a192f); // 深色科技感天空
+        scene.fog = new THREE.FogExp2(0x0a192f, 0.0008); // 降低霧氣濃度提升視野
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-        const renderer = new THREE.WebGLRenderer({ antialias: false }); // 手機端關閉抗鋸齒以提升效能
-        renderer.setPixelRatio(window.devicePixelRatio > 1.5 ? 1.5 : window.devicePixelRatio); // 限制像素比例
+        // 攝影機設定
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 4000);
+        
+        // 渲染器設定 (嚴格限制 pixelRatio 以榨乾手機效能)
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); 
         renderer.setSize(window.innerWidth, window.innerHeight);
+        // 開啟陰影，但使用最基礎的貼圖以節省效能
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.BasicShadowMap; // 最佳化：使用最基礎的陰影
+        renderer.shadowMap.type = THREE.BasicShadowMap; 
         container.appendChild(renderer.domElement);
 
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+        // --- 光影系統 ---
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5); 
         scene.add(hemiLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(100, 200, 100);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); 
+        dirLight.position.set(300, 800, 400); 
         dirLight.castShadow = true;
+        // 限制陰影相機範圍 (Frustum)，視野外不計算陰影
+        dirLight.shadow.camera.top = 1000;
+        dirLight.shadow.camera.bottom = -1000;
+        dirLight.shadow.camera.left = -1000;
+        dirLight.shadow.camera.right = 1000;
+        dirLight.shadow.mapSize.width = 1024; // 降低陰影解析度
+        dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        // 減少細分面數的地面
-        const groundGeo = new THREE.PlaneGeometry(4000, 4000, 5, 5);
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, flatShading: true });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
+        // 地面
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x05101c, roughness: 0.8, metalness: 0.2, flatShading: true });
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000, 10, 10), groundMat);
+        ground.rotation.x = -Math.PI / 2; 
         ground.receiveShadow = true;
         scene.add(ground);
-        const myPlaneGroup = new THREE.Group();
+
+        // --- 榨乾效能：InstancedMesh 森林生成 ---
+        const treeCount = 800; // 提升樹木數量，測試極限
+        const trunkGeo = new THREE.CylinderGeometry(2, 3, 20, 5); // 降低多邊形數
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x1a0f0a, roughness: 1.0 });
+        const leavesGeo = new THREE.ConeGeometry(12, 40, 5);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x0a2e1f, roughness: 0.9, flatShading: true });
+        
+        const instancedTrunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeCount);
+        const instancedLeaves = new THREE.InstancedMesh(leavesGeo, leavesMat, treeCount);
+        // 讓樹木能接收與投射陰影
+        instancedTrunks.castShadow = true; instancedTrunks.receiveShadow = true;
+        instancedLeaves.castShadow = true; instancedLeaves.receiveShadow = true;
+        
+        const dummy = new THREE.Object3D();
+
+        for (let i = 0; i < treeCount; i++) {
+            let x = (Math.random() - 0.5) * 3000;
+            let z = (Math.random() - 0.5) * 3000;
+            // 淨空中央起跑區
+            if (Math.abs(x) < 150 && Math.abs(z) < 300) { x += 300 * Math.sign(x || 1); } 
+            
+            // 樹幹位置
+            dummy.position.set(x, 10, z);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            instancedTrunks.setMatrixAt(i, dummy.matrix);
+            
+            // 樹葉位置與隨機大小
+            dummy.position.set(x, 30, z);
+            let scale = 0.7 + Math.random() * 0.6;
+            dummy.scale.set(scale, scale, scale);
+            dummy.updateMatrix();
+            instancedLeaves.setMatrixAt(i, dummy.matrix);
+        }
+        scene.add(instancedTrunks); scene.add(instancedLeaves);
+
+        // --- 賽道霓虹光環 ---
+        const rings = [];
+        const ringGeo = new THREE.TorusGeometry(40, 1.5, 8, 32); // 加大檢查點
+        // 發光材質
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.3, wireframe: true });
+        const activeRingMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+        
+        trackPoints.forEach((pos, i) => {
+            const ring = new THREE.Mesh(ringGeo, i === 0 ? activeRingMat : ringMat);
+            ring.position.copy(pos);
+            ring.lookAt(i < trackPoints.length - 1 ? trackPoints[i+1] : trackPoints[0]);
+            scene.add(ring); rings.push(ring);
+        });
+
+        // --- PBR 飛機模型建構系統 ---
+        const myPlaneGroup = new THREE.Group(); 
         scene.add(myPlaneGroup);
-        myPlaneGroup.position.set(0, 10, 0);
+
+        // 共用 PBR 材質 (減少記憶體消耗)
+        const pbrBodyMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.6, roughness: 0.2 });
+        const pbrPartMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 });
+        const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.1, transmission: 0.9, transparent: true }); // 玻璃質感
 
         function buildPlane(group, partsArray) {
+            // 清理舊物件
             while(group.children.length > 0){ group.remove(group.children[0]); }
-
-            const body = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 8), new THREE.MeshStandardMaterial({ color: 0xe74c3c, flatShading: true }));
+            
+            // 流線型機身
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(2, 1.5, 10, 12), pbrBodyMat);
+            body.rotation.x = Math.PI / 2;
             body.castShadow = true;
             group.add(body);
 
-            let wingCount = 0, engineCount = 0, tailCount = 0;
+            // 駕駛艙 (Cockpit)
+            const cockpit = new THREE.Mesh(new THREE.CapsuleGeometry(1, 2, 4, 8), glassMat);
+            cockpit.rotation.x = Math.PI / 2;
+            cockpit.position.set(0, 1.5, -1);
+            group.add(cockpit);
+
+            let wC = 0, eC = 0, tC = 0;
             partsArray.forEach(type => {
                 let mesh;
-                if (type === 'wing') {
-                    mesh = new THREE.Mesh(new THREE.BoxGeometry(16, 0.5, 3), new THREE.MeshStandardMaterial({ color: 0xecf0f1 }));
-                    mesh.position.set(0, 0, -wingCount * 2);
-                    wingCount++;
-                } else if (type === 'engine') {
-                    mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 4, 8), new THREE.MeshStandardMaterial({ color: 0x34495e }));
-                    mesh.rotation.x = Math.PI / 2;
-                    mesh.position.set(0, 0, 4 + engineCount * 2);
-                    engineCount++;
-                } else if (type === 'tail') {
-                    mesh = new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 2), new THREE.MeshStandardMaterial({ color: 0xf1c40f }));
-                    mesh.position.set(0, 2, -3 - tailCount);
-                    const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3, 2), new THREE.MeshStandardMaterial({ color: 0xf1c40f }));
-                    vTail.position.set(0, 1.5, 0);
-                    mesh.add(vTail);
-                    tailCount++;
+                if (type === 'wing') { 
+                    mesh = new THREE.Mesh(new THREE.BoxGeometry(20, 0.3, 4), pbrPartMat); 
+                    mesh.position.set(0, 0, -wC * 2.5); 
+                    wC++; 
                 }
-                if(mesh) { mesh.castShadow = true; group.add(mesh); }
+                else if (type === 'engine') { 
+                    mesh = new THREE.Group();
+                    const shell = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 5, 12), pbrPartMat); 
+                    shell.rotation.x = Math.PI/2; 
+                    const glow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 12), new THREE.MeshBasicMaterial({color: 0x00ffff}));
+                    glow.position.set(0, 0, 2.6); // 引擎噴發口
+                    mesh.add(shell); mesh.add(glow);
+                    mesh.position.set(0, -0.5, 3 + eC * 2); 
+                    eC++; 
+                }
+                else if (type === 'tail') { 
+                    mesh = new THREE.Group();
+                    const hTail = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 2.5), pbrPartMat); 
+                    const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4, 3), pbrPartMat); 
+                    vTail.position.set(0, 2, 0); 
+                    mesh.add(hTail); mesh.add(vTail);
+                    mesh.position.set(0, 0.5, -4.5 - tC); 
+                    tC++; 
+                }
+                if(mesh) {
+                    mesh.traverse(child => { if(child.isMesh) child.castShadow = true; });
+                    group.add(mesh);
+                }
             });
         }
+        
+        // 初始建構
         buildPlane(myPlaneGroup, myPartsList);
 
-        window.addPart = function(type) {
-            myPartsList.push(type);
-            if(type === 'wing') planeStats.lift += 20;
-            if(type === 'engine') planeStats.speed += 30;
-            if(type === 'tail') planeStats.control += 20;
+        // UI 組裝邏輯
+        window.addPart = function(type) { 
+            myPartsList.push(type); 
+            if(type==='wing') planeStats.lift += 30; 
+            if(type==='engine') planeStats.speed += 40; 
+            if(type==='tail') planeStats.control += 25; 
             
             document.getElementById('stat-speed').innerText = planeStats.speed;
             document.getElementById('stat-control').innerText = planeStats.control;
             document.getElementById('stat-lift').innerText = planeStats.lift;
-            buildPlane(myPlaneGroup, myPartsList);
+            buildPlane(myPlaneGroup, myPartsList); 
         };
-
-        window.resetParts = function() {
-            myPartsList = [];
-            planeStats = { ...baseStats };
+        
+        window.resetParts = function() { 
+            myPartsList = []; 
+            planeStats = {...baseStats}; 
             document.getElementById('stat-speed').innerText = planeStats.speed;
             document.getElementById('stat-control').innerText = planeStats.control;
             document.getElementById('stat-lift').innerText = planeStats.lift;
-            buildPlane(myPlaneGroup, myPartsList);
+            buildPlane(myPlaneGroup, myPartsList); 
         };
+        // --- 專業版 AI 對手系統 (AIBot) ---
+        class AIBot {
+            constructor(name, startGridIndex) {
+                this.name = name;
+                this.group = new THREE.Group();
+                // AI 預設配備稍微好一點，增加挑戰性
+                buildPlane(this.group, ['wing', 'engine']); 
+                scene.add(this.group);
+                
+                // AI 名牌
+                this.label = document.createElement('div');
+                this.label.className = 'nametag ai-tag';
+                this.label.innerText = "🤖 " + name;
+                document.getElementById('nametag-container').appendChild(this.label);
+                
+                this.targetIndex = 0;
+                this.velocity = 0;
+                // 基礎速度加上隨機變數，讓每台 AI 都有不同手感
+                this.baseSpeed = 120 + Math.random() * 30; 
+                this.liftCoefficient = 50 + Math.random() * 20;
+                
+                // 動態起跑格排位
+                let startPos = spawnGrid[startGridIndex % spawnGrid.length];
+                this.group.position.copy(startPos);
+                this.group.lookAt(trackPoints[0]);
+            }
 
+            update(delta) {
+                // 平滑加速 (Smooth Acceleration)
+                this.velocity += (this.baseSpeed - this.velocity) * 2 * delta;
+                
+                // 航點導航邏輯 (Steering Behavior)
+                let targetPos = trackPoints[this.targetIndex];
+                
+                // 計算面向目標所需的旋轉矩陣與四元數 (Quaternion)
+                const targetQuaternion = new THREE.Quaternion();
+                const dummyMatrix = new THREE.Matrix4();
+                dummyMatrix.lookAt(this.group.position, targetPos, this.group.up);
+                targetQuaternion.setFromRotationMatrix(dummyMatrix);
+                
+                // Slerp (球面線性插值)：讓 AI 飛機能像真人一樣擁有平滑轉向的慣性
+                // 數字越小轉向越遲鈍，數字越大轉向越精準
+                this.group.quaternion.slerp(targetQuaternion, 1.5 * delta);
+                
+                // 模擬升力 (簡易版，讓 AI 也能感受到重力與升力的平衡)
+                let currentLift = (this.velocity / 100) * (this.liftCoefficient * 0.8);
+                const GRAVITY = 30;
+                this.group.position.y += (currentLift - GRAVITY) * delta;
+
+                // 防止 AI 飛進地底或飛出大氣層
+                if(this.group.position.y < 10) this.group.position.y = 10;
+                if(this.group.position.y > 200) this.group.position.y = 200;
+
+                // 前進推力 (Thrust)
+                this.group.translateZ(-this.velocity * delta);
+
+                // 檢查是否通過檢查點 (Checkpoint)
+                if (this.group.position.distanceTo(targetPos) < 60) {
+                    this.targetIndex++;
+                    if (this.targetIndex >= trackPoints.length) this.targetIndex = 0;
+                }
+            }
+        }
+
+        // --- Firebase 即時連線與房間管理 ---
         function updateMultiplayer() {
             if (!isGameActive || !currentRoomId) return; 
-            const playerRef = ref(db, `rooms/${currentRoomId}/players/${playerId}`);
-            set(playerRef, {
-                x: myPlaneGroup.position.x, y: myPlaneGroup.position.y, z: myPlaneGroup.position.z,
-                rx: myPlaneGroup.rotation.x, ry: myPlaneGroup.rotation.y, rz: myPlaneGroup.rotation.z,
-                parts: myPartsList.join(',')
+            // 降低傳送頻率可優化效能，這裡我們利用 requestAnimationFrame 的特性持續同步
+            update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { 
+                x: myPlaneGroup.position.x, y: myPlaneGroup.position.y, z: myPlaneGroup.position.z, 
+                rx: myPlaneGroup.rotation.x, ry: myPlaneGroup.rotation.y, rz: myPlaneGroup.rotation.z 
             });
         }
 
         window.joinLobby = function() {
-            const inputId = document.getElementById('room-input').value.trim();
-            if(!inputId) return alert("請輸入房間號碼！");
+            playerName = document.getElementById('player-name').value || "Maverick";
+            currentRoomId = document.getElementById('room-input').value.trim();
+            if(!currentRoomId) return alert("請輸入連線頻道！");
             
-            currentRoomId = inputId;
-            document.getElementById('room-name-display').innerText = currentRoomId;
+            document.getElementById('room-name-display').innerText = currentRoomId; 
             changeScreen('lobby');
-
-            const roomRef = ref(db, `rooms/${currentRoomId}/players`);
-            onValue(roomRef, (snapshot) => {
-                const data = snapshot.val();
-                let count = data ? Object.keys(data).length : 0;
-                document.getElementById('player-list').innerText = `已連線玩家: ${count} 人`;
+            
+            // 監聽房間狀態
+            onValue(ref(db, `rooms/${currentRoomId}`), (snapshot) => {
+                const roomData = snapshot.val();
                 
-                if(!data || !isGameActive) return; 
-
-                for (let id in data) {
-                    if (id === playerId) continue;
-                    if (!players[id]) {
-                        players[id] = { group: new THREE.Group(), partsStr: "" };
-                        scene.add(players[id].group);
-                    }
-                    if(players[id].partsStr !== data[id].parts) {
-                        players[id].partsStr = data[id].parts;
-                        let oppPartsArray = data[id].parts ? data[id].parts.split(',') : [];
-                        buildPlane(players[id].group, oppPartsArray);
-                    }
-                    players[id].group.position.set(data[id].x, data[id].y, data[id].z);
-                    players[id].group.rotation.set(data[id].rx, data[id].ry, data[id].rz);
+                // 房間不存在，我就是房主 (Host)
+                if (!roomData) { 
+                    isHost = true; 
+                    set(ref(db, `rooms/${currentRoomId}/status`), 'waiting'); 
+                    document.getElementById('btn-start').style.display = 'inline-block'; 
                 }
-                
-                for (let id in players) {
-                    if (!data[id]) {
-                        scene.remove(players[id].group);
-                        delete players[id];
+                // 房主按了開始，所有人進入本地倒數程序
+                else if (roomData.status === 'starting' && currentScreen === 'lobby') { 
+                    startCountdownLocally(); 
+                }
+
+                const playersData = roomData ? roomData.players : null;
+                let listHTML = ""; 
+                let indexCounter = 0; 
+                let allReady = true;
+
+                if (playersData) {
+                    for (let id in playersData) {
+                        const p = playersData[id];
+                        // 根據加入順序分配起跑排位
+                        if (id === playerId) myGridIndex = indexCounter;
+                        
+                        listHTML += `<div style="padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
+                            ${p.name} ${indexCounter === 0 ? "👑" : ""} 
+                            <span style="float: right; color: ${p.ready ? '#00ffcc' : '#e74c3c'}">${p.ready ? "✔️ READY" : "❌ WAIT"}</span>
+                        </div>`;
+                        
+                        if (!p.ready) allReady = false;
+                        
+                        // 處理對手 3D 模型的生成與同步
+                        if (id !== playerId && isGameActive) {
+                            if (!players[id]) {
+                                players[id] = { group: new THREE.Group(), partsStr: "", label: document.createElement('div') };
+                                players[id].label.className = 'nametag'; 
+                                players[id].label.innerText = p.name;
+                                document.getElementById('nametag-container').appendChild(players[id].label); 
+                                scene.add(players[id].group);
+                            }
+                            // 如果對手更改了飛機配置，重新建構模型
+                            if(players[id].partsStr !== p.parts) { 
+                                players[id].partsStr = p.parts; 
+                                buildPlane(players[id].group, p.parts ? p.parts.split(',') : []); 
+                            }
+                            players[id].group.position.set(p.x, p.y, p.z); 
+                            players[id].group.rotation.set(p.rx, p.ry, p.rz);
+                        }
+                        indexCounter++;
                     }
+                }
+                document.getElementById('player-list').innerHTML = listHTML || "等待其他飛行員加入...";
+                // 房主必須等所有人都 Ready 才能按開始
+                if (isHost) {
+                    const startBtn = document.getElementById('btn-start');
+                    startBtn.disabled = !allReady;
+                    startBtn.style.opacity = allReady ? 1 : 0.5;
                 }
             });
-
+            
+            // 斷線時自動移除自己的資料
             onDisconnect(ref(db, `rooms/${currentRoomId}/players/${playerId}`)).remove();
-            set(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { status: 'waiting' });
+            // 寫入自己的初始狀態
+            set(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { name: playerName, ready: false, parts: myPartsList.join(',') });
         };
 
-        window.leaveLobby = function() {
-            if(currentRoomId) {
-                remove(ref(db, `rooms/${currentRoomId}/players/${playerId}`));
-                currentRoomId = null;
-            }
-            changeScreen('main-menu');
+        window.toggleReady = function() { 
+            isReady = !isReady; 
+            const btn = document.getElementById('btn-ready');
+            btn.innerText = isReady ? "取消準備" : "準備就緒 (READY)"; 
+            btn.style.background = isReady ? "#e74c3c" : "#00ffcc";
+            btn.style.color = isReady ? "#fff" : "#111";
+            update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { ready: isReady, parts: myPartsList.join(',') }); 
         };
-        // --- 整合鍵盤與觸控控制 ---
-        let keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
-        let velocity = 0;
-        const GRAVITY = 30; 
         
-        // 鍵盤支援
+        window.hostStartGame = function() { 
+            if(isHost) set(ref(db, `rooms/${currentRoomId}/status`), 'starting'); 
+        };
+        
+        window.leaveLobby = function() { 
+            if(currentRoomId) remove(ref(db, `rooms/${currentRoomId}/players/${playerId}`)); 
+            currentRoomId = null; isHost = false; isReady = false; 
+            document.getElementById('btn-start').style.display = 'none'; 
+            changeScreen('main-menu'); 
+        };
+        // --- 控制輸入系統 (Input System) ---
+        let keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
+        let velocity = 0; 
+        
+        // 鍵盤監聽
         window.addEventListener('keydown', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true; });
         window.addEventListener('keyup', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false; });
 
-        // 觸控支援 (綁定虛擬按鈕)
-        const bindTouch = (id, key) => {
+        // 手機虛擬觸控綁定
+        const bindT = (id, k) => { 
             const el = document.getElementById(id);
-            // preventDefault 避免手機瀏覽器縮放或選取文字
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
-        };
-        bindTouch('btn-up', 'w'); // 這裡設定上鍵為 W (俯衝/Pitch Down)
-        bindTouch('btn-down', 's'); // 下鍵為 S (爬升/Pitch Up)
-        bindTouch('btn-left', 'a');
-        bindTouch('btn-right', 'd');
-        bindTouch('btn-boost', 'shift');
-        bindTouch('btn-slow', 'space');
-
-        const cameraOffset = new THREE.Vector3(0, 8, 25);
-
-        function updatePhysics(delta) {
-            let targetSpeed = keys.shift ? planeStats.speed * 1.5 : (keys.space ? 0 : planeStats.speed);
-            velocity += (targetSpeed - velocity) * 1.5 * delta;
-
-            let currentLift = (velocity / 100) * (planeStats.lift * 0.8);
-            let verticalVelocity = currentLift - GRAVITY;
-            
-            let turnSpeed = (planeStats.control / 100) * delta * 1.5;
-            if (keys.w) myPlaneGroup.rotateX(turnSpeed);
-            if (keys.s) myPlaneGroup.rotateX(-turnSpeed);
-            if (keys.a) myPlaneGroup.rotateZ(turnSpeed);
-            if (keys.d) myPlaneGroup.rotateZ(-turnSpeed);
-
-            // 最佳化 5：自動穩定飛機 (Auto-leveling)
-            // 當沒有左右轉向時，自動將 Roll 歸零
-            if(!keys.a && !keys.d) myPlaneGroup.rotation.z -= myPlaneGroup.rotation.z * 3 * delta;
-            // 當沒有上下俯仰時，輕微將 Pitch 歸零，避免無盡翻滾
-            if(!keys.w && !keys.s) myPlaneGroup.rotation.x -= myPlaneGroup.rotation.x * 2 * delta;
-
-            myPlaneGroup.translateZ(-velocity * delta);
-            myPlaneGroup.position.y += verticalVelocity * delta;
-
-            if (myPlaneGroup.position.y < 3) {
-                myPlaneGroup.position.y = 3;
-                velocity *= 0.9; 
-                if(myPlaneGroup.rotation.x < 0) myPlaneGroup.rotation.x *= 0.8; 
+            if(el) {
+                el.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys[k]=true; }); 
+                el.addEventListener('touchend', (e)=>{ e.preventDefault(); keys[k]=false; }); 
             }
+        };
+        bindT('btn-up','w'); bindT('btn-down','s'); bindT('btn-left','a'); bindT('btn-right','d'); bindT('btn-boost','shift'); bindT('btn-slow','space');
 
-            document.getElementById('speed-display').innerText = Math.round(velocity * 5);
-            document.getElementById('alt-display').innerText = Math.round(myPlaneGroup.position.y);
+        const cameraOffset = new THREE.Vector3(0, 10, 35); // 讓視野更廣闊
 
-            const relativeOffset = cameraOffset.clone().applyMatrix4(myPlaneGroup.matrixWorld);
-            camera.position.lerp(relativeOffset, 0.1);
-            camera.lookAt(myPlaneGroup.position);
+        // --- 名牌座標投影系統 (UI Projection) ---
+        function updateNameTags() {
+            // 合併真人玩家與 AI 的陣列
+            const allEntities = [...Object.values(players), ...aiBots];
+            allEntities.forEach(ent => {
+                if(ent.group && ent.label) {
+                    const tempV = new THREE.Vector3();
+                    ent.group.getWorldPosition(tempV);
+                    tempV.y += 8; // 讓名字飄在飛機上方
+                    tempV.project(camera); // 核心：將 3D 座標轉換為 -1 到 1 的 2D 螢幕比例
+                    
+                    if(tempV.z > 1) { 
+                        // z > 1 代表物體在攝影機背後，隱藏名牌
+                        ent.label.style.display = 'none';
+                    } else {
+                        const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+                        const y = (tempV.y * -0.5 + 0.5) * window.innerHeight;
+                        ent.label.style.display = 'block';
+                        ent.label.style.left = `${x}px`;
+                        ent.label.style.top = `${y}px`;
+                    }
+                }
+            });
         }
 
+        // --- 墜機與重生機制 (Crash & Respawn) ---
+        function handleCrash() {
+            isGameActive = false; 
+            document.getElementById('crash-screen').style.display = 'flex';
+            
+            // 螢幕震動特效
+            document.body.style.transform = "translate(5px, 5px)";
+            setTimeout(() => document.body.style.transform = "translate(-5px, -5px)", 50);
+            setTimeout(() => document.body.style.transform = "translate(0, 0)", 100);
+
+            setTimeout(() => {
+                document.getElementById('crash-screen').style.display = 'none';
+                // 復活在上一過關的檢查點，或是起跑線
+                let respawnPos = currentTargetIndex === 0 ? spawnGrid[myGridIndex % spawnGrid.length] : trackPoints[currentTargetIndex - 1];
+                myPlaneGroup.position.copy(respawnPos); 
+                myPlaneGroup.rotation.set(0, 0, 0);
+                velocity = 0; 
+                isGameActive = true;
+            }, 2000);
+        }
+
+        // --- 核心物理引擎 (Physics Engine) ---
+        function updatePhysics(delta) {
+            // 1. 推力與阻力 (Thrust & Drag)
+            let targetSpeed = keys.shift ? planeStats.speed * 1.5 : (keys.space ? 50 : planeStats.speed);
+            // 加入平滑加速與空氣阻力模擬
+            velocity += (targetSpeed - velocity) * 1.5 * delta;
+
+            // 2. 升力與重力計算 (Lift & Gravity)
+            const airDensity = 1.225; // 空氣密度常數
+            const GRAVITY = 35; // 遊戲化重力
+            // Lift = 0.5 * rho * v^2 * A * Cl (針對遊戲手感簡化)
+            let liftForce = 0.5 * airDensity * Math.pow(velocity / 50, 2) * (planeStats.lift / 50);
+            let verticalVelocity = liftForce - GRAVITY;
+            
+            // 3. 飛行控制面 (Control Surfaces)
+            let turnSpeed = (planeStats.control / 100) * delta * 2.0;
+            if (keys.w) myPlaneGroup.rotateX(turnSpeed);   // Pitch Down (俯衝)
+            if (keys.s) myPlaneGroup.rotateX(-turnSpeed);  // Pitch Up (爬升)
+            if (keys.a) myPlaneGroup.rotateZ(turnSpeed);   // Roll Left (左翻滾)
+            if (keys.d) myPlaneGroup.rotateZ(-turnSpeed);  // Roll Right (右翻滾)
+
+            // 4. 物理極限約束 (Clamping) - 防止無限翻滾
+            myPlaneGroup.rotation.x = Math.max(Math.min(myPlaneGroup.rotation.x, Math.PI/2.5), -Math.PI/2.5);
+            myPlaneGroup.rotation.z = Math.max(Math.min(myPlaneGroup.rotation.z, Math.PI/2), -Math.PI/2);
+            
+            // Auto-leveling (自動回正系統)
+            if(!keys.a && !keys.d) myPlaneGroup.rotation.z -= myPlaneGroup.rotation.z * 2 * delta;
+            if(!keys.w && !keys.s) myPlaneGroup.rotation.x -= myPlaneGroup.rotation.x * 1.5 * delta;
+
+            // 5. 執行位移
+            myPlaneGroup.translateZ(-velocity * delta); // 向機頭方向前進
+            myPlaneGroup.position.y += verticalVelocity * delta; // 升力與重力交互作用
+
+            // 6. 碰撞偵測 (Collision Detection)
+            // 高度太低或太高都會引發系統異常墜毀
+            if (myPlaneGroup.position.y < 3 || myPlaneGroup.position.y > 600) { 
+                handleCrash(); 
+                return; 
+            }
+
+            // 7. 檢查點進度判定 (Checkpoint Logic)
+            let dist = myPlaneGroup.position.distanceTo(trackPoints[currentTargetIndex]);
+            if (dist < 50) { // 進入光環半徑
+                rings[currentTargetIndex].material = ringMat; // 恢復舊光環顏色
+                currentTargetIndex++;
+                if(currentTargetIndex >= trackPoints.length) { 
+                    currentTargetIndex = 0; 
+                    currentLap++; 
+                    if(currentLap > 3) {
+                        alert("🎉 賽事完成！你是王牌飛行員！");
+                        leaveLobby();
+                        return;
+                    }
+                }
+                rings[currentTargetIndex].material = activeRingMat; // 點亮下一個光環
+            }
+
+            // 更新儀表板 UI
+            document.getElementById('speed-display').innerText = Math.round(velocity * 4);
+            document.getElementById('alt-display').innerText = Math.round(myPlaneGroup.position.y * 3);
+            document.getElementById('lap-display').innerText = currentLap;
+            document.getElementById('chk-display').innerText = Math.round(dist);
+
+            // 8. 攝影機動態平滑跟隨 (Camera Lerp)
+            const relativeOffset = cameraOffset.clone().applyMatrix4(myPlaneGroup.matrixWorld);
+            camera.position.lerp(relativeOffset, 0.15); // 數字越小，延遲感與重量感越重
+            camera.lookAt(myPlaneGroup.position);
+            
+            updateNameTags(); 
+        }
+
+        // --- 畫面切換與狀態管理 ---
         window.changeScreen = function(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             currentScreen = screenId;
             
+            // 遊戲 HUD 顯示控制
             document.getElementById('hud').style.display = (screenId === 'game-ui') ? 'block' : 'none';
-            
-            // 由於使用 CSS media query 控制顯示，這裡只需控制外層 hint
-            document.getElementById('controls-hint').style.display = (screenId === 'game-ui') ? 'block' : 'none';
+            document.getElementById('race-hud').style.display = (screenId === 'game-ui') ? 'block' : 'none';
 
             if (screenId === 'garage') {
                 isGameActive = false;
-                myPlaneGroup.position.set(0, 10, 0);
+                myPlaneGroup.position.set(0, 10, 0); 
                 myPlaneGroup.rotation.set(0, 0, 0);
-                camera.position.set(20, 15, 25);
+                camera.position.set(25, 15, 30); 
                 camera.lookAt(myPlaneGroup.position);
             }
         };
 
-        window.startCountdown = function() {
+        // --- 賽事啟動程序 (Race Initialization) ---
+        function startCountdownLocally() {
             changeScreen('game-ui');
             isGameActive = false; 
-            myPlaneGroup.position.set(0, 5, 0); 
-            myPlaneGroup.rotation.set(0, 0, 0);
-            velocity = 0;
+            
+            // 玩家就位
+            let startPos = spawnGrid[myGridIndex % spawnGrid.length];
+            myPlaneGroup.position.copy(startPos); 
+            myPlaneGroup.lookAt(trackPoints[0]);
+            
+            // AI 生成與就位 (佔用玩家後方的網格)
+            aiBots.forEach(bot => { scene.remove(bot.group); bot.label.remove(); });
+            aiBots = [];
+            for(let i=1; i<=3; i++) {
+                // 給 AI 一些有氣勢的名字
+                let aiNames = ["Viper", "Jester", "Iceman"];
+                aiBots.push(new AIBot(aiNames[i-1], myGridIndex + i));
+            }
 
-            const countdownEl = document.getElementById('countdown-display');
-            countdownEl.style.display = 'block';
-            let count = 3;
-            countdownEl.innerText = count;
+            velocity = 0; currentLap = 1; currentTargetIndex = 0;
+            rings.forEach(r => r.material = ringMat); 
+            rings[0].material = activeRingMat;
 
+            // 倒數動畫
+            const countEl = document.getElementById('countdown-display');
+            countEl.style.display = 'block'; 
+            let c = 3; 
+            countEl.innerText = c;
+            
             let timer = setInterval(() => {
-                count--;
-                if(count > 0) {
-                    countdownEl.innerText = count;
-                } else if(count === 0) {
-                    countdownEl.innerText = "GO!";
-                } else {
-                    clearInterval(timer);
-                    countdownEl.style.display = 'none';
+                c--;
+                if(c > 0) countEl.innerText = c;
+                else if(c === 0) {
+                    countEl.innerText = "ENGAGE!";
+                    countEl.style.color = "#00ffcc";
+                }
+                else {
+                    clearInterval(timer); 
+                    countEl.style.display = 'none';
+                    countEl.style.color = "#fff"; // 顏色重置
                     isGameActive = true; 
+                    if(isHost) set(ref(db, `rooms/${currentRoomId}/status`), 'running');
                 }
             }, 1000);
-        };
+        }
 
+        // --- 遊戲主迴圈 (Game Loop) ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
             
-            if (currentScreen === 'garage') {
+            // 在機庫中僅做展示旋轉
+            if (currentScreen === 'garage') { 
                 myPlaneGroup.rotation.y += 0.5 * delta; 
-                renderer.render(scene, camera);
+                renderer.render(scene, camera); 
                 return; 
             }
-
-            if (isGameActive) {
-                updatePhysics(delta);
-                updateMultiplayer();
+            
+            // 賽事進行中
+            if (isGameActive) { 
+                updatePhysics(delta); 
+                updateMultiplayer(); 
+                aiBots.forEach(bot => bot.update(delta)); 
             }
             
             renderer.render(scene, camera);
         }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // --- RWD 響應式視窗縮放 ---
+        window.addEventListener('resize', () => { 
+            camera.aspect = window.innerWidth/window.innerHeight; 
+            camera.updateProjectionMatrix(); 
+            renderer.setSize(window.innerWidth, window.innerHeight); 
         });
 
+        // 啟動引擎！
         animate();
     </script>
 </body>
