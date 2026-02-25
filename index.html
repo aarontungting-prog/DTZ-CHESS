@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avia Builder & Racer</title>
+    <title>Avia Builder & Racer - Turbine Edition</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #87CEEB; user-select: none; -webkit-touch-callout: none; }
         #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* 明亮乾淨的 Aviassembly 風格 UI */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(8px); color: #333; }
         .screen.active { display: flex; }
         .transparent-screen { background: none; backdrop-filter: none; pointer-events: none;} 
         
         h1 { font-size: 3.5rem; color: #2c3e50; text-shadow: 2px 2px 0px #fff; margin-bottom: 20px; text-align: center; }
-        h2 { color: #2c3e50; text-shadow: 1px 1px 0px #fff; }
         
         button { margin: 10px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 20px; background: #3498db; color: white; cursor: pointer; box-shadow: 0 5px 0 #2980b9; transition: all 0.1s; pointer-events: auto; }
         button:active { transform: translateY(5px); box-shadow: 0 0 0 #2980b9; }
@@ -26,26 +24,21 @@
         input[type="text"] { padding: 15px; font-size: 1.2rem; border-radius: 15px; border: 3px solid #bdc3c7; text-align: center; margin-bottom: 15px; outline: none; width: 80%; max-width: 250px; font-weight: bold; color: #2c3e50;}
         input[type="text"]:focus { border-color: #3498db; }
         
-        /* 房間內的機庫組裝介面 */
         #room-ui-container { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
         #room-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; }
         
-        #player-list-panel { background: rgba(255, 255, 255, 0.8); padding: 15px; border-radius: 15px; min-width: 200px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #fff;}
+        #player-list-panel { background: rgba(255, 255, 255, 0.85); padding: 15px; border-radius: 15px; min-width: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
         .player-item { padding: 8px; border-bottom: 2px solid #ecf0f1; font-weight: bold; font-size: 1.1rem;}
         
-        #plane-stats { background: rgba(255, 255, 255, 0.8); padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #fff;}
+        #plane-stats { background: rgba(255, 255, 255, 0.85); padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
         
         #builder-panel { display: flex; justify-content: center; gap: 10px; padding: 20px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px); pointer-events: auto; flex-wrap: wrap;}
         .part-btn { background: #ecf0f1; border: 3px solid #bdc3c7; color: #2c3e50; padding: 12px 20px; border-radius: 15px; cursor: pointer; font-weight: bold; transition: all 0.1s;}
         .part-btn:active { transform: scale(0.95); background: #dfe6e9; }
         
-        /* 遊戲內儀表板 */
         #hud { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; text-shadow: 2px 2px 0px #2c3e50; pointer-events: none; z-index: 10; display: none;}
-        
-        /* 名牌 */
         .nametag { position: absolute; color: #fff; background: rgba(44, 62, 80, 0.6); padding: 4px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); display: none; z-index: 5; border: 2px solid #fff;}
 
-        /* 手機按鍵 */
         #touch-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; pointer-events: none; z-index: 15; padding: 0 20px; box-sizing: border-box;}
         .touch-group { display: flex; gap: 15px; pointer-events: auto; }
         .touch-btn { width: 65px; height: 65px; background: rgba(255, 255, 255, 0.5); border: 3px solid #fff; border-radius: 50%; color: #2c3e50; font-size: 1.8rem; font-weight:bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -69,11 +62,10 @@
     <div id="nametag-container"></div> 
 
     <div id="main-menu" class="screen active">
-        <h1>Avia Assembly<br>Web</h1>
-        <input type="text" id="player-name" placeholder="輸入玩家暱稱" value="飛行員">
-        
+        <h1>Avia Assembly<br>Turbine Web</h1>
+        <input type="text" id="player-name" placeholder="輸入玩家暱稱" value="王牌飛行員">
         <div style="background: rgba(255,255,255,0.8); padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
-            <button class="orange" onclick="createRoom()">➕ 創建房間</button>
+            <button class="orange" onclick="createRoom()">➕ 創建房間 (單人/多人)</button>
             <div style="margin: 20px 0; font-weight: bold; color: #7f8c8d;">或</div>
             <input type="text" id="room-input" placeholder="輸入房間號碼" style="margin-bottom: 10px;"><br>
             <button class="green" onclick="joinRoom()">🔍 加入房間</button>
@@ -100,7 +92,7 @@
             
             <div id="builder-panel">
                 <div class="part-btn" onclick="addPart('wing')">➕ 機翼 (升力)</div>
-                <div class="part-btn" onclick="addPart('engine')">➕ 引擎 (速度)</div>
+                <div class="part-btn" onclick="addPart('engine')">➕ 渦輪引擎 (速度)</div>
                 <div class="part-btn" onclick="addPart('tail')">➕ 尾翼 (操控)</div>
                 <div class="part-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="resetParts()">🗑️ 重新組裝</div>
             </div>
@@ -126,7 +118,6 @@
         import { initializeApp } from "firebase/app";
         import { getDatabase, ref, set, onValue, onDisconnect, remove, update } from "firebase/database";
 
-        // Firebase 初始化
         const firebaseConfig = {
             apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
             authDomain: "airplane-game-68f8f.firebaseapp.com",
@@ -136,7 +127,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 全域變數
         let currentScreen = 'main-menu';
         let playerId = "P_" + Math.floor(Math.random() * 99999);
         let playerName = "飛行員";
@@ -148,45 +138,35 @@
         let planeStats = { ...baseStats };
         let myPartsList = []; 
 
-        // --- Three.js 卡通風格環境 ---
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // 天空藍
-        scene.fog = new THREE.Fog(0x87CEEB, 200, 2000); // 柔和的霧氣
+        scene.background = new THREE.Color(0x87CEEB); 
+        scene.fog = new THREE.Fog(0x87CEEB, 200, 2000); 
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 4000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 柔和陰影
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         container.appendChild(renderer.domElement);
 
-        // 明亮的照明
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); 
-        scene.add(ambientLight);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); 
-        dirLight.position.set(300, 500, 200); 
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.top = 500; dirLight.shadow.camera.bottom = -500;
-        dirLight.shadow.camera.left = -500; dirLight.shadow.camera.right = 500;
+        dirLight.position.set(300, 500, 200); dirLight.castShadow = true;
         scene.add(dirLight);
 
-        // 卡通綠地
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, flatShading: true }); // flatShading 增加低多邊形立體感
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, flatShading: true }); 
         const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000, 20, 20), groundMat);
-        ground.rotation.x = -Math.PI / 2; 
-        ground.receiveShadow = true;
-        scene.add(ground);
+        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
-        // 建立棉花糖雲朵 (Clouds)
         function createCloud() {
             const cloudGroup = new THREE.Group();
             const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
             const parts = 3 + Math.floor(Math.random() * 3);
             for(let i=0; i<parts; i++) {
                 const size = 10 + Math.random() * 15;
-                const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), cloudMat); // 用十二面體代替球體更像卡通
+                const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), cloudMat); 
                 mesh.position.set((Math.random()-0.5)*30, (Math.random()-0.5)*10, (Math.random()-0.5)*20);
                 cloudGroup.add(mesh);
             }
@@ -198,47 +178,133 @@
             cloud.position.set((Math.random() - 0.5) * 3000, 200 + Math.random() * 300, (Math.random() - 0.5) * 3000);
             scene.add(cloud);
         }
-        // --- 卡通積木飛機建構系統 ---
+
+        // --- 動態生成 2D 貼圖 ---
+        function createCockpitTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#3498db'; ctx.fillRect(0, 0, 256, 256); 
+            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(40, 40, 176, 120, 20); ctx.fill(); 
+            ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.moveTo(60, 60); ctx.lineTo(120, 120); ctx.stroke(); 
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createFanTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill(); 
+            ctx.fillStyle = '#bdc3c7'; 
+            ctx.translate(128, 128); 
+            for(let i=0; i<8; i++) {
+                ctx.rotate(Math.PI / 4);
+                ctx.fillRect(10, -10, 100, 20); 
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createWingTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ecf0f1'; ctx.fillRect(0, 0, 256, 256); 
+            ctx.fillStyle = '#e74c3c'; ctx.fillRect(200, 0, 40, 256);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // 噴射火焰粒子貼圖
+        function createFireTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(64, 64, 10, 64, 64, 64);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // 白熱核心
+            gradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)'); // 金黃
+            gradient.addColorStop(0.6, 'rgba(255, 50, 0, 0.4)'); // 橘紅
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // 透明邊緣
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(canvas);
+        }
+        const texCockpit = createCockpitTexture();
+        const texFan = createFanTexture();
+        const texWing = createWingTexture();
+        const texFire = createFireTexture();
+
+        // PBR 高質感材質
+        const matBody = new THREE.MeshStandardMaterial({ color: 0x3498db, metalness: 0.3, roughness: 0.4 }); 
+        const matNose = new THREE.MeshStandardMaterial({ map: texCockpit, metalness: 0.3, roughness: 0.4 }); 
+        const matWingSolid = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.2, roughness: 0.5 }); 
+        const matWingTop = new THREE.MeshStandardMaterial({ map: texWing, metalness: 0.2, roughness: 0.5 }); 
+        const wingMaterials = [matWingSolid, matWingSolid, matWingTop, matWingSolid, matWingSolid, matWingSolid];
+        
+        const matEngine = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.7, roughness: 0.2 }); 
+        const matFan = new THREE.MeshStandardMaterial({ map: texFan, metalness: 0.5, roughness: 0.5 }); 
+        
+        // 引擎噴火材質 (使用 AdditiveBlending)
+        const matFire = new THREE.SpriteMaterial({ map: texFire, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true });
+
+        const matTail = new THREE.MeshStandardMaterial({ color: 0xe74c3c, metalness: 0.3, roughness: 0.4 }); 
+
         const myPlaneGroup = new THREE.Group(); 
         scene.add(myPlaneGroup);
-
-        // 鮮豔的材質
-        const matBody = new THREE.MeshStandardMaterial({ color: 0x3498db, flatShading: true }); // 藍色機身
-        const matWing = new THREE.MeshStandardMaterial({ color: 0xecf0f1, flatShading: true }); // 白色機翼
-        const matEngine = new THREE.MeshStandardMaterial({ color: 0x95a5a6, flatShading: true }); // 灰色引擎
-        const matTail = new THREE.MeshStandardMaterial({ color: 0xe74c3c, flatShading: true }); // 紅色尾翼
 
         function buildPlane(group, partsArray) {
             while(group.children.length > 0){ group.remove(group.children[0]); }
             
-            // 基礎核心方塊
-            const body = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 6), matBody);
+            // 圓柱形機身
+            const bodyGeo = new THREE.CylinderGeometry(1.5, 1.5, 6, 16);
+            bodyGeo.rotateX(Math.PI / 2); 
+            const body = new THREE.Mesh(bodyGeo, matBody);
             body.castShadow = true;
             group.add(body);
+
+            // 錐形機頭 + 駕駛艙貼圖
+            const noseGeo = new THREE.ConeGeometry(1.5, 2.5, 16);
+            noseGeo.rotateX(-Math.PI / 2); 
+            const nose = new THREE.Mesh(noseGeo, matNose);
+            nose.position.set(0, 0, -4.25); 
+            nose.castShadow = true;
+            group.add(nose);
 
             let wC = 0, eC = 0, tC = 0;
             partsArray.forEach(type => {
                 let mesh;
                 if (type === 'wing') { 
-                    mesh = new THREE.Mesh(new THREE.BoxGeometry(16, 0.5, 3), matWing); 
-                    mesh.position.set(0, 0, -wC * 2); wC++; 
+                    mesh = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 3), wingMaterials); 
+                    mesh.position.set(0, 0, -1 - wC * 2); wC++; 
                 }
                 else if (type === 'engine') { 
-                    mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 4), matEngine); 
-                    mesh.position.set(0, -0.5, 4 + eC * 2); eC++; 
+                    mesh = new THREE.Group();
+                    // 引擎外殼
+                    const shellGeo = new THREE.CylinderGeometry(0.8, 0.8, 3, 16);
+                    shellGeo.rotateX(Math.PI / 2);
+                    const shell = new THREE.Mesh(shellGeo, matEngine);
+                    shell.castShadow = true;
+                    mesh.add(shell);
+                    
+                    // 獨立螺旋槳扇葉
+                    const fan = new THREE.Mesh(new THREE.CircleGeometry(0.78, 16), matFan);
+                    fan.position.set(0, 0, -1.51); // 貼在前方
+                    fan.rotateY(Math.PI); // 朝前
+                    fan.name = "fan"; // 標記名稱以供動畫讀取
+                    mesh.add(fan);
+
+                    // 獨立噴射火焰
+                    const fire = new THREE.Sprite(matFire.clone()); // Clone 讓每顆引擎火焰可獨立
+                    fire.position.set(0, 0, 2.0); // 貼在後方排氣口外
+                    fire.scale.set(1.5, 1.5, 1.5);
+                    fire.name = "fire"; // 標記名稱
+                    mesh.add(fire);
+
+                    mesh.position.set(0, -1, 1 + eC * 2.5); eC++; 
                 }
                 else if (type === 'tail') { 
                     mesh = new THREE.Group();
-                    const hTail = new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 2), matTail); 
-                    const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3, 2), matTail); 
+                    const hTail = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 2), matTail); 
+                    const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3, 2), matTail); 
                     vTail.position.set(0, 1.5, 0); 
                     mesh.add(hTail); mesh.add(vTail);
-                    mesh.position.set(0, 1, -4 - tC); tC++; 
+                    mesh.position.set(0, 0.5, 3 + tC * 1.5); tC++; 
                 }
-                if(mesh) {
-                    mesh.traverse(child => { if(child.isMesh) child.castShadow = true; });
-                    group.add(mesh);
-                }
+                if(mesh) group.add(mesh);
             });
         }
         
@@ -246,19 +312,13 @@
 
         window.addPart = function(type) { 
             myPartsList.push(type); 
-            if(type==='wing') planeStats.lift += 20; 
-            if(type==='engine') planeStats.speed += 30; 
-            if(type==='tail') planeStats.control += 20; 
-            updateStatsUI();
-            buildPlane(myPlaneGroup, myPartsList); 
-            syncRoomData(); // 在房間組裝時即時同步給別人看
+            if(type==='wing') planeStats.lift += 20; if(type==='engine') planeStats.speed += 30; if(type==='tail') planeStats.control += 20; 
+            updateStatsUI(); buildPlane(myPlaneGroup, myPartsList); syncRoomData(); 
         };
         
         window.resetParts = function() { 
             myPartsList = []; planeStats = {...baseStats}; 
-            updateStatsUI();
-            buildPlane(myPlaneGroup, myPartsList); 
-            syncRoomData();
+            updateStatsUI(); buildPlane(myPlaneGroup, myPartsList); syncRoomData();
         };
 
         function updateStatsUI() {
@@ -267,7 +327,6 @@
             document.getElementById('stat-lift').innerText = planeStats.lift;
         }
 
-        // --- 房間管理 (Room Management) ---
         function syncRoomData() {
             if(currentRoomId && !isGameActive) {
                 update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { parts: myPartsList.join(',') });
@@ -276,9 +335,9 @@
 
         window.createRoom = function() {
             playerName = document.getElementById('player-name').value || "飛行員";
-            // 隨機產生 4 碼房間號
             currentRoomId = Math.floor(1000 + Math.random() * 9000).toString(); 
             isHost = true;
+            document.getElementById('btn-start').style.display = 'block';
             set(ref(db, `rooms/${currentRoomId}/status`), 'waiting'); 
             enterRoomUI();
         };
@@ -289,6 +348,7 @@
             if(!inputId) return alert("請輸入房間號碼！");
             currentRoomId = inputId;
             isHost = false;
+            document.getElementById('btn-start').style.display = 'none'; 
             enterRoomUI();
         };
 
@@ -296,30 +356,25 @@
             document.getElementById('room-id-display').innerText = currentRoomId; 
             changeScreen('room-screen');
             
-            // 監聽房間資料
             onValue(ref(db, `rooms/${currentRoomId}`), (snapshot) => {
                 const roomData = snapshot.val();
                 if (!roomData) return; 
-                
-                // 如果房主按下開始，所有人進入遊戲
-                if (roomData.status === 'running' && currentScreen === 'room-screen') { 
-                    launchGameLocally(); 
-                }
+                if (roomData.status === 'running' && currentScreen === 'room-screen') { launchGameLocally(); }
 
                 const playersData = roomData.players;
                 let listHTML = ""; 
-                let hostIsMe = false;
 
                 if (playersData) {
                     const playerIds = Object.keys(playersData);
-                    // 第一個加入房間的預設為房主
-                    if(playerIds[0] === playerId) isHost = true;
+                    if(playerIds[0] === playerId) {
+                        isHost = true;
+                        document.getElementById('btn-start').style.display = 'block';
+                    }
 
                     playerIds.forEach((id, index) => {
                         const p = playersData[id];
-                        listHTML += `<div class="player-item">✈️ ${p.name} ${index === 0 ? "👑 (房主)" : ""}</div>`;
+                        listHTML += `<div class="player-item">✈️ ${p.name} ${index === 0 ? "👑" : ""}</div>`;
                         
-                        // 處理別人飛機在房間內的同步展示
                         if (id !== playerId) {
                             if (!players[id]) {
                                 players[id] = { group: new THREE.Group(), partsStr: "", label: document.createElement('div') };
@@ -331,11 +386,9 @@
                                 players[id].partsStr = p.parts; 
                                 buildPlane(players[id].group, p.parts ? p.parts.split(',') : []); 
                             }
-                            // 讓別人的飛機排列在旁邊展示
-                            players[id].group.position.set((index + 1) * 15, 5, 0); 
-                            
-                            // 遊戲開始後的座標同步由 updatePhysics 處理
-                            if(isGameActive) {
+                            if(!isGameActive) {
+                                players[id].group.position.set((index + 1) * 15, 5, 0); 
+                            } else {
                                 players[id].group.position.set(p.x, p.y, p.z); 
                                 players[id].group.rotation.set(p.rx, p.ry, p.rz);
                             }
@@ -343,11 +396,6 @@
                     });
                 }
                 document.getElementById('player-list-content').innerHTML = listHTML;
-                
-                // 只有房主能看到並按下開始按鈕 (單人也會顯示)
-                if (isHost) {
-                    document.getElementById('btn-start').style.display = 'block';
-                }
             });
             
             onDisconnect(ref(db, `rooms/${currentRoomId}/players/${playerId}`)).remove();
@@ -360,7 +408,6 @@
             document.getElementById('btn-start').style.display = 'none'; 
             changeScreen('main-menu'); 
         };
-        // --- 飛行控制與物理 (Physics & Controls) ---
         let keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
         let velocity = 0; 
         
@@ -380,8 +427,7 @@
                 if(players[id].group && players[id].label) {
                     const tempV = new THREE.Vector3();
                     players[id].group.getWorldPosition(tempV);
-                    tempV.y += 6; 
-                    tempV.project(camera); 
+                    tempV.y += 6; tempV.project(camera); 
                     
                     if(tempV.z > 1) { 
                         players[id].label.style.display = 'none';
@@ -394,6 +440,23 @@
                     }
                 }
             }
+        }
+
+        // --- 螺旋槳旋轉與噴射火焰動畫 ---
+        function animateEngines(delta, group, isBoosting) {
+            group.traverse(child => {
+                if(child.name === "fan") {
+                    // 根據加速狀態改變風扇轉速
+                    child.rotation.z -= delta * (isBoosting ? 30 : 10); 
+                }
+                if(child.name === "fire") {
+                    // 根據加速狀態與隨機數製造火焰閃爍與縮放效果
+                    let baseScale = isBoosting ? 3.0 : 1.2;
+                    let pulse = Math.random() * (isBoosting ? 0.5 : 0.2);
+                    child.scale.set(baseScale + pulse, baseScale + pulse, baseScale + pulse);
+                    child.material.opacity = isBoosting ? 1.0 : 0.6;
+                }
+            });
         }
 
         function updatePhysics(delta) {
@@ -419,7 +482,6 @@
             myPlaneGroup.translateZ(-velocity * delta);
             myPlaneGroup.position.y += verticalVelocity * delta;
 
-            // 地面反彈保護
             if (myPlaneGroup.position.y < 3) { 
                 myPlaneGroup.position.y = 3; 
                 velocity *= 0.8; 
@@ -440,7 +502,8 @@
             if (!isGameActive || !currentRoomId) return; 
             update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { 
                 x: myPlaneGroup.position.x, y: myPlaneGroup.position.y, z: myPlaneGroup.position.z, 
-                rx: myPlaneGroup.rotation.x, ry: myPlaneGroup.rotation.y, rz: myPlaneGroup.rotation.z 
+                rx: myPlaneGroup.rotation.x, ry: myPlaneGroup.rotation.y, rz: myPlaneGroup.rotation.z,
+                boosting: keys.shift // 讓對手也能看到我噴火
             });
         }
 
@@ -459,38 +522,45 @@
             }
         };
 
-        // 房主觸發開始
         window.startGame = function() {
             if(isHost) set(ref(db, `rooms/${currentRoomId}/status`), 'running'); 
         };
 
-        // 啟動遊戲
         function launchGameLocally() {
             changeScreen('game-ui');
             isGameActive = true; 
-            // 隨機在空中某處生成
             myPlaneGroup.position.set((Math.random()-0.5)*100, 50, (Math.random()-0.5)*100); 
-            velocity = planeStats.speed; // 初始給予速度避免立刻墜落
+            velocity = planeStats.speed; 
         }
 
-        // --- 遊戲主迴圈 (Game Loop) ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
             
             if (currentScreen === 'room-screen') { 
-                // 房間內展示：自己的飛機稍微旋轉
                 myPlaneGroup.rotation.y += 0.3 * delta; 
-                // 別人的飛機也跟著旋轉展示
+                animateEngines(delta, myPlaneGroup, false); // 大廳展示基礎火焰
                 for(let id in players) {
-                    if(players[id].group) players[id].group.rotation.y += 0.3 * delta;
+                    if(players[id].group) {
+                        players[id].group.rotation.y += 0.3 * delta;
+                        animateEngines(delta, players[id].group, false);
+                    }
                 }
             }
             
             if (isGameActive) { 
                 updatePhysics(delta); 
                 updateMultiplayerIngame(); 
+                
+                // 動態更新自己與對手的引擎動畫
+                animateEngines(delta, myPlaneGroup, keys.shift);
+                for(let id in players) {
+                    if(players[id].group && players[id].partsStr) {
+                        // 假設 Firebase 同步了對手的 boosting 狀態 (預設 false)
+                        animateEngines(delta, players[id].group, false); 
+                    }
+                }
             }
             
             renderer.render(scene, camera);
