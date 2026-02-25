@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avia Builder & Racer - Turbine Edition</title>
+    <title>Avia Racer - Public Beta</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #87CEEB; user-select: none; -webkit-touch-callout: none; }
         #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
@@ -27,17 +27,20 @@
         #room-ui-container { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
         #room-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; }
         
-        #player-list-panel { background: rgba(255, 255, 255, 0.85); padding: 15px; border-radius: 15px; min-width: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
+        #player-list-panel { background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 15px; min-width: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
         .player-item { padding: 8px; border-bottom: 2px solid #ecf0f1; font-weight: bold; font-size: 1.1rem;}
         
-        #plane-stats { background: rgba(255, 255, 255, 0.85); padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
+        #plane-stats { background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
         
-        #builder-panel { display: flex; justify-content: center; gap: 10px; padding: 20px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px); pointer-events: auto; flex-wrap: wrap;}
+        #builder-panel { display: flex; justify-content: center; gap: 10px; padding: 20px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px); pointer-events: auto; flex-wrap: wrap;}
         .part-btn { background: #ecf0f1; border: 3px solid #bdc3c7; color: #2c3e50; padding: 12px 20px; border-radius: 15px; cursor: pointer; font-weight: bold; transition: all 0.1s;}
         .part-btn:active { transform: scale(0.95); background: #dfe6e9; }
         
         #hud { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; text-shadow: 2px 2px 0px #2c3e50; pointer-events: none; z-index: 10; display: none;}
-        .nametag { position: absolute; color: #fff; background: rgba(44, 62, 80, 0.6); padding: 4px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); display: none; z-index: 5; border: 2px solid #fff;}
+        #boost-bar-container { width: 200px; height: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-top: 5px; border: 2px solid #fff; overflow: hidden;}
+        #boost-bar { width: 100%; height: 100%; background: #e74c3c; transition: width 0.1s linear;}
+        
+        .nametag { position: absolute; color: #fff; background: rgba(44, 62, 80, 0.8); padding: 4px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); display: none; z-index: 5; border: 2px solid #fff;}
 
         #touch-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; pointer-events: none; z-index: 15; padding: 0 20px; box-sizing: border-box;}
         .touch-group { display: flex; gap: 15px; pointer-events: auto; }
@@ -62,13 +65,13 @@
     <div id="nametag-container"></div> 
 
     <div id="main-menu" class="screen active">
-        <h1>Avia Assembly<br>Turbine Web</h1>
-        <input type="text" id="player-name" placeholder="輸入玩家暱稱" value="王牌飛行員">
-        <div style="background: rgba(255,255,255,0.8); padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
-            <button class="orange" onclick="createRoom()">➕ 創建房間 (單人/多人)</button>
+        <h1>Avia Engine<br><span style="color:#e74c3c; font-size:0.6em;">Public Beta</span></h1>
+        <input type="text" id="player-name" placeholder="輸入玩家暱稱" value="Beta 試飛員">
+        <div style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+            <button class="orange" onclick="createRoom()">➕ 建立多人伺服器</button>
             <div style="margin: 20px 0; font-weight: bold; color: #7f8c8d;">或</div>
-            <input type="text" id="room-input" placeholder="輸入房間號碼" style="margin-bottom: 10px;"><br>
-            <button class="green" onclick="joinRoom()">🔍 加入房間</button>
+            <input type="text" id="room-input" placeholder="輸入伺服器代碼" style="margin-bottom: 10px;"><br>
+            <button class="green" onclick="joinRoom()">🔍 連線</button>
         </div>
     </div>
 
@@ -76,31 +79,35 @@
         <div id="room-ui-container">
             <div id="room-header">
                 <div id="player-list-panel">
-                    <div style="font-size: 1.2rem; font-weight: bold; color: #e67e22; margin-bottom: 10px;">房間號碼: <span id="room-id-display"></span></div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #e67e22; margin-bottom: 10px;">伺服器: <span id="room-id-display"></span></div>
                     <div id="player-list-content"></div>
-                    <button id="btn-start" class="green" style="width: 100%; margin: 15px 0 0 0; display: none;" onclick="startGame()">🚀 開始飛行</button>
-                    <button style="width: 100%; margin: 10px 0 0 0; background: #e74c3c; box-shadow: 0 5px 0 #c0392b;" onclick="leaveRoom()">離開房間</button>
+                    <button id="btn-start" class="green" style="width: 100%; margin: 15px 0 0 0; display: none;" onclick="startGame()">🚀 全機起飛</button>
+                    <button style="width: 100%; margin: 10px 0 0 0; background: #e74c3c; box-shadow: 0 5px 0 #c0392b;" onclick="leaveRoom()">中斷連線</button>
                 </div>
                 
                 <div id="plane-stats">
-                    📊 飛機性能<br>
-                    <span style="color:#2980b9;">速度 (SPD):</span> <span id="stat-speed">100</span><br>
-                    <span style="color:#27ae60;">操控 (CTRL):</span> <span id="stat-control">50</span><br>
-                    <span style="color:#8e44ad;">升力 (LIFT):</span> <span id="stat-lift">50</span>
+                    📊 空氣動力參數<br>
+                    <span style="color:#2980b9;">推力 (THRUST):</span> <span id="stat-speed">100</span><br>
+                    <span style="color:#27ae60;">控制面 (CTRL):</span> <span id="stat-control">50</span><br>
+                    <span style="color:#8e44ad;">翼面積 (AREA):</span> <span id="stat-lift">50</span>
                 </div>
             </div>
             
             <div id="builder-panel">
-                <div class="part-btn" onclick="addPart('wing')">➕ 機翼 (升力)</div>
-                <div class="part-btn" onclick="addPart('engine')">➕ 渦輪引擎 (速度)</div>
-                <div class="part-btn" onclick="addPart('tail')">➕ 尾翼 (操控)</div>
-                <div class="part-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="resetParts()">🗑️ 重新組裝</div>
+                <div class="part-btn" onclick="addPart('wing')">➕ 加大翼面 (Max: 3)</div>
+                <div class="part-btn" onclick="addPart('engine')">➕ 渦輪增壓 (Max: 3)</div>
+                <div class="part-btn" onclick="addPart('tail')">➕ 副翼擴充 (Max: 2)</div>
+                <div class="part-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="resetParts()">🗑️ 重置</div>
             </div>
         </div>
     </div>
 
     <div id="game-ui" class="screen transparent-screen">
-        <div id="hud">SPD: <span id="speed-display">0</span><br>ALT: <span id="alt-display">0</span></div>
+        <div id="hud">
+            SPD: <span id="speed-display">0</span><br>
+            ALT: <span id="alt-display">0</span>
+            <div id="boost-bar-container"><div id="boost-bar"></div></div>
+        </div>
         <div id="touch-controls">
             <div class="touch-group" style="flex-direction: column; align-items: center;">
                 <div class="touch-btn" id="btn-up">▲</div>
@@ -116,7 +123,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, set, onValue, onDisconnect, remove, update } from "firebase/database";
+        import { getDatabase, ref, set, onValue, onDisconnect, remove, update, off } from "firebase/database";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
@@ -131,12 +138,20 @@
         let playerId = "P_" + Math.floor(Math.random() * 99999);
         let playerName = "飛行員";
         let currentRoomId = null; 
+        let roomListener = null; 
         let isHost = false, isGameActive = false;
         let players = {}; 
 
         let baseStats = { speed: 100, control: 50, lift: 50 };
         let planeStats = { ...baseStats };
         let myPartsList = []; 
+        let boostEnergy = 100; 
+
+        // Zero-GC 靜態快取變數
+        const Z_AXIS = new THREE.Vector3(0, 0, 1);
+        const _tempVec = new THREE.Vector3();
+        const _camOffset = new THREE.Vector3();
+        const cameraOffsetDist = new THREE.Vector3(0, 8, 20);
 
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
@@ -179,7 +194,6 @@
             scene.add(cloud);
         }
 
-        // --- 動態生成 2D 貼圖 ---
         function createCockpitTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -195,10 +209,7 @@
             ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill(); 
             ctx.fillStyle = '#bdc3c7'; 
             ctx.translate(128, 128); 
-            for(let i=0; i<8; i++) {
-                ctx.rotate(Math.PI / 4);
-                ctx.fillRect(10, -10, 100, 20); 
-            }
+            for(let i=0; i<8; i++) { ctx.rotate(Math.PI / 4); ctx.fillRect(10, -10, 100, 20); }
             return new THREE.CanvasTexture(canvas);
         }
 
@@ -210,15 +221,14 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        // 噴射火焰粒子貼圖
         function createFireTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
             const gradient = ctx.createRadialGradient(64, 64, 10, 64, 64, 64);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // 白熱核心
-            gradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)'); // 金黃
-            gradient.addColorStop(0.6, 'rgba(255, 50, 0, 0.4)'); // 橘紅
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // 透明邊緣
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
+            gradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)'); 
+            gradient.addColorStop(0.6, 'rgba(255, 50, 0, 0.4)'); 
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 128, 128);
             return new THREE.CanvasTexture(canvas);
@@ -228,7 +238,6 @@
         const texWing = createWingTexture();
         const texFire = createFireTexture();
 
-        // PBR 高質感材質
         const matBody = new THREE.MeshStandardMaterial({ color: 0x3498db, metalness: 0.3, roughness: 0.4 }); 
         const matNose = new THREE.MeshStandardMaterial({ map: texCockpit, metalness: 0.3, roughness: 0.4 }); 
         const matWingSolid = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.2, roughness: 0.5 }); 
@@ -237,26 +246,33 @@
         
         const matEngine = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.7, roughness: 0.2 }); 
         const matFan = new THREE.MeshStandardMaterial({ map: texFan, metalness: 0.5, roughness: 0.5 }); 
-        
-        // 引擎噴火材質 (使用 AdditiveBlending)
-        const matFire = new THREE.SpriteMaterial({ map: texFire, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true });
-
+        const baseMatFire = new THREE.SpriteMaterial({ map: texFire, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true });
         const matTail = new THREE.MeshStandardMaterial({ color: 0xe74c3c, metalness: 0.3, roughness: 0.4 }); 
 
         const myPlaneGroup = new THREE.Group(); 
         scene.add(myPlaneGroup);
 
+        function safeDisposeGroup(group) {
+            group.traverse(child => {
+                if(child.isMesh || child.isSprite){
+                    if(child.geometry) child.geometry.dispose();
+                    if(child.material && child.userData.isDisposableMaterial){
+                        child.material.dispose();
+                    }
+                }
+            });
+            group.clear(); 
+        }
+
         function buildPlane(group, partsArray) {
-            while(group.children.length > 0){ group.remove(group.children[0]); }
+            safeDisposeGroup(group);
             
-            // 圓柱形機身
             const bodyGeo = new THREE.CylinderGeometry(1.5, 1.5, 6, 16);
             bodyGeo.rotateX(Math.PI / 2); 
             const body = new THREE.Mesh(bodyGeo, matBody);
             body.castShadow = true;
             group.add(body);
 
-            // 錐形機頭 + 駕駛艙貼圖
             const noseGeo = new THREE.ConeGeometry(1.5, 2.5, 16);
             noseGeo.rotateX(-Math.PI / 2); 
             const nose = new THREE.Mesh(noseGeo, matNose);
@@ -273,25 +289,23 @@
                 }
                 else if (type === 'engine') { 
                     mesh = new THREE.Group();
-                    // 引擎外殼
                     const shellGeo = new THREE.CylinderGeometry(0.8, 0.8, 3, 16);
                     shellGeo.rotateX(Math.PI / 2);
                     const shell = new THREE.Mesh(shellGeo, matEngine);
                     shell.castShadow = true;
                     mesh.add(shell);
                     
-                    // 獨立螺旋槳扇葉
                     const fan = new THREE.Mesh(new THREE.CircleGeometry(0.78, 16), matFan);
-                    fan.position.set(0, 0, -1.51); // 貼在前方
-                    fan.rotateY(Math.PI); // 朝前
-                    fan.name = "fan"; // 標記名稱以供動畫讀取
+                    fan.position.set(0, 0, -1.51); 
+                    fan.rotateY(Math.PI); 
+                    fan.userData.isPropeller = true;
                     mesh.add(fan);
 
-                    // 獨立噴射火焰
-                    const fire = new THREE.Sprite(matFire.clone()); // Clone 讓每顆引擎火焰可獨立
-                    fire.position.set(0, 0, 2.0); // 貼在後方排氣口外
+                    const fire = new THREE.Sprite(baseMatFire.clone()); 
+                    fire.position.set(0, 0, 2.0); 
                     fire.scale.set(1.5, 1.5, 1.5);
-                    fire.name = "fire"; // 標記名稱
+                    fire.userData.isFire = true;
+                    fire.userData.isDisposableMaterial = true;
                     mesh.add(fire);
 
                     mesh.position.set(0, -1, 1 + eC * 2.5); eC++; 
@@ -310,7 +324,14 @@
         
         buildPlane(myPlaneGroup, myPartsList);
 
+        // ✅ 修復：零件安裝數量限制防護
         window.addPart = function(type) { 
+            let limit = type === 'tail' ? 2 : 3;
+            let currentCount = myPartsList.filter(p => p === type).length;
+            if (currentCount >= limit) {
+                alert(`⚠️ ${type} 已達安裝上限 (${limit}個)！`);
+                return;
+            }
             myPartsList.push(type); 
             if(type==='wing') planeStats.lift += 20; if(type==='engine') planeStats.speed += 30; if(type==='tail') planeStats.control += 20; 
             updateStatsUI(); buildPlane(myPlaneGroup, myPartsList); syncRoomData(); 
@@ -337,18 +358,20 @@
             playerName = document.getElementById('player-name').value || "飛行員";
             currentRoomId = Math.floor(1000 + Math.random() * 9000).toString(); 
             isHost = true;
-            document.getElementById('btn-start').style.display = 'block';
-            set(ref(db, `rooms/${currentRoomId}/status`), 'waiting'); 
+            
+            set(ref(db, `rooms/${currentRoomId}`), {
+                status: "waiting",
+                host: playerId
+            });
             enterRoomUI();
         };
 
         window.joinRoom = function() {
             playerName = document.getElementById('player-name').value || "飛行員";
             const inputId = document.getElementById('room-input').value.trim();
-            if(!inputId) return alert("請輸入房間號碼！");
+            if(!inputId) return alert("請輸入伺服器代碼！");
             currentRoomId = inputId;
             isHost = false;
-            document.getElementById('btn-start').style.display = 'none'; 
             enterRoomUI();
         };
 
@@ -356,54 +379,100 @@
             document.getElementById('room-id-display').innerText = currentRoomId; 
             changeScreen('room-screen');
             
-            onValue(ref(db, `rooms/${currentRoomId}`), (snapshot) => {
+            const roomRef = ref(db, `rooms/${currentRoomId}`);
+            
+            // ✅ 修復：宣告 callback 函數以便精準移除監聽
+            const roomCallback = (snapshot) => {
                 const roomData = snapshot.val();
-                if (!roomData) return; 
-                if (roomData.status === 'running' && currentScreen === 'room-screen') { launchGameLocally(); }
+                
+                if (!roomData) {
+                    if(!isHost) leaveRoom(); 
+                    return; 
+                }
+                
+                isHost = (roomData.host === playerId);
+                document.getElementById('btn-start').style.display = isHost ? 'block' : 'none';
+                
+                if (roomData.status === 'running' && currentScreen === 'room-screen') { 
+                    launchGameLocally(); 
+                }
 
-                const playersData = roomData.players;
+                const playersData = roomData.players || {};
+                const activeIds = Object.keys(playersData);
                 let listHTML = ""; 
 
-                if (playersData) {
-                    const playerIds = Object.keys(playersData);
-                    if(playerIds[0] === playerId) {
-                        isHost = true;
-                        document.getElementById('btn-start').style.display = 'block';
-                    }
-
-                    playerIds.forEach((id, index) => {
-                        const p = playersData[id];
-                        listHTML += `<div class="player-item">✈️ ${p.name} ${index === 0 ? "👑" : ""}</div>`;
-                        
-                        if (id !== playerId) {
-                            if (!players[id]) {
-                                players[id] = { group: new THREE.Group(), partsStr: "", label: document.createElement('div') };
-                                players[id].label.className = 'nametag'; players[id].label.innerText = p.name;
-                                document.getElementById('nametag-container').appendChild(players[id].label); 
-                                scene.add(players[id].group);
-                            }
-                            if(players[id].partsStr !== p.parts) { 
-                                players[id].partsStr = p.parts; 
-                                buildPlane(players[id].group, p.parts ? p.parts.split(',') : []); 
-                            }
-                            if(!isGameActive) {
-                                players[id].group.position.set((index + 1) * 15, 5, 0); 
-                            } else {
-                                players[id].group.position.set(p.x, p.y, p.z); 
-                                players[id].group.rotation.set(p.rx, p.ry, p.rz);
-                            }
+                activeIds.forEach((id) => {
+                    const p = playersData[id];
+                    let hostIcon = (roomData.host === id) ? "👑" : "";
+                    listHTML += `<div class="player-item">✈️ ${p.name} ${hostIcon}</div>`;
+                    
+                    if (id !== playerId) {
+                        if (!players[id]) {
+                            players[id] = { 
+                                group: new THREE.Group(), 
+                                partsStr: "", 
+                                label: document.createElement('div'), 
+                                targetPos: new THREE.Vector3(), 
+                                targetRot: new THREE.Quaternion() 
+                            };
+                            players[id].label.className = 'nametag'; players[id].label.innerText = p.name;
+                            document.getElementById('nametag-container').appendChild(players[id].label); 
+                            scene.add(players[id].group);
                         }
-                    });
+                        if(players[id].partsStr !== p.parts) { 
+                            players[id].partsStr = p.parts; 
+                            buildPlane(players[id].group, p.parts ? p.parts.split(',') : []); 
+                        }
+                        if(!isGameActive) {
+                            players[id].group.position.set((activeIds.indexOf(id) + 1) * 15, 5, 0); 
+                        } else {
+                            players[id].targetPos.set(p.x, p.y, p.z); 
+                            // ✅ 修復：接收 Quaternion 進行高精度同步
+                            if(p.qx !== undefined) {
+                                players[id].targetRot.set(p.qx, p.qy, p.qz, p.qw);
+                            }
+                            players[id].isBoosting = p.boosting; 
+                        }
+                    }
+                });
+                
+                for(let id in players){
+                    if(!activeIds.includes(id)){
+                        scene.remove(players[id].group);
+                        if(players[id].label && players[id].label.parentNode){
+                            players[id].label.parentNode.removeChild(players[id].label);
+                        }
+                        delete players[id];
+                    }
                 }
+                
                 document.getElementById('player-list-content').innerHTML = listHTML;
-            });
+            };
+
+            // 綁定監聽並記錄 callback
+            roomListener = roomCallback;
+            onValue(roomRef, roomListener);
             
             onDisconnect(ref(db, `rooms/${currentRoomId}/players/${playerId}`)).remove();
             set(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { name: playerName, parts: myPartsList.join(',') });
         }
 
+        // ✅ 修復：精準解除監聽並徹底清理房間
         window.leaveRoom = function() { 
-            if(currentRoomId) remove(ref(db, `rooms/${currentRoomId}/players/${playerId}`)); 
+            if(currentRoomId) {
+                const roomRef = ref(db, `rooms/${currentRoomId}`);
+                if(roomListener) { 
+                    off(roomRef, 'value', roomListener); 
+                    roomListener = null; 
+                }
+                
+                // Host 離開時刪除整個房間，避免無主孤魂房
+                if(isHost) {
+                    remove(roomRef);
+                } else {
+                    remove(ref(db, `rooms/${currentRoomId}/players/${playerId}`)); 
+                }
+            }
             currentRoomId = null; isHost = false; 
             document.getElementById('btn-start').style.display = 'none'; 
             changeScreen('main-menu'); 
@@ -420,20 +489,18 @@
         };
         bindT('btn-up','w'); bindT('btn-down','s'); bindT('btn-left','a'); bindT('btn-right','d'); bindT('btn-boost','shift'); bindT('btn-slow','space');
 
-        const cameraOffset = new THREE.Vector3(0, 8, 20);
-
         function updateNameTags() {
             for (let id in players) {
                 if(players[id].group && players[id].label) {
-                    const tempV = new THREE.Vector3();
-                    players[id].group.getWorldPosition(tempV);
-                    tempV.y += 6; tempV.project(camera); 
+                    players[id].group.getWorldPosition(_tempVec);
+                    _tempVec.y += 6; 
+                    _tempVec.project(camera); 
                     
-                    if(tempV.z > 1) { 
+                    if(_tempVec.z > 1) { 
                         players[id].label.style.display = 'none';
                     } else {
-                        const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
-                        const y = (tempV.y * -0.5 + 0.5) * window.innerHeight;
+                        const x = (_tempVec.x * 0.5 + 0.5) * window.innerWidth;
+                        const y = (_tempVec.y * -0.5 + 0.5) * window.innerHeight;
                         players[id].label.style.display = 'block';
                         players[id].label.style.left = `${x}px`;
                         players[id].label.style.top = `${y}px`;
@@ -442,15 +509,12 @@
             }
         }
 
-        // --- 螺旋槳旋轉與噴射火焰動畫 ---
         function animateEngines(delta, group, isBoosting) {
             group.traverse(child => {
-                if(child.name === "fan") {
-                    // 根據加速狀態改變風扇轉速
-                    child.rotation.z -= delta * (isBoosting ? 30 : 10); 
+                if(child.userData.isPropeller) {
+                    child.rotateOnAxis(Z_AXIS, delta * (isBoosting ? 30 : 10));
                 }
-                if(child.name === "fire") {
-                    // 根據加速狀態與隨機數製造火焰閃爍與縮放效果
+                if(child.userData.isFire) {
                     let baseScale = isBoosting ? 3.0 : 1.2;
                     let pulse = Math.random() * (isBoosting ? 0.5 : 0.2);
                     child.scale.set(baseScale + pulse, baseScale + pulse, baseScale + pulse);
@@ -460,24 +524,51 @@
         }
 
         function updatePhysics(delta) {
-            let targetSpeed = keys.shift ? planeStats.speed * 1.5 : (keys.space ? 20 : planeStats.speed);
-            velocity += (targetSpeed - velocity) * 2 * delta;
+            let isBoosting = keys.shift && boostEnergy > 0;
+            if (isBoosting) {
+                boostEnergy -= 20 * delta; 
+                if(boostEnergy < 0) boostEnergy = 0;
+            } else {
+                boostEnergy += 10 * delta; 
+                if(boostEnergy > 100) boostEnergy = 100;
+            }
+            document.getElementById('boost-bar').style.width = `${boostEnergy}%`;
 
-            const GRAVITY = 30; 
-            let liftForce = (velocity / 100) * (planeStats.lift * 0.8);
-            let verticalVelocity = liftForce - GRAVITY;
+            let thrustTarget = isBoosting ? planeStats.speed * 1.5 : (keys.space ? 20 : planeStats.speed);
+            velocity += (thrustTarget - velocity) * 0.8 * delta; 
             
-            let turnSpeed = (planeStats.control / 100) * delta * 2.0;
-            if (keys.w) myPlaneGroup.rotateX(turnSpeed);
-            if (keys.s) myPlaneGroup.rotateX(-turnSpeed);
-            if (keys.a) myPlaneGroup.rotateZ(turnSpeed);
-            if (keys.d) myPlaneGroup.rotateZ(-turnSpeed);
+            const drag = 0.005 * velocity * velocity; 
+            velocity -= drag * delta;
+            if(velocity < 0) velocity = 0;
+
+            const airDensity = 1.225;
+            const wingArea = 10 + planeStats.lift * 0.1;
+            const GRAVITY = 40; 
+            
+            // ✅ 修復：平滑且真實的攻角升力計算 (Clamp)
+            let aoa = myPlaneGroup.rotation.x; 
+            let liftCoeff = THREE.MathUtils.clamp(0.3 + aoa * 0.8, -0.5, 1.2);
+            let liftForce = 0.5 * airDensity * (Math.pow(velocity/20, 2)) * wingArea * Math.max(0.1, liftCoeff);
+            
+            let rollFactor = Math.cos(myPlaneGroup.rotation.z);
+            let verticalVelocity = (liftForce * rollFactor) - GRAVITY;
+            
+            let pitchInput = (keys.s ? 1 : 0) - (keys.w ? 1 : 0); 
+            let rollInput = (keys.a ? 1 : 0) - (keys.d ? 1 : 0);  
+            
+            let controlAuth = (planeStats.control / 100) * delta * 2.0;
+            myPlaneGroup.rotation.x += pitchInput * controlAuth;
+            myPlaneGroup.rotation.z += rollInput * controlAuth;
+
+            // ✅ 修復：防止浮點溢出的安全 Banking Turn
+            myPlaneGroup.rotation.y += Math.sin(myPlaneGroup.rotation.z) * 1.5 * delta;
+            myPlaneGroup.rotation.y %= (Math.PI * 2);
+
+            if(rollInput === 0) myPlaneGroup.rotation.z -= myPlaneGroup.rotation.z * 1.5 * delta;
+            if(pitchInput === 0) myPlaneGroup.rotation.x -= myPlaneGroup.rotation.x * 1.0 * delta;
 
             myPlaneGroup.rotation.x = Math.max(Math.min(myPlaneGroup.rotation.x, Math.PI/3), -Math.PI/3);
             myPlaneGroup.rotation.z = Math.max(Math.min(myPlaneGroup.rotation.z, Math.PI/2.5), -Math.PI/2.5);
-            
-            if(!keys.a && !keys.d) myPlaneGroup.rotation.z -= myPlaneGroup.rotation.z * 2 * delta;
-            if(!keys.w && !keys.s) myPlaneGroup.rotation.x -= myPlaneGroup.rotation.x * 1.5 * delta;
 
             myPlaneGroup.translateZ(-velocity * delta);
             myPlaneGroup.position.y += verticalVelocity * delta;
@@ -491,19 +582,28 @@
             document.getElementById('speed-display').innerText = Math.round(velocity * 4);
             document.getElementById('alt-display').innerText = Math.round(myPlaneGroup.position.y);
 
-            const relativeOffset = cameraOffset.clone().applyMatrix4(myPlaneGroup.matrixWorld);
-            camera.position.lerp(relativeOffset, 0.1); 
+            _camOffset.copy(cameraOffsetDist).applyMatrix4(myPlaneGroup.matrixWorld);
+            camera.position.lerp(_camOffset, 0.1); 
             camera.lookAt(myPlaneGroup.position);
             
             updateNameTags(); 
         }
 
-        function updateMultiplayerIngame() {
+        let netTimer = 0;
+        function updateMultiplayerIngame(delta) {
             if (!isGameActive || !currentRoomId) return; 
+            netTimer += delta;
+            if (netTimer < 0.05) return; 
+            netTimer = 0;
+
+            // ✅ 修復：發送 Quaternion 避免 Euler Gimbal Lock
             update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { 
                 x: myPlaneGroup.position.x, y: myPlaneGroup.position.y, z: myPlaneGroup.position.z, 
-                rx: myPlaneGroup.rotation.x, ry: myPlaneGroup.rotation.y, rz: myPlaneGroup.rotation.z,
-                boosting: keys.shift // 讓對手也能看到我噴火
+                qx: myPlaneGroup.quaternion.x, 
+                qy: myPlaneGroup.quaternion.y, 
+                qz: myPlaneGroup.quaternion.z, 
+                qw: myPlaneGroup.quaternion.w,
+                boosting: keys.shift && boostEnergy > 0
             });
         }
 
@@ -523,7 +623,7 @@
         };
 
         window.startGame = function() {
-            if(isHost) set(ref(db, `rooms/${currentRoomId}/status`), 'running'); 
+            if(isHost) update(ref(db, `rooms/${currentRoomId}`), { status: 'running' }); 
         };
 
         function launchGameLocally() {
@@ -531,16 +631,17 @@
             isGameActive = true; 
             myPlaneGroup.position.set((Math.random()-0.5)*100, 50, (Math.random()-0.5)*100); 
             velocity = planeStats.speed; 
+            boostEnergy = 100; 
         }
 
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
+            const delta = Math.min(clock.getDelta(), 0.033); 
             
             if (currentScreen === 'room-screen') { 
                 myPlaneGroup.rotation.y += 0.3 * delta; 
-                animateEngines(delta, myPlaneGroup, false); // 大廳展示基礎火焰
+                animateEngines(delta, myPlaneGroup, false); 
                 for(let id in players) {
                     if(players[id].group) {
                         players[id].group.rotation.y += 0.3 * delta;
@@ -551,14 +652,15 @@
             
             if (isGameActive) { 
                 updatePhysics(delta); 
-                updateMultiplayerIngame(); 
+                updateMultiplayerIngame(delta); 
                 
-                // 動態更新自己與對手的引擎動畫
-                animateEngines(delta, myPlaneGroup, keys.shift);
+                animateEngines(delta, myPlaneGroup, keys.shift && boostEnergy > 0);
+                
                 for(let id in players) {
-                    if(players[id].group && players[id].partsStr) {
-                        // 假設 Firebase 同步了對手的 boosting 狀態 (預設 false)
-                        animateEngines(delta, players[id].group, false); 
+                    if(players[id].group && players[id].targetPos) {
+                        players[id].group.position.lerp(players[id].targetPos, 0.15);
+                        players[id].group.quaternion.slerp(players[id].targetRot, 0.15);
+                        animateEngines(delta, players[id].group, players[id].isBoosting); 
                     }
                 }
             }
