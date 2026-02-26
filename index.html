@@ -2,679 +2,383 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avia Racer - Public Beta</title>
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #87CEEB; user-select: none; -webkit-touch-callout: none; }
-        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(8px); color: #333; }
-        .screen.active { display: flex; }
-        .transparent-screen { background: none; backdrop-filter: none; pointer-events: none;} 
-        
-        h1 { font-size: 3.5rem; color: #2c3e50; text-shadow: 2px 2px 0px #fff; margin-bottom: 20px; text-align: center; }
-        
-        button { margin: 10px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 20px; background: #3498db; color: white; cursor: pointer; box-shadow: 0 5px 0 #2980b9; transition: all 0.1s; pointer-events: auto; }
-        button:active { transform: translateY(5px); box-shadow: 0 0 0 #2980b9; }
-        button.green { background: #2ecc71; box-shadow: 0 5px 0 #27ae60; }
-        button.green:active { box-shadow: 0 0 0 #27ae60; }
-        button.orange { background: #e67e22; box-shadow: 0 5px 0 #d35400; }
-        button.orange:active { box-shadow: 0 0 0 #d35400; }
-        
-        input[type="text"] { padding: 15px; font-size: 1.2rem; border-radius: 15px; border: 3px solid #bdc3c7; text-align: center; margin-bottom: 15px; outline: none; width: 80%; max-width: 250px; font-weight: bold; color: #2c3e50;}
-        input[type="text"]:focus { border-color: #3498db; }
-        
-        #room-ui-container { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
-        #room-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; }
-        
-        #player-list-panel { background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 15px; min-width: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
-        .player-item { padding: 8px; border-bottom: 2px solid #ecf0f1; font-weight: bold; font-size: 1.1rem;}
-        
-        #plane-stats { background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff;}
-        
-        #builder-panel { display: flex; justify-content: center; gap: 10px; padding: 20px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px); pointer-events: auto; flex-wrap: wrap;}
-        .part-btn { background: #ecf0f1; border: 3px solid #bdc3c7; color: #2c3e50; padding: 12px 20px; border-radius: 15px; cursor: pointer; font-weight: bold; transition: all 0.1s;}
-        .part-btn:active { transform: scale(0.95); background: #dfe6e9; }
-        
-        #hud { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; text-shadow: 2px 2px 0px #2c3e50; pointer-events: none; z-index: 10; display: none;}
-        #boost-bar-container { width: 200px; height: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; margin-top: 5px; border: 2px solid #fff; overflow: hidden;}
-        #boost-bar { width: 100%; height: 100%; background: #e74c3c; transition: width 0.1s linear;}
-        
-        .nametag { position: absolute; color: #fff; background: rgba(44, 62, 80, 0.8); padding: 4px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); display: none; z-index: 5; border: 2px solid #fff;}
-
-        #touch-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; pointer-events: none; z-index: 15; padding: 0 20px; box-sizing: border-box;}
-        .touch-group { display: flex; gap: 15px; pointer-events: auto; }
-        .touch-btn { width: 65px; height: 65px; background: rgba(255, 255, 255, 0.5); border: 3px solid #fff; border-radius: 50%; color: #2c3e50; font-size: 1.8rem; font-weight:bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .touch-btn:active { background: rgba(255, 255, 255, 0.9); }
-
-        @media (max-width: 768px) { #touch-controls { display: flex !important; } }
-    </style>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-                "firebase/database": "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"
-            }
-        }
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>連線版彈弓足球</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 <body>
-    <div id="game-container"></div>
-    <div id="nametag-container"></div> 
-
-    <div id="main-menu" class="screen active">
-        <h1>Avia Engine<br><span style="color:#e74c3c; font-size:0.6em;">Public Beta</span></h1>
-        <input type="text" id="player-name" placeholder="輸入玩家暱稱" value="Beta 試飛員">
-        <div style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
-            <button class="orange" onclick="createRoom()">➕ 建立多人伺服器</button>
-            <div style="margin: 20px 0; font-weight: bold; color: #7f8c8d;">或</div>
-            <input type="text" id="room-input" placeholder="輸入伺服器代碼" style="margin-bottom: 10px;"><br>
-            <button class="green" onclick="joinRoom()">🔍 連線</button>
+    <div id="ui-container">
+        <h1>⚽ 彈弓足球對戰</h1>
+        <div id="menu">
+            <button id="create-btn">創建房間 (Create Room)</button>
+            <br><br>
+            <input type="text" id="room-input" placeholder="輸入房號 (Room ID)">
+            <button id="join-btn">加入房間 (Join Room)</button>
+        </div>
+        <div id="status" style="display:none;">
+            <h2 id="room-display">房號：</h2>
+            <h2 id="score-display">🔴 紅隊 0 - 0 藍隊 🔵</h2>
+            <p id="turn-display">等待對手加入...</p>
         </div>
     </div>
 
-    <div id="room-screen" class="screen transparent-screen">
-        <div id="room-ui-container">
-            <div id="room-header">
-                <div id="player-list-panel">
-                    <div style="font-size: 1.2rem; font-weight: bold; color: #e67e22; margin-bottom: 10px;">伺服器: <span id="room-id-display"></span></div>
-                    <div id="player-list-content"></div>
-                    <button id="btn-start" class="green" style="width: 100%; margin: 15px 0 0 0; display: none;" onclick="startGame()">🚀 全機起飛</button>
-                    <button style="width: 100%; margin: 10px 0 0 0; background: #e74c3c; box-shadow: 0 5px 0 #c0392b;" onclick="leaveRoom()">中斷連線</button>
-                </div>
-                
-                <div id="plane-stats">
-                    📊 空氣動力參數<br>
-                    <span style="color:#2980b9;">推力 (THRUST):</span> <span id="stat-speed">100</span><br>
-                    <span style="color:#27ae60;">控制面 (CTRL):</span> <span id="stat-control">50</span><br>
-                    <span style="color:#8e44ad;">翼面積 (AREA):</span> <span id="stat-lift">50</span>
-                </div>
-            </div>
-            
-            <div id="builder-panel">
-                <div class="part-btn" onclick="addPart('wing')">➕ 加大翼面 (Max: 3)</div>
-                <div class="part-btn" onclick="addPart('engine')">➕ 渦輪增壓 (Max: 3)</div>
-                <div class="part-btn" onclick="addPart('tail')">➕ 副翼擴充 (Max: 2)</div>
-                <div class="part-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="resetParts()">🗑️ 重置</div>
-            </div>
-        </div>
+    <div id="game-container" style="display:none;">
+        <canvas id="game-canvas"></canvas>
     </div>
 
-    <div id="game-ui" class="screen transparent-screen">
-        <div id="hud">
-            SPD: <span id="speed-display">0</span><br>
-            ALT: <span id="alt-display">0</span>
-            <div id="boost-bar-container"><div id="boost-bar"></div></div>
-        </div>
-        <div id="touch-controls">
-            <div class="touch-group" style="flex-direction: column; align-items: center;">
-                <div class="touch-btn" id="btn-up">▲</div>
-                <div style="display:flex; gap: 30px;"><div class="touch-btn" id="btn-left">◀</div><div class="touch-btn" id="btn-right">▶</div></div>
-                <div class="touch-btn" id="btn-down">▼</div>
-            </div>
-            <div class="touch-group" style="flex-direction: column; justify-content: center; gap: 20px;">
-                <div class="touch-btn" id="btn-boost" style="border-color: #e74c3c; color: #e74c3c;">🚀</div>
-                <div class="touch-btn" id="btn-slow" style="border-color: #3498db; color: #3498db;">🛑</div>
-            </div>
-        </div>
-    </div>
-    <script type="module">
-        import * as THREE from 'three';
-        import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, set, onValue, onDisconnect, remove, update, off } from "firebase/database";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
-            authDomain: "airplane-game-68f8f.firebaseapp.com",
-            projectId: "airplane-game-68f8f",
-            databaseURL: "https://airplane-game-68f8f-default-rtdb.firebaseio.com/" 
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        let currentScreen = 'main-menu';
-        let playerId = "P_" + Math.floor(Math.random() * 99999);
-        let playerName = "飛行員";
-        let currentRoomId = null; 
-        let roomListener = null; 
-        let isHost = false, isGameActive = false;
-        let players = {}; 
-
-        let baseStats = { speed: 100, control: 50, lift: 50 };
-        let planeStats = { ...baseStats };
-        let myPartsList = []; 
-        let boostEnergy = 100; 
-
-        // Zero-GC 靜態快取變數
-        const Z_AXIS = new THREE.Vector3(0, 0, 1);
-        const _tempVec = new THREE.Vector3();
-        const _camOffset = new THREE.Vector3();
-        const cameraOffsetDist = new THREE.Vector3(0, 8, 20);
-
-        const container = document.getElementById('game-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); 
-        scene.fog = new THREE.Fog(0x87CEEB, 200, 2000); 
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 4000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
-        container.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); 
-        dirLight.position.set(300, 500, 200); dirLight.castShadow = true;
-        scene.add(dirLight);
-
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, flatShading: true }); 
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000, 20, 20), groundMat);
-        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-
-        function createCloud() {
-            const cloudGroup = new THREE.Group();
-            const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
-            const parts = 3 + Math.floor(Math.random() * 3);
-            for(let i=0; i<parts; i++) {
-                const size = 10 + Math.random() * 15;
-                const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), cloudMat); 
-                mesh.position.set((Math.random()-0.5)*30, (Math.random()-0.5)*10, (Math.random()-0.5)*20);
-                cloudGroup.add(mesh);
-            }
-            return cloudGroup;
-        }
-
-        for (let i = 0; i < 40; i++) {
-            let cloud = createCloud();
-            cloud.position.set((Math.random() - 0.5) * 3000, 200 + Math.random() * 300, (Math.random() - 0.5) * 3000);
-            scene.add(cloud);
-        }
-
-        function createCockpitTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#3498db'; ctx.fillRect(0, 0, 256, 256); 
-            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(40, 40, 176, 120, 20); ctx.fill(); 
-            ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.moveTo(60, 60); ctx.lineTo(120, 120); ctx.stroke(); 
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        function createFanTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill(); 
-            ctx.fillStyle = '#bdc3c7'; 
-            ctx.translate(128, 128); 
-            for(let i=0; i<8; i++) { ctx.rotate(Math.PI / 4); ctx.fillRect(10, -10, 100, 20); }
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        function createWingTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ecf0f1'; ctx.fillRect(0, 0, 256, 256); 
-            ctx.fillStyle = '#e74c3c'; ctx.fillRect(200, 0, 40, 256);
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        function createFireTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            const gradient = ctx.createRadialGradient(64, 64, 10, 64, 64, 64);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
-            gradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)'); 
-            gradient.addColorStop(0.6, 'rgba(255, 50, 0, 0.4)'); 
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); 
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 128, 128);
-            return new THREE.CanvasTexture(canvas);
-        }
-        const texCockpit = createCockpitTexture();
-        const texFan = createFanTexture();
-        const texWing = createWingTexture();
-        const texFire = createFireTexture();
-
-        const matBody = new THREE.MeshStandardMaterial({ color: 0x3498db, metalness: 0.3, roughness: 0.4 }); 
-        const matNose = new THREE.MeshStandardMaterial({ map: texCockpit, metalness: 0.3, roughness: 0.4 }); 
-        const matWingSolid = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.2, roughness: 0.5 }); 
-        const matWingTop = new THREE.MeshStandardMaterial({ map: texWing, metalness: 0.2, roughness: 0.5 }); 
-        const wingMaterials = [matWingSolid, matWingSolid, matWingTop, matWingSolid, matWingSolid, matWingSolid];
-        
-        const matEngine = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.7, roughness: 0.2 }); 
-        const matFan = new THREE.MeshStandardMaterial({ map: texFan, metalness: 0.5, roughness: 0.5 }); 
-        const baseMatFire = new THREE.SpriteMaterial({ map: texFire, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true });
-        const matTail = new THREE.MeshStandardMaterial({ color: 0xe74c3c, metalness: 0.3, roughness: 0.4 }); 
-
-        const myPlaneGroup = new THREE.Group(); 
-        scene.add(myPlaneGroup);
-
-        function safeDisposeGroup(group) {
-            group.traverse(child => {
-                if(child.isMesh || child.isSprite){
-                    if(child.geometry) child.geometry.dispose();
-                    if(child.material && child.userData.isDisposableMaterial){
-                        child.material.dispose();
-                    }
-                }
-            });
-            group.clear(); 
-        }
-
-        function buildPlane(group, partsArray) {
-            safeDisposeGroup(group);
-            
-            const bodyGeo = new THREE.CylinderGeometry(1.5, 1.5, 6, 16);
-            bodyGeo.rotateX(Math.PI / 2); 
-            const body = new THREE.Mesh(bodyGeo, matBody);
-            body.castShadow = true;
-            group.add(body);
-
-            const noseGeo = new THREE.ConeGeometry(1.5, 2.5, 16);
-            noseGeo.rotateX(-Math.PI / 2); 
-            const nose = new THREE.Mesh(noseGeo, matNose);
-            nose.position.set(0, 0, -4.25); 
-            nose.castShadow = true;
-            group.add(nose);
-
-            let wC = 0, eC = 0, tC = 0;
-            partsArray.forEach(type => {
-                let mesh;
-                if (type === 'wing') { 
-                    mesh = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 3), wingMaterials); 
-                    mesh.position.set(0, 0, -1 - wC * 2); wC++; 
-                }
-                else if (type === 'engine') { 
-                    mesh = new THREE.Group();
-                    const shellGeo = new THREE.CylinderGeometry(0.8, 0.8, 3, 16);
-                    shellGeo.rotateX(Math.PI / 2);
-                    const shell = new THREE.Mesh(shellGeo, matEngine);
-                    shell.castShadow = true;
-                    mesh.add(shell);
-                    
-                    const fan = new THREE.Mesh(new THREE.CircleGeometry(0.78, 16), matFan);
-                    fan.position.set(0, 0, -1.51); 
-                    fan.rotateY(Math.PI); 
-                    fan.userData.isPropeller = true;
-                    mesh.add(fan);
-
-                    const fire = new THREE.Sprite(baseMatFire.clone()); 
-                    fire.position.set(0, 0, 2.0); 
-                    fire.scale.set(1.5, 1.5, 1.5);
-                    fire.userData.isFire = true;
-                    fire.userData.isDisposableMaterial = true;
-                    mesh.add(fire);
-
-                    mesh.position.set(0, -1, 1 + eC * 2.5); eC++; 
-                }
-                else if (type === 'tail') { 
-                    mesh = new THREE.Group();
-                    const hTail = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 2), matTail); 
-                    const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3, 2), matTail); 
-                    vTail.position.set(0, 1.5, 0); 
-                    mesh.add(hTail); mesh.add(vTail);
-                    mesh.position.set(0, 0.5, 3 + tC * 1.5); tC++; 
-                }
-                if(mesh) group.add(mesh);
-            });
-        }
-        
-        buildPlane(myPlaneGroup, myPartsList);
-
-        // ✅ 修復：零件安裝數量限制防護
-        window.addPart = function(type) { 
-            let limit = type === 'tail' ? 2 : 3;
-            let currentCount = myPartsList.filter(p => p === type).length;
-            if (currentCount >= limit) {
-                alert(`⚠️ ${type} 已達安裝上限 (${limit}個)！`);
-                return;
-            }
-            myPartsList.push(type); 
-            if(type==='wing') planeStats.lift += 20; if(type==='engine') planeStats.speed += 30; if(type==='tail') planeStats.control += 20; 
-            updateStatsUI(); buildPlane(myPlaneGroup, myPartsList); syncRoomData(); 
-        };
-        
-        window.resetParts = function() { 
-            myPartsList = []; planeStats = {...baseStats}; 
-            updateStatsUI(); buildPlane(myPlaneGroup, myPartsList); syncRoomData();
-        };
-
-        function updateStatsUI() {
-            document.getElementById('stat-speed').innerText = planeStats.speed;
-            document.getElementById('stat-control').innerText = planeStats.control;
-            document.getElementById('stat-lift').innerText = planeStats.lift;
-        }
-
-        function syncRoomData() {
-            if(currentRoomId && !isGameActive) {
-                update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { parts: myPartsList.join(',') });
-            }
-        }
-
-        window.createRoom = function() {
-            playerName = document.getElementById('player-name').value || "飛行員";
-            currentRoomId = Math.floor(1000 + Math.random() * 9000).toString(); 
-            isHost = true;
-            
-            set(ref(db, `rooms/${currentRoomId}`), {
-                status: "waiting",
-                host: playerId
-            });
-            enterRoomUI();
-        };
-
-        window.joinRoom = function() {
-            playerName = document.getElementById('player-name').value || "飛行員";
-            const inputId = document.getElementById('room-input').value.trim();
-            if(!inputId) return alert("請輸入伺服器代碼！");
-            currentRoomId = inputId;
-            isHost = false;
-            enterRoomUI();
-        };
-
-        function enterRoomUI() {
-            document.getElementById('room-id-display').innerText = currentRoomId; 
-            changeScreen('room-screen');
-            
-            const roomRef = ref(db, `rooms/${currentRoomId}`);
-            
-            // ✅ 修復：宣告 callback 函數以便精準移除監聽
-            const roomCallback = (snapshot) => {
-                const roomData = snapshot.val();
-                
-                if (!roomData) {
-                    if(!isHost) leaveRoom(); 
-                    return; 
-                }
-                
-                isHost = (roomData.host === playerId);
-                document.getElementById('btn-start').style.display = isHost ? 'block' : 'none';
-                
-                if (roomData.status === 'running' && currentScreen === 'room-screen') { 
-                    launchGameLocally(); 
-                }
-
-                const playersData = roomData.players || {};
-                const activeIds = Object.keys(playersData);
-                let listHTML = ""; 
-
-                activeIds.forEach((id) => {
-                    const p = playersData[id];
-                    let hostIcon = (roomData.host === id) ? "👑" : "";
-                    listHTML += `<div class="player-item">✈️ ${p.name} ${hostIcon}</div>`;
-                    
-                    if (id !== playerId) {
-                        if (!players[id]) {
-                            players[id] = { 
-                                group: new THREE.Group(), 
-                                partsStr: "", 
-                                label: document.createElement('div'), 
-                                targetPos: new THREE.Vector3(), 
-                                targetRot: new THREE.Quaternion() 
-                            };
-                            players[id].label.className = 'nametag'; players[id].label.innerText = p.name;
-                            document.getElementById('nametag-container').appendChild(players[id].label); 
-                            scene.add(players[id].group);
-                        }
-                        if(players[id].partsStr !== p.parts) { 
-                            players[id].partsStr = p.parts; 
-                            buildPlane(players[id].group, p.parts ? p.parts.split(',') : []); 
-                        }
-                        if(!isGameActive) {
-                            players[id].group.position.set((activeIds.indexOf(id) + 1) * 15, 5, 0); 
-                        } else {
-                            players[id].targetPos.set(p.x, p.y, p.z); 
-                            // ✅ 修復：接收 Quaternion 進行高精度同步
-                            if(p.qx !== undefined) {
-                                players[id].targetRot.set(p.qx, p.qy, p.qz, p.qw);
-                            }
-                            players[id].isBoosting = p.boosting; 
-                        }
-                    }
-                });
-                
-                for(let id in players){
-                    if(!activeIds.includes(id)){
-                        scene.remove(players[id].group);
-                        if(players[id].label && players[id].label.parentNode){
-                            players[id].label.parentNode.removeChild(players[id].label);
-                        }
-                        delete players[id];
-                    }
-                }
-                
-                document.getElementById('player-list-content').innerHTML = listHTML;
-            };
-
-            // 綁定監聽並記錄 callback
-            roomListener = roomCallback;
-            onValue(roomRef, roomListener);
-            
-            onDisconnect(ref(db, `rooms/${currentRoomId}/players/${playerId}`)).remove();
-            set(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { name: playerName, parts: myPartsList.join(',') });
-        }
-
-        // ✅ 修復：精準解除監聽並徹底清理房間
-        window.leaveRoom = function() { 
-            if(currentRoomId) {
-                const roomRef = ref(db, `rooms/${currentRoomId}`);
-                if(roomListener) { 
-                    off(roomRef, 'value', roomListener); 
-                    roomListener = null; 
-                }
-                
-                // Host 離開時刪除整個房間，避免無主孤魂房
-                if(isHost) {
-                    remove(roomRef);
-                } else {
-                    remove(ref(db, `rooms/${currentRoomId}/players/${playerId}`)); 
-                }
-            }
-            currentRoomId = null; isHost = false; 
-            document.getElementById('btn-start').style.display = 'none'; 
-            changeScreen('main-menu'); 
-        };
-        let keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
-        let velocity = 0; 
-        
-        window.addEventListener('keydown', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true; });
-        window.addEventListener('keyup', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false; });
-
-        const bindT = (id, k) => { 
-            const el = document.getElementById(id);
-            if(el) { el.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys[k]=true; }); el.addEventListener('touchend', (e)=>{ e.preventDefault(); keys[k]=false; }); }
-        };
-        bindT('btn-up','w'); bindT('btn-down','s'); bindT('btn-left','a'); bindT('btn-right','d'); bindT('btn-boost','shift'); bindT('btn-slow','space');
-
-        function updateNameTags() {
-            for (let id in players) {
-                if(players[id].group && players[id].label) {
-                    players[id].group.getWorldPosition(_tempVec);
-                    _tempVec.y += 6; 
-                    _tempVec.project(camera); 
-                    
-                    if(_tempVec.z > 1) { 
-                        players[id].label.style.display = 'none';
-                    } else {
-                        const x = (_tempVec.x * 0.5 + 0.5) * window.innerWidth;
-                        const y = (_tempVec.y * -0.5 + 0.5) * window.innerHeight;
-                        players[id].label.style.display = 'block';
-                        players[id].label.style.left = `${x}px`;
-                        players[id].label.style.top = `${y}px`;
-                    }
-                }
-            }
-        }
-
-        function animateEngines(delta, group, isBoosting) {
-            group.traverse(child => {
-                if(child.userData.isPropeller) {
-                    child.rotateOnAxis(Z_AXIS, delta * (isBoosting ? 30 : 10));
-                }
-                if(child.userData.isFire) {
-                    let baseScale = isBoosting ? 3.0 : 1.2;
-                    let pulse = Math.random() * (isBoosting ? 0.5 : 0.2);
-                    child.scale.set(baseScale + pulse, baseScale + pulse, baseScale + pulse);
-                    child.material.opacity = isBoosting ? 1.0 : 0.6;
-                }
-            });
-        }
-
-        function updatePhysics(delta) {
-            let isBoosting = keys.shift && boostEnergy > 0;
-            if (isBoosting) {
-                boostEnergy -= 20 * delta; 
-                if(boostEnergy < 0) boostEnergy = 0;
-            } else {
-                boostEnergy += 10 * delta; 
-                if(boostEnergy > 100) boostEnergy = 100;
-            }
-            document.getElementById('boost-bar').style.width = `${boostEnergy}%`;
-
-            let thrustTarget = isBoosting ? planeStats.speed * 1.5 : (keys.space ? 20 : planeStats.speed);
-            velocity += (thrustTarget - velocity) * 0.8 * delta; 
-            
-            const drag = 0.005 * velocity * velocity; 
-            velocity -= drag * delta;
-            if(velocity < 0) velocity = 0;
-
-            const airDensity = 1.225;
-            const wingArea = 10 + planeStats.lift * 0.1;
-            const GRAVITY = 40; 
-            
-            // ✅ 修復：平滑且真實的攻角升力計算 (Clamp)
-            let aoa = myPlaneGroup.rotation.x; 
-            let liftCoeff = THREE.MathUtils.clamp(0.3 + aoa * 0.8, -0.5, 1.2);
-            let liftForce = 0.5 * airDensity * (Math.pow(velocity/20, 2)) * wingArea * Math.max(0.1, liftCoeff);
-            
-            let rollFactor = Math.cos(myPlaneGroup.rotation.z);
-            let verticalVelocity = (liftForce * rollFactor) - GRAVITY;
-            
-            let pitchInput = (keys.s ? 1 : 0) - (keys.w ? 1 : 0); 
-            let rollInput = (keys.a ? 1 : 0) - (keys.d ? 1 : 0);  
-            
-            let controlAuth = (planeStats.control / 100) * delta * 2.0;
-            myPlaneGroup.rotation.x += pitchInput * controlAuth;
-            myPlaneGroup.rotation.z += rollInput * controlAuth;
-
-            // ✅ 修復：防止浮點溢出的安全 Banking Turn
-            myPlaneGroup.rotation.y += Math.sin(myPlaneGroup.rotation.z) * 1.5 * delta;
-            myPlaneGroup.rotation.y %= (Math.PI * 2);
-
-            if(rollInput === 0) myPlaneGroup.rotation.z -= myPlaneGroup.rotation.z * 1.5 * delta;
-            if(pitchInput === 0) myPlaneGroup.rotation.x -= myPlaneGroup.rotation.x * 1.0 * delta;
-
-            myPlaneGroup.rotation.x = Math.max(Math.min(myPlaneGroup.rotation.x, Math.PI/3), -Math.PI/3);
-            myPlaneGroup.rotation.z = Math.max(Math.min(myPlaneGroup.rotation.z, Math.PI/2.5), -Math.PI/2.5);
-
-            myPlaneGroup.translateZ(-velocity * delta);
-            myPlaneGroup.position.y += verticalVelocity * delta;
-
-            if (myPlaneGroup.position.y < 3) { 
-                myPlaneGroup.position.y = 3; 
-                velocity *= 0.8; 
-                myPlaneGroup.rotation.x *= 0.8;
-            }
-
-            document.getElementById('speed-display').innerText = Math.round(velocity * 4);
-            document.getElementById('alt-display').innerText = Math.round(myPlaneGroup.position.y);
-
-            _camOffset.copy(cameraOffsetDist).applyMatrix4(myPlaneGroup.matrixWorld);
-            camera.position.lerp(_camOffset, 0.1); 
-            camera.lookAt(myPlaneGroup.position);
-            
-            updateNameTags(); 
-        }
-
-        let netTimer = 0;
-        function updateMultiplayerIngame(delta) {
-            if (!isGameActive || !currentRoomId) return; 
-            netTimer += delta;
-            if (netTimer < 0.05) return; 
-            netTimer = 0;
-
-            // ✅ 修復：發送 Quaternion 避免 Euler Gimbal Lock
-            update(ref(db, `rooms/${currentRoomId}/players/${playerId}`), { 
-                x: myPlaneGroup.position.x, y: myPlaneGroup.position.y, z: myPlaneGroup.position.z, 
-                qx: myPlaneGroup.quaternion.x, 
-                qy: myPlaneGroup.quaternion.y, 
-                qz: myPlaneGroup.quaternion.z, 
-                qw: myPlaneGroup.quaternion.w,
-                boosting: keys.shift && boostEnergy > 0
-            });
-        }
-
-        window.changeScreen = function(screenId) {
-            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            currentScreen = screenId;
-            document.getElementById('hud').style.display = (screenId === 'game-ui') ? 'block' : 'none';
-
-            if (screenId === 'room-screen') {
-                isGameActive = false;
-                myPlaneGroup.position.set(0, 5, 0); 
-                myPlaneGroup.rotation.set(0, 0, 0);
-                camera.position.set(15, 10, 20); 
-                camera.lookAt(0, 5, 0);
-            }
-        };
-
-        window.startGame = function() {
-            if(isHost) update(ref(db, `rooms/${currentRoomId}`), { status: 'running' }); 
-        };
-
-        function launchGameLocally() {
-            changeScreen('game-ui');
-            isGameActive = true; 
-            myPlaneGroup.position.set((Math.random()-0.5)*100, 50, (Math.random()-0.5)*100); 
-            velocity = planeStats.speed; 
-            boostEnergy = 100; 
-        }
-
-        const clock = new THREE.Clock();
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = Math.min(clock.getDelta(), 0.033); 
-            
-            if (currentScreen === 'room-screen') { 
-                myPlaneGroup.rotation.y += 0.3 * delta; 
-                animateEngines(delta, myPlaneGroup, false); 
-                for(let id in players) {
-                    if(players[id].group) {
-                        players[id].group.rotation.y += 0.3 * delta;
-                        animateEngines(delta, players[id].group, false);
-                    }
-                }
-            }
-            
-            if (isGameActive) { 
-                updatePhysics(delta); 
-                updateMultiplayerIngame(delta); 
-                
-                animateEngines(delta, myPlaneGroup, keys.shift && boostEnergy > 0);
-                
-                for(let id in players) {
-                    if(players[id].group && players[id].targetPos) {
-                        players[id].group.position.lerp(players[id].targetPos, 0.15);
-                        players[id].group.quaternion.slerp(players[id].targetRot, 0.15);
-                        animateEngines(delta, players[id].group, players[id].isBoosting); 
-                    }
-                }
-            }
-            
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => { 
-            camera.aspect = window.innerWidth/window.innerHeight; 
-            camera.updateProjectionMatrix(); 
-            renderer.setSize(window.innerWidth, window.innerHeight); 
-        });
-
-        animate();
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #2c3e50;
+    color: white;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#ui-container {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #c0392b;
+}
+
+input {
+    padding: 10px;
+    font-size: 16px;
+}
+
+#game-container {
+    /* 球場邊框設定 */
+    border: 5px solid white;
+    background-color: #27ae60; /* 經典足球場綠色 */
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
+  authDomain: "airplane-game-68f8f.firebaseapp.com",
+  projectId: "airplane-game-68f8f",
+  storageBucket: "airplane-game-68f8f.firebasestorage.app",
+  messagingSenderId: "215248477446",
+  appId: "1:215248477446:web:f1d9dbb69b759118125287",
+  measurementId: "G-GKWZMFT66H",
+  // 加上 databaseURL 以啟用 Realtime Database (即時資料庫)
+  databaseURL: "https://airplane-game-68f8f-default-rtdb.firebaseio.com/" 
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// === 遊戲狀態 (Game State) ===
+let currentRoom = null;
+let playerColor = null; // 'red' 或 'blue'
+let isMyTurn = false;
+let scores = { red: 0, blue: 0 };
+
+// === UI 元素 ===
+const menuDiv = document.getElementById('menu');
+const statusDiv = document.getElementById('status');
+const gameContainer = document.getElementById('game-container');
+const roomDisplay = document.getElementById('room-display');
+const scoreDisplay = document.getElementById('score-display');
+const turnDisplay = document.getElementById('turn-display');
+const roomInput = document.getElementById('room-input');
+
+// === Matter.js 設定 ===
+const Engine = Matter.Engine,
+      Render = Matter.Render,
+      Runner = Matter.Runner,
+      Bodies = Matter.Bodies,
+      Composite = Matter.Composite,
+      Events = Matter.Events,
+      Mouse = Matter.Mouse,
+      MouseConstraint = Matter.MouseConstraint;
+
+let engine, render, runner;
+let ball;
+let players = [];
+let slingshots = []; // 用來將球員固定在原位的約束 (Constraint)
+
+const width = 400;
+const height = 600;
+
+function initPhysics() {
+    engine = Engine.create();
+    // 關閉重力 (Gravity) 因為這是從上往下看的視角 (Top-down view)
+    engine.world.gravity.y = 0; 
+    
+    render = Render.create({
+        canvas: document.getElementById('game-canvas'),
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false, // 關閉線框模式，顯示顏色
+            background: 'transparent'
+        }
+    });
+
+    // 建立邊界 (Walls)
+    const walls = [
+        Bodies.rectangle(width/2, 0, width, 20, { isStatic: true, render: { fillStyle: 'white' } }), // 上
+        Bodies.rectangle(width/2, height, width, 20, { isStatic: true, render: { fillStyle: 'white' } }), // 下
+        Bodies.rectangle(0, height/2, 20, height, { isStatic: true, render: { fillStyle: 'white' } }), // 左
+        Bodies.rectangle(width, height/2, 20, height, { isStatic: true, render: { fillStyle: 'white' } }) // 右
+    ];
+    
+    // 中線 (Midline) - 視覺用，不會碰撞
+    const midline = Bodies.rectangle(width/2, height/2, width, 5, { 
+        isStatic: true, 
+        isSensor: true, // 設為感測器 (Sensor) 代表球可以穿透過去
+        render: { fillStyle: 'white' } 
+    });
+
+    Composite.add(engine.world, [...walls, midline]);
+
+    // 初始化球與球員
+    resetPositions();
+
+    Render.run(render);
+    runner = Runner.create();
+    Runner.run(runner, engine);
+
+    setupMouseInteraction();
+}
+
+function resetPositions() {
+    // 移除舊的球員與球
+    if(ball) Composite.remove(engine.world, ball);
+    players.forEach(p => Composite.remove(engine.world, p));
+    slingshots.forEach(s => Composite.remove(engine.world, s));
+    players = [];
+    slingshots = [];
+
+    // 建立足球 (Ball)
+    ball = Bodies.circle(width/2, height/2, 12, { 
+        restitution: 0.9, // 彈性 (Restitution)
+        frictionAir: 0.02, // 空氣阻力 (Air friction) 使球慢慢停下
+        render: { fillStyle: 'white' } 
+    });
+    Composite.add(engine.world, ball);
+
+    // 球員陣型座標 (2-3-2)
+    const bluePositions = [
+        {x: 150, y: 100}, {x: 250, y: 100}, // 後衛
+        {x: 100, y: 180}, {x: 200, y: 180}, {x: 300, y: 180}, // 中場
+        {x: 150, y: 260}, {x: 250, y: 260} // 前鋒
+    ];
+    
+    const redPositions = [
+        {x: 150, y: 500}, {x: 250, y: 500}, // 後衛
+        {x: 100, y: 420}, {x: 200, y: 420}, {x: 300, y: 420}, // 中場
+        {x: 150, y: 340}, {x: 250, y: 340} // 前鋒
+    ];
+
+    function createTeam(positions, color) {
+        positions.forEach(pos => {
+            let player = Bodies.circle(pos.x, pos.y, 18, {
+                restitution: 0.6,
+                frictionAir: 0.05,
+                render: { fillStyle: color === 'blue' ? '#3498db' : '#e74c3c' },
+                team: color
+            });
+            
+            // 彈簧約束 (Constraint)，把球員綁在原位
+            let tether = Matter.Constraint.create({
+                pointA: { x: pos.x, y: pos.y },
+                bodyB: player,
+                stiffness: 0.05, // 硬度 (Stiffness)
+                render: { visible: false }
+            });
+
+            players.push(player);
+            slingshots.push(tether);
+            Composite.add(engine.world, [player, tether]);
+        });
+    }
+
+    createTeam(bluePositions, 'blue');
+    createTeam(redPositions, 'red');
+}
+
+// 處理滑鼠拉動與發射
+function setupMouseInteraction() {
+    const mouse = Mouse.create(render.canvas);
+    const mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: { stiffness: 0.2, render: { visible: false } }
+    });
+    Composite.add(engine.world, mouseConstraint);
+
+    // 只能在自己的回合拉動自己的球員
+    Events.on(mouseConstraint, 'startdrag', function(event) {
+        const body = event.body;
+        if (!isMyTurn || body.team !== playerColor || body === ball) {
+            mouseConstraint.body = null; // 阻止拖曳
+        }
+    });
+
+    Events.on(mouseConstraint, 'enddrag', function(event) {
+        if (!isMyTurn) return;
+        const body = event.body;
+        
+        // 取得彈性繩的錨點 (Anchor point)
+        const tether = slingshots.find(s => s.bodyB === body);
+        if (tether) {
+            // 計算拉動的向量 (Vector) 並將操作傳送給 Firebase
+            const dx = body.position.x - tether.pointA.x;
+            const dy = body.position.y - tether.pointA.y;
+            
+            // 將操作發送到資料庫，同步給對手
+            const actionRef = ref(db, `rooms/${currentRoom}/action`);
+            set(actionRef, {
+                playerId: players.indexOf(body),
+                forceX: dx * -0.05, // 往反方向施力
+                forceY: dy * -0.05,
+                timestamp: Date.now()
+            });
+
+            // 換對手回合
+            update(ref(db, `rooms/${currentRoom}`), { turn: playerColor === 'red' ? 'blue' : 'red' });
+        }
+    });
+}
+
+// 監聽進球判定
+setInterval(() => {
+    if (!ball) return;
+    // 簡單判定：如果球越過上下邊界，算進球 (Goal)
+    if (ball.position.y < 30) {
+        scoreGoal('red');
+    } else if (ball.position.y > height - 30) {
+        scoreGoal('blue');
+    }
+}, 500);
+
+function scoreGoal(team) {
+    if (playerColor !== 'red') return; // 只由房主 (紅隊) 結算分數，避免重複計算
+    let newScores = { ...scores };
+    newScores[team] += 1;
+    update(ref(db, `rooms/${currentRoom}`), { scores: newScores, resetFlag: Date.now() });
+
+    if (newScores[team] >= 6) {
+        alert(`${team === 'red' ? '紅' : '藍'}隊獲勝！`);
+        update(ref(db, `rooms/${currentRoom}`), { scores: { red: 0, blue: 0 } });
+    }
+}
+
+// === Firebase 連線邏輯 ===
+
+document.getElementById('create-btn').addEventListener('click', () => {
+    const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+    currentRoom = roomId;
+    playerColor = 'red'; // 房主為紅隊
+    
+    set(ref(db, `rooms/${roomId}`), {
+        status: 'waiting',
+        turn: 'red',
+        scores: { red: 0, blue: 0 }
+    }).then(() => {
+        enterGameUI();
+        listenToRoom();
+    });
+});
+
+document.getElementById('join-btn').addEventListener('click', () => {
+    const roomId = roomInput.value.trim().toUpperCase();
+    if (!roomId) return alert("請輸入房號");
+    
+    get(ref(db, `rooms/${roomId}`)).then((snapshot) => {
+        if (snapshot.exists() && snapshot.val().status === 'waiting') {
+            currentRoom = roomId;
+            playerColor = 'blue'; // 加入者為藍隊
+            
+            update(ref(db, `rooms/${roomId}`), { status: 'playing' }).then(() => {
+                enterGameUI();
+                listenToRoom();
+            });
+        } else {
+            alert("房間不存在或已滿");
+        }
+    });
+});
+
+function enterGameUI() {
+    menuDiv.style.display = 'none';
+    statusDiv.style.display = 'block';
+    gameContainer.style.display = 'block';
+    roomDisplay.innerText = `房號：${currentRoom} (你是 ${playerColor === 'red' ? '🔴 紅隊' : '🔵 藍隊'})`;
+    initPhysics();
+}
+
+let lastActionTime = 0;
+
+function listenToRoom() {
+    // 監聽房間狀態
+    onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        scores = data.scores || { red: 0, blue: 0 };
+        scoreDisplay.innerText = `🔴 紅隊 ${scores.red} - ${scores.blue} 藍隊 🔵`;
+        
+        isMyTurn = (data.turn === playerColor);
+        if (data.status === 'waiting') {
+            turnDisplay.innerText = "等待對手加入...";
+            isMyTurn = false;
+        } else {
+            turnDisplay.innerText = isMyTurn ? "👉 換你拉動球員！" : "⏳ 等待對手操作...";
+        }
+
+        if (data.resetFlag && data.resetFlag > lastActionTime) {
+            resetPositions();
+            lastActionTime = data.resetFlag;
+        }
+    });
+
+    // 監聽對手的射擊動作 (Action Sync)
+    onValue(ref(db, `rooms/${currentRoom}/action`), (snapshot) => {
+        const action = snapshot.val();
+        if (action && action.timestamp > lastActionTime) {
+            lastActionTime = action.timestamp;
+            const targetPlayer = players[action.playerId];
+            if (targetPlayer) {
+                // 套用對手傳來的力道
+                Matter.Body.applyForce(targetPlayer, targetPlayer.position, {
+                    x: action.forceX,
+                    y: action.forceY
+                });
+            }
+        }
+    });
+}
