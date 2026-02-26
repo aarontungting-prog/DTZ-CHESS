@@ -8,73 +8,39 @@
     
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #2c3e50;
-            color: white;
+            margin: 0; padding: 0;
+            background-color: #2c3e50; color: white;
             font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden; /* 防止左右滑動 */
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
         }
-
         #ui-container {
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            width: 90%;
-            max-width: 400px;
+            text-align: center; margin-top: 20px; margin-bottom: 10px;
+            width: 90%; max-width: 400px;
         }
-
         button {
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            width: 100%;
-            margin-bottom: 10px;
-            box-sizing: border-box;
+            padding: 12px 20px; font-size: 16px; cursor: pointer;
+            background-color: #e74c3c; color: white;
+            border: none; border-radius: 8px; width: 100%;
+            margin-bottom: 10px; box-sizing: border-box; font-weight: bold;
         }
-
         button:hover { background-color: #c0392b; }
-
+        #single-btn { background-color: #f39c12; }
+        #single-btn:hover { background-color: #d68910; }
+        #join-btn { background-color: #3498db; }
+        #join-btn:hover { background-color: #2980b9; }
         input {
-            padding: 12px;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            text-align: center;
+            padding: 12px; font-size: 16px; width: 100%; margin-bottom: 10px;
+            border-radius: 8px; border: 1px solid #ccc;
+            box-sizing: border-box; text-align: center;
         }
-
         #game-container {
-            border: 4px solid white;
-            background-color: #27ae60;
-            border-radius: 10px;
-            position: relative;
-            /* Responsive Design (響應式設計：讓畫布適應手機螢幕大小) */
-            width: 100vw; 
-            max-width: 400px;
-            /* 保持 2:3 的比例 (400x600) */
-            aspect-ratio: 2 / 3; 
-            overflow: hidden;
-            display: none;
+            border: 4px solid white; background-color: #27ae60;
+            border-radius: 10px; position: relative;
+            width: 100vw; max-width: 400px; aspect-ratio: 2 / 3; 
+            overflow: hidden; display: none;
         }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            /* 關鍵：防止手機拖曳球員時畫面跟著捲動 */
-            touch-action: none; 
-        }
-
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         h1 { font-size: 24px; margin-bottom: 15px; }
         h2 { font-size: 18px; margin: 10px 0; }
         p { font-size: 16px; color: #f1c40f; font-weight: bold; }
@@ -86,16 +52,17 @@
         <h1>⚽ 彈弓足球對戰</h1>
         
         <div id="menu">
-            <button id="create-btn">創建房間 (Create Room)</button>
+            <button id="single-btn">單人遊玩 (Single Player vs AI)</button>
             <hr style="border:0; border-top:1px solid #7f8c8d; margin: 15px 0;">
+            <button id="create-btn">創建連線房間 (Create Room)</button>
             <input type="text" id="room-input" placeholder="輸入房號 (Room ID)">
             <button id="join-btn">加入房間 (Join Room)</button>
         </div>
 
         <div id="status" style="display:none;">
-            <h2 id="room-display">房號：</h2>
+            <h2 id="room-display">單人模式</h2>
             <h2 id="score-display">🔴 紅隊 0 - 0 藍隊 🔵</h2>
-            <p id="turn-display">等待對手加入...</p>
+            <p id="turn-display">準備開始...</p>
         </div>
     </div>
 
@@ -121,8 +88,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // Game State (遊戲狀態：記錄當前遊戲模式與分數)
+        let gameMode = 'single'; // 'single' 或 'multi'
         let currentRoom = null;
-        let playerColor = null; 
+        let playerColor = 'red'; 
         let isMyTurn = false;
         let scores = { red: 0, blue: 0 };
 
@@ -134,14 +103,9 @@
         const turnDisplay = document.getElementById('turn-display');
         const roomInput = document.getElementById('room-input');
 
-        const Engine = Matter.Engine,
-              Render = Matter.Render,
-              Runner = Matter.Runner,
-              Bodies = Matter.Bodies,
-              Composite = Matter.Composite,
-              Events = Matter.Events,
-              Mouse = Matter.Mouse,
-              MouseConstraint = Matter.MouseConstraint;
+        const Engine = Matter.Engine, Render = Matter.Render, Runner = Matter.Runner,
+              Bodies = Matter.Bodies, Composite = Matter.Composite, Events = Matter.Events,
+              Mouse = Matter.Mouse, MouseConstraint = Matter.MouseConstraint, Vector = Matter.Vector;
 
         let engine, render, runner;
         let ball;
@@ -158,35 +122,25 @@
             render = Render.create({
                 canvas: document.getElementById('game-canvas'),
                 engine: engine,
-                options: {
-                    width: gameWidth,
-                    height: gameHeight,
-                    wireframes: false, 
-                    background: 'transparent'
-                }
+                options: { width: gameWidth, height: gameHeight, wireframes: false, background: 'transparent' }
             });
 
             const walls = [
-                Bodies.rectangle(gameWidth/2, 0, gameWidth, 20, { isStatic: true, render: { fillStyle: 'white' } }), 
-                Bodies.rectangle(gameWidth/2, gameHeight, gameWidth, 20, { isStatic: true, render: { fillStyle: 'white' } }), 
-                Bodies.rectangle(0, gameHeight/2, 20, gameHeight, { isStatic: true, render: { fillStyle: 'white' } }), 
-                Bodies.rectangle(gameWidth, gameHeight/2, 20, gameHeight, { isStatic: true, render: { fillStyle: 'white' } }) 
+                Bodies.rectangle(gameWidth/2, -10, gameWidth, 20, { isStatic: true, render: { fillStyle: 'white' } }), 
+                Bodies.rectangle(gameWidth/2, gameHeight+10, gameWidth, 20, { isStatic: true, render: { fillStyle: 'white' } }), 
+                Bodies.rectangle(-10, gameHeight/2, 20, gameHeight, { isStatic: true, render: { fillStyle: 'white' } }), 
+                Bodies.rectangle(gameWidth+10, gameHeight/2, 20, gameHeight, { isStatic: true, render: { fillStyle: 'white' } }) 
             ];
             
-            const midline = Bodies.rectangle(gameWidth/2, gameHeight/2, gameWidth, 5, { 
-                isStatic: true, 
-                isSensor: true, 
-                render: { fillStyle: 'rgba(255, 255, 255, 0.5)' } 
+            const midline = Bodies.rectangle(gameWidth/2, gameHeight/2, gameWidth, 4, { 
+                isStatic: true, isSensor: true, render: { fillStyle: 'rgba(255, 255, 255, 0.4)' } 
             });
 
             Composite.add(engine.world, [...walls, midline]);
-
             resetPositions();
-
             Render.run(render);
             runner = Runner.create();
             Runner.run(runner, engine);
-
             setupMouseInteraction();
         }
 
@@ -198,9 +152,7 @@
             slingshots = [];
 
             ball = Bodies.circle(gameWidth/2, gameHeight/2, 12, { 
-                restitution: 0.9, 
-                frictionAir: 0.02, 
-                render: { fillStyle: 'white' } 
+                restitution: 0.9, frictionAir: 0.015, render: { fillStyle: 'white' } 
             });
             Composite.add(engine.world, ball);
 
@@ -219,40 +171,29 @@
             function createTeam(positions, color) {
                 positions.forEach(pos => {
                     let player = Bodies.circle(pos.x, pos.y, 18, {
-                        restitution: 0.6,
-                        frictionAir: 0.05,
-                        render: { fillStyle: color === 'blue' ? '#3498db' : '#e74c3c' },
-                        team: color
+                        restitution: 0.5, frictionAir: 0.08,
+                        render: { fillStyle: color === 'blue' ? '#3498db' : '#e74c3c' }, team: color
                     });
-                    
                     let tether = Matter.Constraint.create({
-                        pointA: { x: pos.x, y: pos.y },
-                        bodyB: player,
-                        stiffness: 0.05, 
-                        render: { visible: false }
+                        pointA: { x: pos.x, y: pos.y }, bodyB: player, stiffness: 0.05, render: { visible: false }
                     });
-
                     players.push(player);
                     slingshots.push(tether);
                     Composite.add(engine.world, [player, tether]);
                 });
             }
-
             createTeam(bluePositions, 'blue');
             createTeam(redPositions, 'red');
         }
 
         function setupMouseInteraction() {
             const mouse = Mouse.create(render.canvas);
-            
-            // 讓滑鼠/觸控點擊與 Canvas 的縮放比例正確對應
             const scaleX = render.canvas.width / render.canvas.clientWidth;
             const scaleY = render.canvas.height / render.canvas.clientHeight;
             Mouse.setScale(mouse, { x: scaleX, y: scaleY });
 
             const mouseConstraint = MouseConstraint.create(engine, {
-                mouse: mouse,
-                constraint: { stiffness: 0.2, render: { visible: false } }
+                mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } }
             });
             Composite.add(engine.world, mouseConstraint);
 
@@ -266,62 +207,145 @@
             Events.on(mouseConstraint, 'enddrag', function(event) {
                 if (!isMyTurn) return;
                 const body = event.body;
-                
                 const tether = slingshots.find(s => s.bodyB === body);
+                
                 if (tether) {
                     const dx = body.position.x - tether.pointA.x;
                     const dy = body.position.y - tether.pointA.y;
-                    
-                    const actionRef = ref(db, `rooms/${currentRoom}/action`);
-                    set(actionRef, {
-                        playerId: players.indexOf(body),
-                        forceX: dx * -0.05, 
-                        forceY: dy * -0.05,
-                        timestamp: Date.now()
-                    });
+                    const forceX = dx * -0.05;
+                    const forceY = dy * -0.05;
 
-                    update(ref(db, `rooms/${currentRoom}`), { turn: playerColor === 'red' ? 'blue' : 'red' });
+                    if (gameMode === 'multi') {
+                        // 連線模式：將動作送到 Firebase
+                        set(ref(db, `rooms/${currentRoom}/action`), {
+                            playerId: players.indexOf(body), forceX: forceX, forceY: forceY, timestamp: Date.now()
+                        });
+                        update(ref(db, `rooms/${currentRoom}`), { turn: playerColor === 'red' ? 'blue' : 'red' });
+                    } else {
+                        // 單人模式：直接切換回合並呼叫 AI
+                        isMyTurn = false;
+                        turnDisplay.innerText = "⏳ 等待 AI 操作...";
+                        setTimeout(triggerAITurn, 1500); // 1.5秒後 AI 動作
+                    }
                 }
             });
         }
 
-        setInterval(() => {
-            if (!ball) return;
-            if (ball.position.y < 30) {
-                scoreGoal('red');
-            } else if (ball.position.y > gameHeight - 30) {
-                scoreGoal('blue');
-            }
-        }, 500);
+        // --- AI Logic (人工智慧邏輯：控制藍隊自動打擊) ---
+        function triggerAITurn() {
+            if (gameMode !== 'single') return;
 
-        function scoreGoal(team) {
-            if (playerColor !== 'red') return; 
-            let newScores = { ...scores };
-            newScores[team] += 1;
-            update(ref(db, `rooms/${currentRoom}`), { scores: newScores, resetFlag: Date.now() });
+            // 尋找距離球最近的藍隊球員
+            let bestPlayer = null;
+            let minDistance = Infinity;
+            
+            players.forEach(p => {
+                if (p.team === 'blue') {
+                    let dist = Vector.magnitude(Vector.sub(p.position, ball.position));
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        bestPlayer = p;
+                    }
+                }
+            });
 
-            if (newScores[team] >= 6) {
-                alert(`${team === 'red' ? '紅' : '藍'}隊獲勝！`);
-                update(ref(db, `rooms/${currentRoom}`), { scores: { red: 0, blue: 0 } });
+            if (bestPlayer) {
+                // 計算從球員指向球的向量 (Vector)
+                let direction = Vector.normalise(Vector.sub(ball.position, bestPlayer.position));
+                
+                // 模擬拉動放開的力道 (Force)
+                let power = 0.06; 
+                Matter.Body.applyForce(bestPlayer, bestPlayer.position, {
+                    x: direction.x * power,
+                    y: direction.y * power
+                });
+
+                // 切換回玩家回合
+                setTimeout(() => {
+                    isMyTurn = true;
+                    turnDisplay.innerText = "👉 換你拉動紅隊球員！";
+                }, 1000);
             }
         }
 
+        // --- 分數判定 ---
+        setInterval(() => {
+            if (!ball) return;
+            if (ball.position.y < 20) scoreGoal('red');
+            else if (ball.position.y > gameHeight - 20) scoreGoal('blue');
+        }, 500);
+
+        function scoreGoal(team) {
+            if (gameMode === 'multi') {
+                if (playerColor !== 'red') return; // 只由房主結算
+                let newScores = { ...scores };
+                newScores[team] += 1;
+                update(ref(db, `rooms/${currentRoom}`), { scores: newScores, resetFlag: Date.now() });
+                checkWin(newScores, team);
+            } else {
+                // 單人模式本地結算
+                scores[team] += 1;
+                updateScoreUI();
+                resetPositions();
+                checkWin(scores, team);
+                
+                // 進球後重置回合
+                isMyTurn = true;
+                turnDisplay.innerText = "👉 換你拉動紅隊球員！";
+            }
+        }
+
+        function checkWin(currentScores, team) {
+            if (currentScores[team] >= 6) {
+                alert(`${team === 'red' ? '🔴 紅隊' : '🔵 藍隊'} 獲勝！`);
+                scores = { red: 0, blue: 0 };
+                if (gameMode === 'multi') {
+                    update(ref(db, `rooms/${currentRoom}`), { scores: scores });
+                } else {
+                    updateScoreUI();
+                }
+            }
+        }
+
+        function updateScoreUI() {
+            scoreDisplay.innerText = `🔴 紅隊 ${scores.red} - ${scores.blue} 藍隊 🔵`;
+        }
+
+        // --- 按鈕事件綁定 ---
+        
+        document.getElementById('single-btn').addEventListener('click', () => {
+            gameMode = 'single';
+            playerColor = 'red';
+            isMyTurn = true;
+            scores = { red: 0, blue: 0 };
+            menuDiv.style.display = 'none';
+            statusDiv.style.display = 'block';
+            gameContainer.style.display = 'block';
+            roomDisplay.innerText = "模式：單人遊玩 (vs AI)";
+            turnDisplay.innerText = "👉 換你拉動紅隊球員！";
+            updateScoreUI();
+            initPhysics();
+        });
+
         document.getElementById('create-btn').addEventListener('click', () => {
+            gameMode = 'multi';
             const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
-            currentRoom = roomId;
-            playerColor = 'red'; 
             
+            // 加上 catch 捕捉 Firebase 權限錯誤 (Permission Denied)
             set(ref(db, `rooms/${roomId}`), {
-                status: 'waiting',
-                turn: 'red',
-                scores: { red: 0, blue: 0 }
+                status: 'waiting', turn: 'red', scores: { red: 0, blue: 0 }
             }).then(() => {
-                enterGameUI();
+                currentRoom = roomId;
+                playerColor = 'red'; 
+                enterMultiplayerUI();
                 listenToRoom();
+            }).catch((error) => {
+                alert("無法創建房間！請檢查 Firebase 的 Security Rules 是否設定為 true。\n錯誤訊息: " + error.message);
             });
         });
 
         document.getElementById('join-btn').addEventListener('click', () => {
+            gameMode = 'multi';
             const roomId = roomInput.value.trim().toUpperCase();
             if (!roomId) return alert("請輸入房號");
             
@@ -329,22 +353,23 @@
                 if (snapshot.exists() && snapshot.val().status === 'waiting') {
                     currentRoom = roomId;
                     playerColor = 'blue'; 
-                    
                     update(ref(db, `rooms/${roomId}`), { status: 'playing' }).then(() => {
-                        enterGameUI();
+                        enterMultiplayerUI();
                         listenToRoom();
                     });
                 } else {
-                    alert("房間不存在或已滿");
+                    alert("房間不存在或遊戲已開始");
                 }
+            }).catch((error) => {
+                alert("無法連線至房間！請檢查 Firebase 權限。\n錯誤訊息: " + error.message);
             });
         });
 
-        function enterGameUI() {
+        function enterMultiplayerUI() {
             menuDiv.style.display = 'none';
             statusDiv.style.display = 'block';
             gameContainer.style.display = 'block';
-            roomDisplay.innerText = `房號：${currentRoom} (你是 ${playerColor === 'red' ? '🔴 紅隊' : '🔵 藍隊'})`;
+            roomDisplay.innerText = `連線房號：${currentRoom} (你是 ${playerColor === 'red' ? '🔴 紅隊' : '🔵 藍隊'})`;
             initPhysics();
         }
 
@@ -356,7 +381,7 @@
                 if (!data) return;
 
                 scores = data.scores || { red: 0, blue: 0 };
-                scoreDisplay.innerText = `🔴 紅隊 ${scores.red} - ${scores.blue} 藍隊 🔵`;
+                updateScoreUI();
                 
                 isMyTurn = (data.turn === playerColor);
                 if (data.status === 'waiting') {
@@ -379,8 +404,7 @@
                     const targetPlayer = players[action.playerId];
                     if (targetPlayer) {
                         Matter.Body.applyForce(targetPlayer, targetPlayer.position, {
-                            x: action.forceX,
-                            y: action.forceY
+                            x: action.forceX, y: action.forceY
                         });
                     }
                 }
