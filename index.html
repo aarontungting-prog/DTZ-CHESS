@@ -3,35 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>迷你足球 Pocket Soccer</title>
+    <title>迷你彈射足球 精裝版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@700;900&display=swap');
 
-        /* 鎖定全螢幕，防止手機滑動 */
+        /* 鎖定全螢幕 */
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #f3a683; /* 復刻截圖的粉橘色背景 */
+            background-color: #f3a683; 
             font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             overflow: hidden; position: fixed; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none;
         }
 
-        /* ===== 自訂提示框 (Toast) ===== */
         #toast {
             position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            background-color: #34495e; color: white; padding: 15px 30px; border-radius: 30px;
-            font-size: 16px; font-family: 'Noto Sans TC', sans-serif; font-weight: bold; 
+            background-color: #2d3436; color: white; padding: 12px 24px; border-radius: 30px;
+            font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: bold; 
             z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; white-space: nowrap;
         }
 
-        /* ===== 主選單 UI (專業扁平化) ===== */
+        /* ===== 主選單 UI (保持專業扁平) ===== */
         #menu-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100%; width: 100%; z-index: 50; position: absolute; 
-            background-color: #a4c639; /* 清新草綠色首頁 */
+            background-color: #a4c639; 
         }
         .menu-title {
             color: white; font-size: 48px; margin-bottom: 20px;
@@ -54,9 +53,7 @@
         .btn-single { background-color: #54a0ff; }
         .btn-multi { background-color: #ff6b6b; }
         
-        .input-group {
-            display: flex; width: 280px; gap: 10px; margin-bottom: 20px;
-        }
+        .input-group { display: flex; width: 280px; gap: 10px; margin-bottom: 20px; }
         .input-box {
             flex-grow: 1; padding: 15px; font-size: 20px; border-radius: 12px; border: none;
             text-align: center; font-family: 'Fredoka One', sans-serif; outline: none;
@@ -69,66 +66,67 @@
         }
         .btn-join:active { transform: translateY(6px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
 
-        /* ===== 遊戲畫面 ===== */
+        /* ===== 遊戲畫面 UI (全新升級) ===== */
         #game-ui { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; position: relative; }
         
-        /* 頂部控制列 (完美復刻截圖) */
+        /* 🌟 全新整合式頂部欄 */
         #top-bar {
-            width: 100%; max-width: 400px; display: flex; align-items: center; justify-content: space-between;
-            padding: 15px 20px; box-sizing: border-box; z-index: 10; margin-bottom: 5px;
+            width: 100%; height: 70px; background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; box-sizing: border-box; z-index: 10;
+            backdrop-filter: blur(5px); border-bottom: 2px solid rgba(255,255,255,0.1);
         }
         #btn-exit {
-            width: 45px; height: 45px; background: white; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center; color: #ff6b6b;
-            font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.1); border: none;
+            width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 12px;
+            display: flex; justify-content: center; align-items: center; color: white;
+            font-size: 20px; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.2s;
         }
-        #btn-exit:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        #btn-exit:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
 
-        /* 計分板 */
+        /* 🌟 升級版計分板 */
         #scoreboard {
-            background: #503d3f; color: white; width: 220px; padding: 8px 15px; border-radius: 20px;
-            display: flex; justify-content: space-between; align-items: center; font-size: 24px;
-            box-shadow: 0 6px 0 rgba(0,0,0,0.15); margin: 0 auto;
+            display: flex; align-items: center; gap: 15px;
         }
-        .score-col { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
-        .team-name { font-size: 11px; opacity: 0.8; font-family: 'Fredoka One', sans-serif; text-transform: uppercase;}
-        .score-red { color: #ff6b6b; font-size: 28px; }
-        .score-blue { color: #4ea8de; font-size: 28px; }
-        .score-vs { font-size: 20px; color: #dcdde1; }
+        .score-badge {
+            display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.4);
+            padding: 5px 15px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);
+        }
+        .team-icon { font-size: 18px; }
+        .score-num { font-size: 24px; color: white; font-family: 'Fredoka One'; }
+        .score-vs { font-size: 18px; color: rgba(255,255,255,0.6); font-family: 'Fredoka One'; }
+        .team-red { color: #ff6b6b; }
+        .team-blue { color: #4ea8de; }
 
-        /* 動態縮放層 */
-        #scaling-wrapper { 
-            position: relative; width: 400px; height: 720px; 
-            transform-origin: top center;
-        }
+        #scaling-wrapper { position: relative; width: 400px; height: 720px; transform-origin: top center; margin-top: 10px;}
         canvas { display: block; width: 100%; height: 100%; outline: none; }
 
-        /* 橫幅提示 */
+        /* 🌟 精緻化橫幅 */
         .turn-banner {
             position: absolute; padding: 12px 35px; border-radius: 30px; font-size: 22px; font-weight: normal;
-            color: white; z-index: 20; transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; opacity: 0; box-shadow: 0 6px 15px rgba(0,0,0,0.2); left: 50%; transform: translateX(-50%) scale(0.8);
+            color: white; z-index: 20; transition: all 0.3s ease;
+            pointer-events: none; opacity: 0; box-shadow: 0 8px 20px rgba(0,0,0,0.3); left: 50%; transform: translateX(-50%) scale(0.8);
+            border: 3px solid rgba(255,255,255,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
         .turn-banner.active { opacity: 1; transform: translateX(-50%) scale(1); }
-        #bot-banner { top: 90px; background-color: #503d3f; }
-        #player-banner { bottom: 90px; background-color: #ff6b6b; }
+        #bot-banner { top: 100px; background: linear-gradient(to right, #4a3b32, #635147); }
+        #player-banner { bottom: 100px; background: linear-gradient(to right, #ff6b6b, #ff8e8e); }
         
-        /* 等待房間提示 */
         #waiting-overlay {
-            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95); padding: 25px 40px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; z-index: 30;
-            display: none; flex-direction: column; align-items: center; border: 4px solid #ff6b6b;
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95); padding: 30px 40px; border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align: center; z-index: 30;
+            display: none; flex-direction: column; align-items: center; border: 5px solid #ff6b6b;
         }
-        #waiting-room-id { font-size: 42px; color: #ff6b6b; margin: 10px 0; letter-spacing: 3px; }
-        .waiting-text { font-size: 16px; color: #503d3f; font-family: 'Noto Sans TC'; font-weight: bold;}
+        #waiting-room-id { font-size: 48px; color: #ff6b6b; margin: 15px 0; letter-spacing: 4px; font-family: 'Fredoka One';}
+        .waiting-text { font-size: 18px; color: #2d3436; font-family: 'Noto Sans TC'; font-weight: bold;}
+        .waiting-sub { font-size: 14px; color: #636e72; margin-top: 10px; }
 
-        /* 結算畫面 */
         #win-modal {
-            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; flex-direction: column; justify-content: center; align-items: center;
+            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; flex-direction: column; justify-content: center; align-items: center;
         }
-        .win-box { background: #fff; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 6px solid #503d3f; width: 80%; max-width: 300px; }
-        #win-text { font-size: 40px; color: #ff6b6b; margin-bottom: 30px; text-transform: uppercase;}
+        .win-box { background: #fff; padding: 40px; border-radius: 30px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5); border: 8px solid #2d3436; width: 85%; max-width: 320px; }
+        #win-text { font-size: 42px; color: #ff6b6b; margin-bottom: 30px; text-transform: uppercase; text-shadow: 2px 2px 0 rgba(0,0,0,0.1);}
     </style>
 </head>
 <body>
@@ -154,19 +152,19 @@
 
     <div id="game-ui">
         <div id="top-bar">
-            <button id="btn-exit">＜</button>
+            <button id="btn-exit">✕</button>
             <div id="scoreboard">
-                <div class="score-col">
-                    <span class="team-name" style="color: #ff6b6b;">YOU</span>
-                    <span class="score-red" id="score-red">0</span>
+                <div class="score-badge team-red">
+                    <span class="team-icon">🛡️</span>
+                    <span class="score-num" id="score-red">0</span>
                 </div>
                 <span class="score-vs">VS</span>
-                <div class="score-col">
-                    <span class="team-name" style="color: #4ea8de;" id="p2-name">BOT</span>
-                    <span class="score-blue" id="score-blue">0</span>
+                <div class="score-badge team-blue">
+                    <span class="score-num" id="score-blue">0</span>
+                    <span class="team-icon">🛡️</span>
                 </div>
             </div>
-            <div style="width: 45px;"></div> </div>
+            <div style="width: 40px;"></div> </div>
 
         <div id="scaling-wrapper">
             <canvas id="game-canvas"></canvas>
@@ -175,9 +173,9 @@
             <div class="turn-banner" id="player-banner">YOUR TURN!</div>
             
             <div id="waiting-overlay">
-                <div class="waiting-text">等待對手加入</div>
+                <div class="waiting-text">正在等待對手加入...</div>
                 <div id="waiting-room-id">0000</div>
-                <div class="waiting-text" style="font-size: 13px; color: #888;">將此房號告訴你的朋友</div>
+                <div class="waiting-sub">請將上方的房號告訴你的朋友</div>
             </div>
         </div>
     </div>
@@ -202,7 +200,6 @@
             setTimeout(() => { toast.style.top = '-100px'; }, 3000); 
         }
 
-        // Firebase 初始化 (東南亞伺服器)
         let db = null;
         try {
             const firebaseConfig = {
@@ -217,29 +214,27 @@
             db = getDatabase(initializeApp(firebaseConfig));
         } catch (e) { console.warn("Firebase 初始化失敗"); }
 
-        // 螢幕自適應縮放
         const scaleWrapper = document.getElementById('scaling-wrapper');
         let currentScale = 1;
         function resizeGame() {
-            const topBarHeight = document.getElementById('top-bar').offsetHeight || 80;
-            const availableHeight = window.innerHeight - topBarHeight - 10; 
-            const availableWidth = window.innerWidth - 10;
+            const topBarHeight = document.getElementById('top-bar').offsetHeight;
+            const availableHeight = window.innerHeight - topBarHeight - 20; 
+            const availableWidth = window.innerWidth - 20;
             currentScale = Math.min(availableWidth / 400, availableHeight / 720);
             scaleWrapper.style.transform = `scale(${currentScale})`;
         }
         window.addEventListener('resize', resizeGame);
         setTimeout(resizeGame, 100);
 
-        // 遊戲狀態與物理引擎變數
         let gameMode = 'single', currentRoom = null, myTeam = 'red', currentTurn = 'red', isMoving = false;
-        let roomStatus = 'ended'; // waiting, playing, ended
+        let roomStatus = 'ended'; 
         let scores = { red: 0, blue: 0 };
         const WIN_SCORE = 3;
+        let opponentAim = null; 
 
         const Engine = Matter.Engine, Render = Matter.Render, Runner = Matter.Runner,
               Bodies = Matter.Bodies, Composite = Matter.Composite, Events = Matter.Events, Vector = Matter.Vector;
         
-        // 球場尺寸定義
         const gameWidth = 400, gameHeight = 720;
         const fieldTop = 80, fieldBottom = 640; 
         const goalW = 150, goalH = 45;
@@ -259,27 +254,39 @@
             render = Render.create({ canvas: canvasObj, engine: engine, options: { width: gameWidth, height: gameHeight, wireframes: false, background: 'transparent' } });
 
             createBoundaries(); resetFormation(true);
-            Events.on(render, 'afterRender', customDraw); Events.on(engine, 'afterUpdate', physicsUpdate);
+            Events.on(render, 'afterRender', customDraw); 
+            Events.on(engine, 'afterUpdate', physicsUpdate);
+            
+            Events.on(engine, 'collisionStart', function(event) {
+                event.pairs.forEach((pair) => {
+                    if (pair.bodyA.label === 'ball' || pair.bodyB.label === 'ball') {
+                        Matter.Body.setVelocity(ball, { x: ball.velocity.x * 0.85, y: ball.velocity.y * 0.85 });
+                    }
+                });
+            });
 
             Render.run(render); runner = Runner.create(); Runner.run(runner, engine);
             setupSlingshot(canvasObj); resizeGame();
         }
 
         function createBoundaries() {
-            // 牆壁摩擦力全關，彈性 0.9 讓反彈順暢乾淨
             const wallOpts = { isStatic: true, render: { visible: false }, restitution: 0.9, friction: 0, frictionStatic: 0 };
             const postOpts = { isStatic: true, render: { visible: false }, restitution: 0.8, friction: 0, frictionStatic: 0 };
-            
+            const thick = 100; 
+
             const walls = [
-                Bodies.rectangle(-10, gameHeight/2, 20, gameHeight, wallOpts), Bodies.rectangle(gameWidth+10, gameHeight/2, 20, gameHeight, wallOpts),
-                Bodies.rectangle(leftW/2, fieldTop-10, leftW, 20, wallOpts), Bodies.rectangle(gameWidth - leftW/2, fieldTop-10, leftW, 20, wallOpts),
-                Bodies.rectangle(leftW/2, fieldBottom+10, leftW, 20, wallOpts), Bodies.rectangle(gameWidth - leftW/2, fieldBottom+10, leftW, 20, wallOpts),
-                // 球網背板
-                Bodies.rectangle(gameWidth/2, fieldTop - goalH - 10, goalW, 20, wallOpts), Bodies.rectangle(gameWidth/2, fieldBottom + goalH + 10, goalW, 20, wallOpts),
-                // 側網
-                Bodies.rectangle(leftW-10, fieldTop - goalH/2, 20, goalH, wallOpts), Bodies.rectangle(gameWidth-leftW+10, fieldTop - goalH/2, 20, goalH, wallOpts),
-                Bodies.rectangle(leftW-10, fieldBottom + goalH/2, 20, goalH, wallOpts), Bodies.rectangle(gameWidth-leftW+10, fieldBottom + goalH/2, 20, goalH, wallOpts),
-                // 物理門柱
+                Bodies.rectangle(-thick/2, gameHeight/2, thick, gameHeight, wallOpts), 
+                Bodies.rectangle(gameWidth+thick/2, gameHeight/2, thick, gameHeight, wallOpts),
+                Bodies.rectangle(leftW/2, fieldTop-thick/2, leftW, thick, wallOpts), 
+                Bodies.rectangle(gameWidth - leftW/2, fieldTop-thick/2, leftW, thick, wallOpts),
+                Bodies.rectangle(leftW/2, fieldBottom+thick/2, leftW, thick, wallOpts), 
+                Bodies.rectangle(gameWidth - leftW/2, fieldBottom+thick/2, leftW, thick, wallOpts),
+                Bodies.rectangle(gameWidth/2, fieldTop - goalH - thick/2, goalW, thick, wallOpts), 
+                Bodies.rectangle(gameWidth/2, fieldBottom + goalH + thick/2, goalW, thick, wallOpts),
+                Bodies.rectangle(leftW-thick/2, fieldTop - goalH/2, thick, goalH, wallOpts), 
+                Bodies.rectangle(gameWidth-leftW+thick/2, fieldTop - goalH/2, thick, goalH, wallOpts),
+                Bodies.rectangle(leftW-thick/2, fieldBottom + goalH/2, thick, goalH, wallOpts), 
+                Bodies.rectangle(gameWidth-leftW+thick/2, fieldBottom + goalH/2, thick, goalH, wallOpts),
                 Bodies.circle(leftW, fieldTop, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldTop, 8, postOpts),
                 Bodies.circle(leftW, fieldBottom, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldBottom, 8, postOpts)
             ];
@@ -291,13 +298,11 @@
             players.forEach(p => Composite.remove(engine.world, p)); players = []; trails = [];
             if(fullReset) { scores = { red: 0, blue: 0 }; updateScoreUI(); }
 
-            // 足球：極輕、低阻力
             ball = Bodies.circle(gameWidth/2, gameHeight/2, 12, { 
                 restitution: 0.9, frictionAir: 0.015, friction: 0, frictionStatic: 0, density: 0.002, render: { visible: false }, label: 'ball'
             });
             Composite.add(engine.world, ball);
 
-            // 球員：稍重、有一定阻力(滑行後停下)，高彈性
             const pOpts = { restitution: 0.85, frictionAir: 0.03, friction: 0, frictionStatic: 0, density: 0.05, render: { visible: false } };
             
             const bluePos = [ {x: gameWidth/2, y: fieldTop + 130}, {x: gameWidth/2 - 80, y: fieldTop + 220}, {x: gameWidth/2 + 80, y: fieldTop + 220}, {x: gameWidth/2 - 70, y: fieldTop + 50}, {x: gameWidth/2 + 70, y: fieldTop + 50} ];
@@ -311,42 +316,44 @@
             if(roomStatus === 'playing') updateTurnBanner();
         }
 
-        // === 專業級扁平化繪圖 ===
         function customDraw() {
             const ctx = render.context; const time = engine.timing.timestamp;
             
-            // 畫球場綠地與白色邊框
+            // 草皮背景
             ctx.fillStyle = '#72c84b';
             ctx.beginPath(); ctx.rect(0, fieldTop, gameWidth, fieldBottom - fieldTop); ctx.fill();
             
-            ctx.fillStyle = 'rgba(0,0,0,0.05)'; // 草皮深淺紋路
+            // 草皮紋路
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
             for(let y = fieldTop; y < fieldBottom; y += 80) { ctx.fillRect(0, y, gameWidth, 40); }
 
-            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
+            // 白色邊線
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
             ctx.strokeRect(0, fieldTop, gameWidth, fieldBottom - fieldTop);
             
-            // 中線與中圈
+            // 中線
             ctx.beginPath(); ctx.moveTo(0, gameHeight/2); ctx.lineTo(gameWidth, gameHeight/2); ctx.stroke();
             ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 50, 0, 2*Math.PI); ctx.stroke();
             ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 8, 0, 2*Math.PI); ctx.fill();
             
-            // 畫凸出的球網與ㄇ字框
+            // 繪製球門 (包含網子與門柱)
             function drawGoal(x, y, isTop) {
-                ctx.fillStyle = isTop ? '#4ea8de' : '#ff6b6b'; ctx.fillRect(x, y, goalW, goalH);
-                ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath();
+                ctx.fillStyle = isTop ? 'rgba(78, 168, 222, 0.8)' : 'rgba(255, 107, 107, 0.8)'; ctx.fillRect(x, y, goalW, goalH);
+                // 球網紋路
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2; ctx.beginPath();
                 for(let i=6; i<goalW; i+=12) { ctx.moveTo(x+i, y); ctx.lineTo(x+i, y+goalH); }
                 for(let i=6; i<goalH; i+=12) { ctx.moveTo(x, y+i); ctx.lineTo(x+goalW, y+i); }
                 ctx.stroke();
-
-                ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 8; ctx.beginPath();
+                // ㄇ字外框
+                ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 6; ctx.beginPath();
                 if(isTop) { ctx.moveTo(x, y+goalH); ctx.lineTo(x, y); ctx.lineTo(x+goalW, y); ctx.lineTo(x+goalW, y+goalH); } 
                 else { ctx.moveTo(x, y); ctx.lineTo(x, y+goalH); ctx.lineTo(x+goalW, y+goalH); ctx.lineTo(x+goalW, y); }
                 ctx.stroke();
-
+                // 門柱點
                 ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 3;
                 let postY = isTop ? y+goalH : y;
-                ctx.beginPath(); ctx.arc(x, postY, 6, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.arc(x+goalW, postY, 6, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(x, postY, 7, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(x+goalW, postY, 7, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
             }
             drawGoal(leftW, fieldTop - goalH, true);
             drawGoal(leftW, fieldBottom, false);
@@ -355,26 +362,20 @@
             trails.forEach(t => { ctx.globalAlpha = t.alpha; ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x, t.y, t.size, 0, Math.PI*2); ctx.fill(); });
             ctx.globalAlpha = 1.0;
 
-            // 扇形瞄準區
+            // 瞄準扇形
             if (dragState.isDragging && dragState.player && roomStatus === 'playing') {
-                let dx = dragState.currentX - dragState.startX; let dy = dragState.currentY - dragState.startY;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist > 10) { 
-                    let angle = Math.atan2(dy, dx); let fanRadius = Math.min(dist * 1.5, 200); 
-                    ctx.beginPath(); ctx.moveTo(dragState.player.position.x, dragState.player.position.y);
-                    ctx.arc(dragState.player.position.x, dragState.player.position.y, fanRadius, angle - 0.35, angle + 0.35);
-                    ctx.closePath(); ctx.fillStyle = 'rgba(74, 59, 50, 0.4)'; ctx.fill(); 
-                }
+                drawAimCone(ctx, dragState.player.position.x, dragState.player.position.y, dragState.currentX - dragState.startX, dragState.currentY - dragState.startY);
+            } else if (opponentAim && currentTurn !== myTeam && roomStatus === 'playing') {
+                let oppPlayer = players[opponentAim.pId];
+                if(oppPlayer) drawAimCone(ctx, oppPlayer.position.x, oppPlayer.position.y, opponentAim.cx - opponentAim.sx, opponentAim.cy - opponentAim.sy);
             }
 
-            // 🌟 繪製分離式扁平陰影 (Drop Shadow) -> 偏移 (0, 5)
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.beginPath(); ctx.arc(ball.position.x, ball.position.y + 4, 12, 0, 2*Math.PI); ctx.fill();
-            players.forEach(p => {
-                ctx.beginPath(); ctx.arc(p.position.x, p.position.y + 6, 22, 0, 2*Math.PI); ctx.fill();
-            });
+            // 🌟 分離式扁平陰影 (Drop Shadow)
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath(); ctx.arc(ball.position.x + 3, ball.position.y + 5, 12, 0, 2*Math.PI); ctx.fill();
+            players.forEach(p => { ctx.beginPath(); ctx.arc(p.position.x + 4, p.position.y + 6, 22, 0, 2*Math.PI); ctx.fill(); });
 
-            // 繪製足球
+            // 足球本體
             ctx.save(); ctx.translate(ball.position.x, ball.position.y); ctx.rotate(ball.angle); 
             ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 2*Math.PI); ctx.fill(); 
             ctx.lineWidth = 3; ctx.strokeStyle = '#2d3436'; ctx.stroke();
@@ -385,18 +386,40 @@
             ctx.beginPath(); ctx.arc(-5, -6, 3, 0, 2*Math.PI); ctx.fill(); 
             ctx.restore();
 
-            // 繪製球員
+            // 🌟 繪製全新「籌碼徽章」風格球員
             players.forEach(p => {
-                if(p.team === currentTurn && !isMoving && currentTurn === myTeam && roomStatus === 'playing') {
-                    ctx.save(); ctx.translate(p.position.x, p.position.y); ctx.rotate(time * 0.003);
+                ctx.save(); ctx.translate(p.position.x, p.position.y);
+                
+                // 光圈 (輪到該隊時顯示)
+                if(p.team === currentTurn && !isMoving && roomStatus === 'playing') {
+                    ctx.save(); ctx.rotate(time * 0.003);
                     ctx.setLineDash([10, 10]); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 4;
-                    ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+                    ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI*2); ctx.stroke(); ctx.restore();
                 }
+
+                // 1. 外圈金屬邊框
+                ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI*2); ctx.fill();
+                // 2. 隊伍顏色主體
                 ctx.fillStyle = p.team === 'red' ? '#ff6b6b' : '#4ea8de';
-                ctx.beginPath(); ctx.arc(p.position.x, p.position.y, 22, 0, 2*Math.PI); ctx.fill(); 
-                ctx.lineWidth = 4; ctx.strokeStyle = '#2d3436'; ctx.stroke();
-                drawStar(ctx, p.position.x, p.position.y, 5, 12, 5.5);
+                ctx.beginPath(); ctx.arc(0, 0, 21, 0, Math.PI*2); ctx.fill(); 
+                // 3. 內部白色基底
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+                // 4. 內部隊伍顏色徽章 (星星)
+                ctx.fillStyle = p.team === 'red' ? '#ff6b6b' : '#4ea8de';
+                drawStar(ctx, 0, 0, 5, 10, 5);
+                
+                ctx.restore();
             });
+        }
+
+        function drawAimCone(ctx, px, py, dx, dy) {
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 10) { 
+                let angle = Math.atan2(dy, dx); let fanRadius = Math.min(dist * 1.5, 200); 
+                ctx.beginPath(); ctx.moveTo(px, py);
+                ctx.arc(px, py, fanRadius, angle - 0.35, angle + 0.35);
+                ctx.closePath(); ctx.fillStyle = 'rgba(74, 59, 50, 0.4)'; ctx.fill(); 
+            }
         }
 
         function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
@@ -405,11 +428,10 @@
                 x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
                 x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
             }
-            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fillStyle = '#ffffff'; ctx.fill();
+            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fill();
         }
 
         function physicsUpdate() {
-            // 🌟 防卡死機制：球員不能進球門區
             players.forEach(p => {
                 if (p.position.y < fieldTop + 15) {
                     Matter.Body.setPosition(p, { x: p.position.x, y: fieldTop + 25 });
@@ -430,6 +452,8 @@
         }
 
         let dragState = { isDragging: false, player: null, startX: 0, startY: 0, currentX: 0, currentY: 0 };
+        let lastAimSyncTime = 0; 
+
         function setupSlingshot(canvas) {
             const getTouchPos = (e) => {
                 const rect = canvas.getBoundingClientRect();
@@ -439,7 +463,7 @@
             };
 
             const onStart = (e) => {
-                if (roomStatus !== 'playing') return; // 🌟 必須在遊玩狀態才能操作
+                if (roomStatus !== 'playing') return; 
                 if (isMoving || currentTurn !== myTeam) return; 
                 const pos = getTouchPos(e);
                 let myPlayer = Matter.Query.point(players, pos).find(b => b.team === myTeam);
@@ -450,26 +474,27 @@
                 }
             };
             const onMove = (e) => {
-                if(e.touches) e.preventDefault(); // 防止滑動
+                if(e.touches) e.preventDefault(); 
                 if (!dragState.isDragging) return;
                 const pos = getTouchPos(e);
                 dragState.currentX = pos.x; dragState.currentY = pos.y;
+                if (gameMode === 'multi' && db && Date.now() - lastAimSyncTime > 50) {
+                    set(ref(db, `rooms/${currentRoom}/aiming`), { pId: players.indexOf(dragState.player), sx: dragState.startX, sy: dragState.startY, cx: pos.x, cy: pos.y });
+                    lastAimSyncTime = Date.now();
+                }
             };
             const onEnd = () => {
                 if (!dragState.isDragging) return;
                 let dx = dragState.startX - dragState.currentX; let dy = dragState.startY - dragState.currentY;
-                
                 let pullDist = Math.sqrt(dx*dx + dy*dy); const maxPull = 200; 
                 if (pullDist > maxPull) { dx = (dx/pullDist) * maxPull; dy = (dy/pullDist) * maxPull; }
-
-                let forceMultiplier = 0.009; 
-                let forceX = dx * forceMultiplier; let forceY = dy * forceMultiplier;
-
-                // 🌟 發射前再次驗證防連點作弊
-                if (gameMode === 'multi' && currentTurn !== myTeam) { dragState.isDragging = false; return; }
-
+                let forceMultiplier = 0.012; let forceX = dx * forceMultiplier; let forceY = dy * forceMultiplier;
+                if (gameMode === 'multi' && currentTurn !== myTeam) { dragState.isDragging = false; set(ref(db, `rooms/${currentRoom}/aiming`), null); return; }
                 applyAction(players.indexOf(dragState.player), forceX, forceY);
-                if (gameMode === 'multi' && db) set(ref(db, `rooms/${currentRoom}/action`), { playerId: players.indexOf(dragState.player), forceX, forceY, timestamp: Date.now() });
+                if (gameMode === 'multi' && db) {
+                    set(ref(db, `rooms/${currentRoom}/action`), { playerId: players.indexOf(dragState.player), forceX, forceY, timestamp: Date.now() });
+                    set(ref(db, `rooms/${currentRoom}/aiming`), null);
+                }
                 dragState.isDragging = false; dragState.player = null;
             };
 
@@ -479,18 +504,17 @@
 
         function applyAction(playerId, forceX, forceY) {
             const player = players[playerId];
-            if (player) { Matter.Body.applyForce(player, player.position, { x: forceX, y: forceY }); isMoving = true; hideBanners(); }
+            if (player) { Matter.Body.applyForce(player, player.position, { x: forceX, y: forceY }); isMoving = true; updateTurnBanner(); }
         }
 
         function checkTurnState() {
-            // 🌟 嚴格的 X 軸與 Y 軸進球判定，保證只有進 U 型門才算分
             let inGoalX = ball.position.x > leftW && ball.position.x < (gameWidth - leftW);
             if (inGoalX && ball.position.y < fieldTop - 5) scoreGoal('red'); 
             else if (inGoalX && ball.position.y > fieldBottom + 5) scoreGoal('blue');
 
             if (isMoving) {
                 let totalSpeed = ball.speed + players.reduce((sum, p) => sum + p.speed, 0);
-                if (totalSpeed < 0.4) { 
+                if (totalSpeed < 0.6) { 
                     isMoving = false;
                     Matter.Body.setVelocity(ball, {x:0, y:0}); players.forEach(p => Matter.Body.setVelocity(p, {x:0, y:0}));
                     currentTurn = currentTurn === 'red' ? 'blue' : 'red';
@@ -528,7 +552,7 @@
             if(bot) {
                 let dir = Vector.normalise(Vector.sub(ball.position, bot.position));
                 let errorAngle = (Math.random() - 0.5) * 0.15; let finalDir = Vector.rotate(dir, errorAngle);
-                applyAction(players.indexOf(bot), finalDir.x * 0.7, finalDir.y * 0.7);
+                applyAction(players.indexOf(bot), finalDir.x * 0.8, finalDir.y * 0.8);
             }
         }
 
@@ -536,27 +560,18 @@
             const bBot = document.getElementById('bot-banner'); const bPlayer = document.getElementById('player-banner');
             bBot.classList.remove('active'); bPlayer.classList.remove('active');
             clearTimeout(bannerTimer); 
-            
             if(roomStatus !== 'playing' || isMoving) return;
-            
-            if (gameMode === 'single') { 
-                if (currentTurn === 'red') bPlayer.classList.add('active'); else bBot.classList.add('active'); 
-            } else {
-                if (currentTurn === myTeam) { bPlayer.innerText = "YOUR TURN!"; bPlayer.classList.add('active'); } 
-                else { bBot.innerText = "OPPONENT THINKING..."; bBot.classList.add('active'); }
-            }
-
+            if (gameMode === 'single') { if (currentTurn === 'red') bPlayer.classList.add('active'); else bBot.classList.add('active'); } 
+            else { if (currentTurn === myTeam) bPlayer.classList.add('active'); else bBot.classList.add('active'); }
             bannerTimer = setTimeout(() => { bBot.classList.remove('active'); bPlayer.classList.remove('active'); }, 2000);
         }
-        function hideBanners() { document.getElementById('bot-banner').classList.remove('active'); document.getElementById('player-banner').classList.remove('active'); }
         function updateScoreUI() { document.getElementById('score-red').innerText = scores.red; document.getElementById('score-blue').innerText = scores.blue; }
 
-        // === 選單與流程控制 ===
         const menuContainer = document.getElementById('menu-container'); const gameUI = document.getElementById('game-ui');
 
         function exitToMenu() {
-            if (gameMode === 'multi' && currentRoom && db) { set(ref(db, `rooms/${currentRoom}`), null); } // 清除房間
-            gameMode = 'single'; currentRoom = null; roomStatus = 'ended';
+            if (gameMode === 'multi' && currentRoom && db) { set(ref(db, `rooms/${currentRoom}`), null); } 
+            gameMode = 'single'; currentRoom = null; roomStatus = 'ended'; opponentAim = null;
             document.getElementById('win-modal').style.display = 'none';
             document.getElementById('waiting-overlay').style.display = 'none';
             gameUI.style.display = 'none'; menuContainer.style.display = 'flex';
@@ -568,67 +583,43 @@
 
         document.getElementById('btn-single').addEventListener('click', () => {
             gameMode = 'single'; myTeam = 'red'; roomStatus = 'playing';
-            document.getElementById('p2-name').innerText = "BOT";
-            document.getElementById('p2-name').style.color = "#4ea8de";
             menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame();
         });
 
-        // 🌟 防撞號創建與斷線保護
         async function generateRoom() {
             let roomId; let exists = true;
-            while(exists) {
-                roomId = Math.floor(1000 + Math.random() * 9000).toString();
-                const snapshot = await get(ref(db, `rooms/${roomId}`));
-                exists = snapshot.exists();
-            }
+            while(exists) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); const snapshot = await get(ref(db, `rooms/${roomId}`)); exists = snapshot.exists(); }
             return roomId;
         }
 
         document.getElementById('btn-create').addEventListener('click', async () => {
             if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
-            const btn = document.getElementById('btn-create');
-            btn.innerText = "創建中..."; btn.disabled = true;
-
+            const btn = document.getElementById('btn-create'); btn.innerText = "創建中..."; btn.disabled = true;
             try {
                 const roomId = await generateRoom();
                 const roomRef = ref(db, `rooms/${roomId}`);
                 await set(roomRef, { scores: { red: 0, blue: 0 }, turn: 'red', status: 'waiting' });
-                
-                // 斷線自動刪除房間
                 onDisconnect(roomRef).remove();
-
                 gameMode = 'multi'; myTeam = 'red'; currentRoom = roomId; roomStatus = 'waiting';
-                document.getElementById('p2-name').innerText = "OPPONENT";
-                
                 menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
                 document.getElementById('waiting-overlay').style.display = 'flex';
                 document.getElementById('waiting-room-id').innerText = roomId;
-                
                 initGame(); listenToRoom();
                 btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false;
-            } catch(e) {
-                btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false;
-                showToast("❌ 創建失敗，請檢查權限", true);
-            }
+            } catch(e) { btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false; showToast("❌ 創建失敗", true); }
         });
 
         document.getElementById('btn-join').addEventListener('click', () => {
             if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
             const roomId = document.getElementById('input-room').value.trim();
             if (roomId.length !== 4) { showToast("請輸入 4 位數房號", true); return; }
-            
             const btn = document.getElementById('btn-join'); btn.innerText = "..."; btn.disabled = true;
-
             get(ref(db, `rooms/${roomId}`)).then((snapshot) => {
                 btn.innerText = "GO"; btn.disabled = false;
                 if (snapshot.exists() && snapshot.val().status === 'waiting') {
-                    // 加入成功，更新狀態為 playing
                     update(ref(db, `rooms/${roomId}`), { status: 'playing' });
-                    // 斷線自動刪除房間
                     onDisconnect(ref(db, `rooms/${roomId}`)).remove();
-
                     gameMode = 'multi'; myTeam = 'blue'; currentRoom = roomId; roomStatus = 'playing';
-                    document.getElementById('p2-name').innerText = "HOST";
                     menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
                     document.getElementById('waiting-overlay').style.display = 'none';
                     initGame(); listenToRoom();
@@ -646,21 +637,13 @@
         function listenToRoom() {
             onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
                 const data = snapshot.val(); 
-                if (!data) {
-                    // 房間被刪除 (對手離開)
-                    if(roomStatus !== 'ended') { showToast("⚠️ 對手已離開房間", true); setTimeout(exitToMenu, 1500); }
-                    return;
-                }
-                
-                // 狀態切換：對手加入
-                if (roomStatus === 'waiting' && data.status === 'playing') {
-                    roomStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none'; updateTurnBanner();
-                }
-
+                if (!data) { if(roomStatus !== 'ended') { showToast("⚠️ 對手已離開房間", true); setTimeout(exitToMenu, 1500); } return; }
+                if (roomStatus === 'waiting' && data.status === 'playing') { roomStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none'; updateTurnBanner(); }
                 scores = data.scores || { red: 0, blue: 0 }; updateScoreUI();
                 if (data.status === 'ended' && document.getElementById('win-modal').style.display !== 'flex') { checkWin('red'); checkWin('blue'); }
                 if (data.resetFlag && data.resetFlag > lastResetTime) { document.getElementById('win-modal').style.display = 'none'; resetFormation(true); lastResetTime = data.resetFlag; }
                 if (data.turn && data.turn !== currentTurn && !isMoving && data.status === 'playing') { currentTurn = data.turn; updateTurnBanner(); }
+                if (data.aiming) opponentAim = data.aiming; else opponentAim = null;
             });
             onValue(ref(db, `rooms/${currentRoom}/action`), (snapshot) => {
                 const action = snapshot.val();
