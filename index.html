@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Soccer Pool 終極爆發力版</title>
+    <title>Soccer Pool 極速手感版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     
     <style>
@@ -15,7 +15,13 @@
             height: 100vh; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
         }
 
-        /* ===== 主選單 ===== */
+        #toast {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background-color: #e74c3c; color: white; padding: 15px 25px; border-radius: 12px;
+            font-size: 16px; font-weight: bold; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; width: 80%; max-width: 350px;
+        }
+
         #menu-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; width: 100%; z-index: 50; position: absolute; background-color: #f4a27a;
@@ -38,17 +44,6 @@
             margin-bottom: 20px; text-align: center; font-weight: bold; outline: none; box-sizing: border-box; background: #fff;
         }
 
-        /* ===== Firebase 錯誤專用畫面 ===== */
-        #firebase-error-screen {
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; width: 100%; z-index: 100; position: absolute; background-color: #2c3e50; color: white; padding: 20px; box-sizing: border-box; text-align: center;
-        }
-        .error-code-box {
-            background: #1a252f; padding: 15px; border-radius: 10px; font-family: monospace;
-            color: #2ecc71; margin: 20px 0; text-align: left; overflow-x: auto; width: 100%; max-width: 320px;
-        }
-
-        /* ===== 遊戲畫面 ===== */
         #game-ui { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; position: relative; }
         #scoreboard {
             background: #503d3f; color: white; width: 320px; padding: 10px 20px; border-radius: 0 0 20px 20px;
@@ -84,20 +79,7 @@
 </head>
 <body>
 
-    <div id="firebase-error-screen">
-        <h2>🚨 無法創建房間</h2>
-        <p>因為你的 Firebase 資料庫權限未開放。<br>請進入 Firebase 控制台，將 Realtime Database 的「Rules (規則)」改成以下內容：</p>
-        <div class="error-code-box" id="rule-code">
-{
-  "rules": {
-    ".read": true,
-    ".write": true
-  }
-}
-        </div>
-        <button class="btn btn-bot" style="width: 320px;" onclick="copyRules()">📋 一鍵複製代碼</button>
-        <button class="btn btn-join" style="width: 320px;" onclick="location.reload()">返回主選單</button>
-    </div>
+    <div id="toast">這裡顯示錯誤訊息</div>
 
     <div id="menu-container">
         <div class="title-box">SOCCER POOL</div>
@@ -141,13 +123,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // 複製規則功能
-        window.copyRules = function() {
-            navigator.clipboard.writeText(`{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}`);
-            alert("已複製！請去 Firebase 貼上並發布。");
-        };
+        function showToast(msg, isError = true) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.backgroundColor = isError ? '#e74c3c' : '#2ecc71';
+            toast.style.top = '20px'; 
+            setTimeout(() => { toast.style.top = '-100px'; }, 4000); 
+        }
 
-        // === Firebase 連線設定 ===
         let db = null;
         try {
             const firebaseConfig = {
@@ -162,7 +145,6 @@
             db = getDatabase(initializeApp(firebaseConfig));
         } catch (e) { console.warn("Firebase 初始化失敗"); }
 
-        // === 自適應縮放 ===
         const scaleWrapper = document.getElementById('scaling-wrapper');
         let currentScale = 1;
         function resizeGame() {
@@ -199,7 +181,6 @@
         }
 
         function createBoundaries() {
-            // 🌟 牆壁彈性設為 1.0 (完全反彈，不掉速)
             const wallOpts = { isStatic: true, render: { visible: false }, restitution: 1.0, friction: 0 };
             const goalW = 140, leftW = (gameWidth - goalW) / 2;
             const walls = [
@@ -216,14 +197,13 @@
             players.forEach(p => Composite.remove(engine.world, p)); players = []; trails = [];
             if(fullReset) { scores = { red: 0, blue: 0 }; updateScoreUI(); }
 
-            // 🌟 物理大改版：大幅降低空氣阻力，提升彈性，讓球員與球在場上瘋狂滑行
+            // 🌟 物理參數全面強化：超高彈性 (restitution)、極低空氣阻力 (frictionAir)
             ball = Bodies.circle(gameWidth/2, gameHeight/2, 12, { 
-                restitution: 0.95, frictionAir: 0.005, friction: 0, density: 0.001, render: { visible: false }, label: 'ball'
+                restitution: 0.98, frictionAir: 0.005, friction: 0, density: 0.001, render: { visible: false }, label: 'ball'
             });
             Composite.add(engine.world, ball);
 
-            // 球員質量變輕 (density)，彈性 0.95，阻力極低
-            const pOpts = { restitution: 0.95, frictionAir: 0.005, friction: 0, density: 0.02, render: { visible: false } };
+            const pOpts = { restitution: 0.98, frictionAir: 0.008, friction: 0, density: 0.02, render: { visible: false } };
             const bluePos = [ {x: gameWidth/2, y: 180}, {x: gameWidth/2 - 80, y: 260}, {x: gameWidth/2 + 80, y: 260}, {x: gameWidth/2 - 60, y: 80}, {x: gameWidth/2 + 60, y: 80} ];
             const redPos = [ {x: gameWidth/2, y: gameHeight - 180}, {x: gameWidth/2 - 80, y: gameHeight - 260}, {x: gameWidth/2 + 80, y: gameHeight - 260}, {x: gameWidth/2 - 60, y: gameHeight - 80}, {x: gameWidth/2 + 60, y: gameHeight - 80} ];
 
@@ -255,10 +235,10 @@
                 let dx = dragState.currentX - dragState.startX; 
                 let dy = dragState.currentY - dragState.startY;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-                // 限制扇形視覺最大長度
                 if (dist > 10) { 
                     let angle = Math.atan2(dy, dx);
-                    let fanRadius = Math.min(dist * 1.5, 200); 
+                    // 放寬視覺扇形的極限長度
+                    let fanRadius = Math.min(dist * 1.5, 250); 
                     let spread = 0.35; 
                     ctx.beginPath();
                     ctx.moveTo(dragState.player.position.x, dragState.player.position.y);
@@ -268,7 +248,6 @@
                 }
             }
 
-            // 足球滾動旋轉
             ctx.save();
             ctx.translate(ball.position.x, ball.position.y);
             ctx.rotate(ball.angle); 
@@ -307,9 +286,10 @@
             checkTurnState();
             if (isMoving) {
                 players.forEach(p => {
-                    if (p.speed > 4) trails.push({ x: p.position.x, y: p.position.y, size: 8, alpha: 0.5, color: p.team === 'red' ? '#ff5e5e' : '#4dc3ff' });
+                    // 放寬產生拖尾的速度門檻，讓視覺更有速度感
+                    if (p.speed > 3) trails.push({ x: p.position.x, y: p.position.y, size: 8, alpha: 0.5, color: p.team === 'red' ? '#ff5e5e' : '#4dc3ff' });
                 });
-                if (ball.speed > 3) trails.push({ x: ball.position.x, y: ball.position.y, size: 6, alpha: 0.5, color: 'rgba(255,255,255,0.8)' });
+                if (ball.speed > 2) trails.push({ x: ball.position.x, y: ball.position.y, size: 6, alpha: 0.5, color: 'rgba(255,255,255,0.8)' });
             }
             for (let i = trails.length - 1; i >= 0; i--) {
                 trails[i].alpha -= 0.02; trails[i].size -= 0.1;
@@ -348,15 +328,19 @@
                 let dx = dragState.startX - dragState.currentX;
                 let dy = dragState.startY - dragState.currentY;
                 
-                // 限制最大拖曳距離 (防止數值破表)
                 let pullDist = Math.sqrt(dx*dx + dy*dy);
-                const maxPull = 150; 
+                const maxPull = 200; // 允許拉更長
                 if (pullDist > maxPull) { dx = (dx/pullDist) * maxPull; dy = (dy/pullDist) * maxPull; }
 
-                // 🌟 Force (力道) 史詩級強化：搭配低阻力，球員會飛出去！
-                let forceMultiplier = 0.003; 
+                // 🌟 Force Multiplier (力量倍率) 徹底解放：放大到 0.008
+                let forceMultiplier = 0.008; 
                 let forceX = dx * forceMultiplier;
                 let forceY = dy * forceMultiplier;
+
+                // Max Force (力量上限) 提高到 0.8
+                const maxForce = 0.8;
+                const currentForce = Math.sqrt(forceX*forceX + forceY*forceY);
+                if(currentForce > maxForce) { forceX = (forceX / currentForce) * maxForce; forceY = (forceY / currentForce) * maxForce; }
 
                 applyAction(players.indexOf(dragState.player), forceX, forceY);
                 if (gameMode === 'multi' && db) set(ref(db, `rooms/${currentRoom}/action`), { playerId: players.indexOf(dragState.player), forceX, forceY, timestamp: Date.now() });
@@ -377,7 +361,8 @@
 
             if (isMoving) {
                 let totalSpeed = ball.speed + players.reduce((sum, p) => sum + p.speed, 0);
-                if (totalSpeed < 0.2) { 
+                // 提高靜止判定的門檻 (0.5)，避免低速時滑太久才換回合
+                if (totalSpeed < 0.5) { 
                     isMoving = false;
                     Matter.Body.setVelocity(ball, {x:0, y:0}); players.forEach(p => Matter.Body.setVelocity(p, {x:0, y:0}));
                     currentTurn = currentTurn === 'red' ? 'blue' : 'red';
@@ -414,7 +399,8 @@
             if(bot) {
                 let dir = Vector.normalise(Vector.sub(ball.position, bot.position));
                 let errorAngle = (Math.random() - 0.5) * 0.2; let finalDir = Vector.rotate(dir, errorAngle);
-                applyAction(players.indexOf(bot), finalDir.x * 0.35, finalDir.y * 0.35); // AI 力量配合新物理引擎
+                // 🌟 同步調高 AI 的力量
+                applyAction(players.indexOf(bot), finalDir.x * 0.5, finalDir.y * 0.5); 
             }
         }
 
@@ -437,35 +423,30 @@
             document.getElementById('room-display').innerText = ""; menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame();
         });
 
-        // 🌟 創建房間：若失敗直接強制切換到「錯誤排除畫面」
         document.getElementById('btn-create').addEventListener('click', () => {
-            if(!db) { document.getElementById('menu-container').style.display = 'none'; document.getElementById('firebase-error-screen').style.display = 'flex'; return; }
+            if(!db) return showToast("⚠️ Firebase 未連線！");
             gameMode = 'multi'; myTeam = 'red';
             const roomId = Math.floor(1000 + Math.random() * 9000).toString(); 
             set(ref(db, `rooms/${roomId}`), { scores: { red: 0, blue: 0 }, turn: 'red', status: 'playing' }).then(() => {
                 currentRoom = roomId; document.getElementById('p2-name').innerText = "P2"; document.getElementById('room-display').innerText = `Room ID: ${roomId}`;
                 menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame(); listenToRoom();
             }).catch(e => {
-                document.getElementById('menu-container').style.display = 'none';
-                document.getElementById('firebase-error-screen').style.display = 'flex';
+                showToast("創建失敗！請至 Firebase 後台開啟讀寫權限。", true);
             });
         });
 
         document.getElementById('btn-join').addEventListener('click', () => {
-            if(!db) { alert("Firebase 未連線！"); return; }
+            if(!db) return showToast("⚠️ Firebase 未連線！");
             const roomId = document.getElementById('input-room').value.trim();
-            if (!roomId) return alert("請輸入房號");
+            if (!roomId) return showToast("請輸入房號");
             gameMode = 'multi'; myTeam = 'blue';
             
             get(ref(db, `rooms/${roomId}`)).then((snapshot) => {
                 if (snapshot.exists()) {
                     currentRoom = roomId; document.getElementById('p2-name').innerText = "P1"; document.getElementById('room-display').innerText = `Room ID: ${roomId}`;
                     menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame(); listenToRoom();
-                } else alert("找不到該房間！請確認號碼。");
-            }).catch(e => {
-                document.getElementById('menu-container').style.display = 'none';
-                document.getElementById('firebase-error-screen').style.display = 'flex';
-            });
+                } else showToast("找不到該房間！請確認號碼。");
+            }).catch(e => showToast("加入失敗，讀取權限遭拒！", true));
         });
 
         document.getElementById('btn-rematch').addEventListener('click', () => {
