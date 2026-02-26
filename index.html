@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>迷你彈射足球 旗艦版</title>
+    <title>迷你足球 Pocket Soccer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     
     <style>
@@ -12,137 +12,187 @@
         /* 鎖定全螢幕，防止手機滑動 */
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #fcece3; /* 柔和的高級米橘色背景 */
-            font-family: 'Noto Sans TC', 'Fredoka One', sans-serif;
+            background-color: #f3a683; /* 復刻截圖的粉橘色背景 */
+            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             overflow: hidden; position: fixed; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none;
         }
 
+        /* ===== 自訂提示框 (Toast) ===== */
         #toast {
             position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
             background-color: #34495e; color: white; padding: 15px 30px; border-radius: 30px;
-            font-size: 16px; font-weight: bold; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-size: 16px; font-family: 'Noto Sans TC', sans-serif; font-weight: bold; 
+            z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; white-space: nowrap;
         }
 
-        /* ===== 主選單 UI 美化 ===== */
+        /* ===== 主選單 UI (專業扁平化) ===== */
         #menu-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100%; width: 100%; z-index: 50; position: absolute; 
-            background: linear-gradient(135deg, #f7a98f, #f38d68);
+            background-color: #a4c639; /* 清新草綠色首頁 */
         }
-        .title-box {
-            background: #4a3b32; color: white; padding: 20px 45px; border-radius: 30px;
-            font-size: 38px; font-family: 'Fredoka One', cursive; margin-bottom: 50px; 
-            box-shadow: 0 12px 0 #2e241e, 0 15px 20px rgba(0,0,0,0.3); letter-spacing: 2px;
+        .menu-title {
+            color: white; font-size: 48px; margin-bottom: 20px;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.15); letter-spacing: 2px;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .btn {
-            width: 290px; padding: 22px; font-size: 22px; font-weight: 900; border: none; border-radius: 25px;
-            cursor: pointer; margin-bottom: 25px; box-shadow: 0 10px 0 rgba(0,0,0,0.2); transition: all 0.1s;
-            font-family: 'Noto Sans TC', sans-serif; color: white; display: flex; align-items: center; justify-content: center; gap: 12px;
+        .menu-subtitle {
+            font-size: 16px; color: #f1f2f6; font-family: 'Noto Sans TC', sans-serif;
+            text-align: center; margin-bottom: 50px; line-height: 1.5; font-weight: bold;
         }
-        .btn:active { transform: translateY(10px); box-shadow: 0 0 0 rgba(0,0,0,0); }
-        .btn-bot { background-color: #f1c40f; box-shadow: 0 10px 0 #d4ac0d; color: #4a3b32; }
-        .btn-create { background-color: #9b59b6; box-shadow: 0 10px 0 #8e44ad; }
-        .btn-join { background-color: #3498db; box-shadow: 0 10px 0 #2980b9; }
         
-        .input-box {
-            width: 290px; padding: 18px; font-size: 20px; border-radius: 20px; border: 4px solid #4a3b32;
-            margin-bottom: 25px; text-align: center; font-weight: bold; outline: none; box-sizing: border-box; background: #fff;
-            box-shadow: inset 0 3px 5px rgba(0,0,0,0.1);
+        .menu-btn {
+            width: 280px; padding: 15px 20px; font-size: 24px; border: none; border-radius: 12px;
+            cursor: pointer; margin-bottom: 20px; transition: transform 0.1s;
+            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif; color: white; 
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            box-shadow: 0 6px 0px rgba(0,0,0,0.2);
         }
+        .menu-btn:active { transform: translateY(6px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
+        .btn-single { background-color: #54a0ff; }
+        .btn-multi { background-color: #ff6b6b; }
+        
+        .input-group {
+            display: flex; width: 280px; gap: 10px; margin-bottom: 20px;
+        }
+        .input-box {
+            flex-grow: 1; padding: 15px; font-size: 20px; border-radius: 12px; border: none;
+            text-align: center; font-family: 'Fredoka One', sans-serif; outline: none;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-join {
+            width: 80px; padding: 15px; background-color: #1dd1a1; color: white; 
+            border: none; border-radius: 12px; font-size: 20px; font-weight: bold;
+            box-shadow: 0 6px 0px rgba(0,0,0,0.2); cursor: pointer;
+        }
+        .btn-join:active { transform: translateY(6px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
 
         /* ===== 遊戲畫面 ===== */
         #game-ui { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; position: relative; }
         
-        #scoreboard {
-            background: #4a3b32; color: white; width: 90%; max-width: 380px; padding: 15px 25px; border-radius: 0 0 30px 30px;
-            display: flex; justify-content: space-between; align-items: center; font-size: 32px;
-            font-family: 'Fredoka One', cursive; z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.2); flex-shrink: 0; margin-bottom: 10px;
+        /* 頂部控制列 (完美復刻截圖) */
+        #top-bar {
+            width: 100%; max-width: 400px; display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px; box-sizing: border-box; z-index: 10; margin-bottom: 5px;
         }
-        .score-red { color: #ff6b6b; }
-        .score-blue { color: #4ea8de; }
-        .team-label { font-size: 14px; font-family: 'Noto Sans TC', sans-serif; opacity: 0.9; margin-bottom: -5px; }
+        #btn-exit {
+            width: 45px; height: 45px; background: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; color: #ff6b6b;
+            font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.1); border: none;
+        }
+        #btn-exit:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
+
+        /* 計分板 */
+        #scoreboard {
+            background: #503d3f; color: white; width: 220px; padding: 8px 15px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center; font-size: 24px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15); margin: 0 auto;
+        }
+        .score-col { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+        .team-name { font-size: 11px; opacity: 0.8; font-family: 'Fredoka One', sans-serif; text-transform: uppercase;}
+        .score-red { color: #ff6b6b; font-size: 28px; }
+        .score-blue { color: #4ea8de; font-size: 28px; }
+        .score-vs { font-size: 20px; color: #dcdde1; }
 
         /* 動態縮放層 */
         #scaling-wrapper { 
-            position: relative; width: 400px; height: 720px; /* 拉高高度以容納凸出球框 */
-            transform-origin: top center; margin-top: 5px;
+            position: relative; width: 400px; height: 720px; 
+            transform-origin: top center;
         }
-        
-        canvas {
-            display: block; width: 100%; height: 100%;
-            /* 移除 Canvas 邊框，我們直接在程式碼裡畫出場地與陰影 */
-            box-sizing: border-box; outline: none;
-        }
+        canvas { display: block; width: 100%; height: 100%; outline: none; }
 
+        /* 橫幅提示 */
         .turn-banner {
-            position: absolute; padding: 15px 40px; border-radius: 40px; font-size: 24px; font-weight: 900;
-            color: white; z-index: 20; transition: opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; opacity: 0; box-shadow: 0 10px 20px rgba(0,0,0,0.3); left: 50%; transform: translateX(-50%) scale(0.5);
-            letter-spacing: 1px;
+            position: absolute; padding: 12px 35px; border-radius: 30px; font-size: 22px; font-weight: normal;
+            color: white; z-index: 20; transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; opacity: 0; box-shadow: 0 6px 15px rgba(0,0,0,0.2); left: 50%; transform: translateX(-50%) scale(0.8);
         }
         .turn-banner.active { opacity: 1; transform: translateX(-50%) scale(1); }
-        #bot-banner { top: 90px; background-color: #4a3b32; }
+        #bot-banner { top: 90px; background-color: #503d3f; }
         #player-banner { bottom: 90px; background-color: #ff6b6b; }
         
-        #room-display { 
-            position: absolute; bottom: 10px; font-size: 18px; color: #4a3b32; 
-            font-weight: 900; width: 100%; text-align: center;
+        /* 等待房間提示 */
+        #waiting-overlay {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95); padding: 25px 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; z-index: 30;
+            display: none; flex-direction: column; align-items: center; border: 4px solid #ff6b6b;
         }
+        #waiting-room-id { font-size: 42px; color: #ff6b6b; margin: 10px 0; letter-spacing: 3px; }
+        .waiting-text { font-size: 16px; color: #503d3f; font-family: 'Noto Sans TC'; font-weight: bold;}
 
+        /* 結算畫面 */
         #win-modal {
-            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; flex-direction: column; justify-content: center; align-items: center;
+            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; flex-direction: column; justify-content: center; align-items: center;
         }
-        .win-box { background: #fff; padding: 40px; border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 8px solid #4a3b32; width: 85%; max-width: 320px; }
-        #win-text { font-size: 42px; font-family: 'Fredoka One', cursive; margin-bottom: 30px; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        .win-box { background: #fff; padding: 40px; border-radius: 25px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 6px solid #503d3f; width: 80%; max-width: 300px; }
+        #win-text { font-size: 40px; color: #ff6b6b; margin-bottom: 30px; text-transform: uppercase;}
     </style>
 </head>
 <body>
 
-    <div id="toast">訊息</div>
+    <div id="toast">提示訊息</div>
 
     <div id="menu-container">
-        <div class="title-box">迷你彈射足球</div>
-        <button class="btn btn-bot" id="btn-single">🤖 單人對戰 (VS 電腦)</button>
-        <div style="height: 15px;"></div>
-        <button class="btn btn-create" id="btn-create">🏠 創建連線房間</button>
-        <input type="text" id="input-room" class="input-box" placeholder="輸入 4 位數房號...">
-        <button class="btn btn-join" id="btn-join">🔗 加入對戰</button>
+        <div class="menu-title">
+            ⚽ POCKET<br>SOCCER
+        </div>
+        <div class="menu-subtitle">
+            拖動球員控制你的小隊，<br>率先獲得 3 粒進球贏得勝利！
+        </div>
+
+        <button class="menu-btn btn-single" id="btn-single">👤 VS 🤖</button>
+        <button class="menu-btn btn-multi" id="btn-create">👤 VS 👤 (建立)</button>
+        
+        <div class="input-group">
+            <input type="text" id="input-room" class="input-box" placeholder="輸入房號加入..." maxlength="4">
+            <button class="btn-join" id="btn-join">GO</button>
+        </div>
     </div>
 
     <div id="game-ui">
-        <div id="scoreboard">
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span class="team-label" style="color: #ff6b6b;">你 (紅隊)</span>
-                <span class="score-red" id="score-red">0</span>
+        <div id="top-bar">
+            <button id="btn-exit">＜</button>
+            <div id="scoreboard">
+                <div class="score-col">
+                    <span class="team-name" style="color: #ff6b6b;">YOU</span>
+                    <span class="score-red" id="score-red">0</span>
+                </div>
+                <span class="score-vs">VS</span>
+                <div class="score-col">
+                    <span class="team-name" style="color: #4ea8de;" id="p2-name">BOT</span>
+                    <span class="score-blue" id="score-blue">0</span>
+                </div>
             </div>
-            <span style="font-size: 24px; color: #dcdde1;">VS</span>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span class="team-label" style="color: #4ea8de;" id="p2-name">對手 (藍隊)</span>
-                <span class="score-blue" id="score-blue">0</span>
-            </div>
-        </div>
+            <div style="width: 45px;"></div> </div>
 
         <div id="scaling-wrapper">
             <canvas id="game-canvas"></canvas>
-            <div class="turn-banner" id="bot-banner">對手思考中...</div>
-            <div class="turn-banner" id="player-banner">換你開火！</div>
-            <div id="room-display"></div>
+            
+            <div class="turn-banner" id="bot-banner">OPPONENT THINKING...</div>
+            <div class="turn-banner" id="player-banner">YOUR TURN!</div>
+            
+            <div id="waiting-overlay">
+                <div class="waiting-text">等待對手加入</div>
+                <div id="waiting-room-id">0000</div>
+                <div class="waiting-text" style="font-size: 13px; color: #888;">將此房號告訴你的朋友</div>
+            </div>
         </div>
     </div>
 
     <div id="win-modal">
         <div class="win-box">
-            <div id="win-text">獲勝！</div>
-            <button class="btn btn-bot" style="width: 100%;" id="btn-rematch">🔄 再玩一局</button>
-            <button class="btn btn-join" style="width: 100%;" id="btn-home">🏠 回主選單</button>
+            <div id="win-text">YOU WON!</div>
+            <button class="menu-btn btn-single" style="width: 100%; font-size: 20px;" id="btn-rematch">PLAY AGAIN</button>
+            <button class="menu-btn btn-multi" style="width: 100%; font-size: 20px;" id="btn-home">MAIN MENU</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         function showToast(msg, isError = false) {
             const toast = document.getElementById('toast');
@@ -152,7 +202,7 @@
             setTimeout(() => { toast.style.top = '-100px'; }, 3000); 
         }
 
-        // 🌟 正確的東南亞 Firebase 網址
+        // Firebase 初始化 (東南亞伺服器)
         let db = null;
         try {
             const firebaseConfig = {
@@ -167,34 +217,37 @@
             db = getDatabase(initializeApp(firebaseConfig));
         } catch (e) { console.warn("Firebase 初始化失敗"); }
 
+        // 螢幕自適應縮放
         const scaleWrapper = document.getElementById('scaling-wrapper');
         let currentScale = 1;
         function resizeGame() {
-            const availableHeight = window.innerHeight - 130; 
+            const topBarHeight = document.getElementById('top-bar').offsetHeight || 80;
+            const availableHeight = window.innerHeight - topBarHeight - 10; 
             const availableWidth = window.innerWidth - 10;
-            // 畫布改為 400x720 以容納凸出的球門
             currentScale = Math.min(availableWidth / 400, availableHeight / 720);
             scaleWrapper.style.transform = `scale(${currentScale})`;
         }
         window.addEventListener('resize', resizeGame);
         setTimeout(resizeGame, 100);
 
+        // 遊戲狀態與物理引擎變數
         let gameMode = 'single', currentRoom = null, myTeam = 'red', currentTurn = 'red', isMoving = false;
+        let roomStatus = 'ended'; // waiting, playing, ended
         let scores = { red: 0, blue: 0 };
         const WIN_SCORE = 3;
 
         const Engine = Matter.Engine, Render = Matter.Render, Runner = Matter.Runner,
               Bodies = Matter.Bodies, Composite = Matter.Composite, Events = Matter.Events, Vector = Matter.Vector;
         
-        // 畫布總大小 400x720。主場地在 y=60 到 y=660。球門凸出 40px。
+        // 球場尺寸定義
         const gameWidth = 400, gameHeight = 720;
-        const fieldTop = 60, fieldBottom = 660; 
-        const goalW = 150, goalH = 40;
+        const fieldTop = 80, fieldBottom = 640; 
+        const goalW = 150, goalH = 45;
         const leftW = (gameWidth - goalW) / 2;
 
         let engine, render, runner, ball, players = [];
         let trails = [];
-        let bannerTimer = null; // 用來控制橫幅消失的計時器
+        let bannerTimer = null;
 
         function initGame() {
             if(engine) { Matter.Engine.clear(engine); Render.stop(render); Runner.stop(runner); document.getElementById('game-canvas').remove(); }
@@ -213,29 +266,20 @@
         }
 
         function createBoundaries() {
-            const wallOpts = { isStatic: true, render: { visible: false }, restitution: 0.8, friction: 0, frictionStatic: 0 };
-            const postOpts = { isStatic: true, render: { visible: false }, restitution: 0.9, friction: 0, frictionStatic: 0 };
+            // 牆壁摩擦力全關，彈性 0.9 讓反彈順暢乾淨
+            const wallOpts = { isStatic: true, render: { visible: false }, restitution: 0.9, friction: 0, frictionStatic: 0 };
+            const postOpts = { isStatic: true, render: { visible: false }, restitution: 0.8, friction: 0, frictionStatic: 0 };
             
             const walls = [
-                // 左右主邊界
-                Bodies.rectangle(-10, gameHeight/2, 20, gameHeight, wallOpts), 
-                Bodies.rectangle(gameWidth+10, gameHeight/2, 20, gameHeight, wallOpts),
-                // 上半部邊界 (留出球門缺口)
-                Bodies.rectangle(leftW/2, fieldTop-10, leftW, 20, wallOpts), 
-                Bodies.rectangle(gameWidth - leftW/2, fieldTop-10, leftW, 20, wallOpts),
-                // 下半部邊界 (留出球門缺口)
-                Bodies.rectangle(leftW/2, fieldBottom+10, leftW, 20, wallOpts), 
-                Bodies.rectangle(gameWidth - leftW/2, fieldBottom+10, leftW, 20, wallOpts),
-                // 球網背板防飛出
-                Bodies.rectangle(gameWidth/2, fieldTop - goalH - 10, goalW, 20, wallOpts), 
-                Bodies.rectangle(gameWidth/2, fieldBottom + goalH + 10, goalW, 20, wallOpts),
-                // 左右側網邊界
-                Bodies.rectangle(leftW-10, fieldTop - goalH/2, 20, goalH, wallOpts),
-                Bodies.rectangle(gameWidth-leftW+10, fieldTop - goalH/2, 20, goalH, wallOpts),
-                Bodies.rectangle(leftW-10, fieldBottom + goalH/2, 20, goalH, wallOpts),
-                Bodies.rectangle(gameWidth-leftW+10, fieldBottom + goalH/2, 20, goalH, wallOpts),
-                
-                // 🌟 物理門柱 (U型門口的兩個點)
+                Bodies.rectangle(-10, gameHeight/2, 20, gameHeight, wallOpts), Bodies.rectangle(gameWidth+10, gameHeight/2, 20, gameHeight, wallOpts),
+                Bodies.rectangle(leftW/2, fieldTop-10, leftW, 20, wallOpts), Bodies.rectangle(gameWidth - leftW/2, fieldTop-10, leftW, 20, wallOpts),
+                Bodies.rectangle(leftW/2, fieldBottom+10, leftW, 20, wallOpts), Bodies.rectangle(gameWidth - leftW/2, fieldBottom+10, leftW, 20, wallOpts),
+                // 球網背板
+                Bodies.rectangle(gameWidth/2, fieldTop - goalH - 10, goalW, 20, wallOpts), Bodies.rectangle(gameWidth/2, fieldBottom + goalH + 10, goalW, 20, wallOpts),
+                // 側網
+                Bodies.rectangle(leftW-10, fieldTop - goalH/2, 20, goalH, wallOpts), Bodies.rectangle(gameWidth-leftW+10, fieldTop - goalH/2, 20, goalH, wallOpts),
+                Bodies.rectangle(leftW-10, fieldBottom + goalH/2, 20, goalH, wallOpts), Bodies.rectangle(gameWidth-leftW+10, fieldBottom + goalH/2, 20, goalH, wallOpts),
+                // 物理門柱
                 Bodies.circle(leftW, fieldTop, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldTop, 8, postOpts),
                 Bodies.circle(leftW, fieldBottom, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldBottom, 8, postOpts)
             ];
@@ -247,45 +291,37 @@
             players.forEach(p => Composite.remove(engine.world, p)); players = []; trails = [];
             if(fullReset) { scores = { red: 0, blue: 0 }; updateScoreUI(); }
 
-            // 🌟 物理參數：足球輕且無阻力、球員重且帶有微阻力(滑行後停下)
+            // 足球：極輕、低阻力
             ball = Bodies.circle(gameWidth/2, gameHeight/2, 12, { 
-                restitution: 0.9, frictionAir: 0.015, friction: 0, frictionStatic: 0, density: 0.005, render: { visible: false }, label: 'ball'
+                restitution: 0.9, frictionAir: 0.015, friction: 0, frictionStatic: 0, density: 0.002, render: { visible: false }, label: 'ball'
             });
             Composite.add(engine.world, ball);
 
-            const pOpts = { restitution: 0.85, frictionAir: 0.025, friction: 0, frictionStatic: 0, density: 0.04, render: { visible: false } };
+            // 球員：稍重、有一定阻力(滑行後停下)，高彈性
+            const pOpts = { restitution: 0.85, frictionAir: 0.03, friction: 0, frictionStatic: 0, density: 0.05, render: { visible: false } };
             
-            // 根據新畫布大小調整初始位置
-            const bluePos = [ {x: gameWidth/2, y: 220}, {x: gameWidth/2 - 80, y: 300}, {x: gameWidth/2 + 80, y: 300}, {x: gameWidth/2 - 70, y: 120}, {x: gameWidth/2 + 70, y: 120} ];
-            const redPos = [ {x: gameWidth/2, y: gameHeight - 220}, {x: gameWidth/2 - 80, y: gameHeight - 300}, {x: gameWidth/2 + 80, y: gameHeight - 300}, {x: gameWidth/2 - 70, y: gameHeight - 120}, {x: gameWidth/2 + 70, y: gameHeight - 120} ];
+            const bluePos = [ {x: gameWidth/2, y: fieldTop + 130}, {x: gameWidth/2 - 80, y: fieldTop + 220}, {x: gameWidth/2 + 80, y: fieldTop + 220}, {x: gameWidth/2 - 70, y: fieldTop + 50}, {x: gameWidth/2 + 70, y: fieldTop + 50} ];
+            const redPos = [ {x: gameWidth/2, y: fieldBottom - 130}, {x: gameWidth/2 - 80, y: fieldBottom - 220}, {x: gameWidth/2 + 80, y: fieldBottom - 220}, {x: gameWidth/2 - 70, y: fieldBottom - 50}, {x: gameWidth/2 + 70, y: fieldBottom - 50} ];
 
             bluePos.forEach(p => { let b = Bodies.circle(p.x, p.y, 22, pOpts); b.team = 'blue'; players.push(b); });
             redPos.forEach(p => { let b = Bodies.circle(p.x, p.y, 22, pOpts); b.team = 'red'; players.push(b); });
             Composite.add(engine.world, players);
-            isMoving = false; currentTurn = 'red'; updateTurnBanner();
+            
+            isMoving = false; currentTurn = 'red'; 
+            if(roomStatus === 'playing') updateTurnBanner();
         }
 
-        // === 終極自訂繪圖 ===
+        // === 專業級扁平化繪圖 ===
         function customDraw() {
             const ctx = render.context; const time = engine.timing.timestamp;
             
-            // 繪製背景與陰影
-            ctx.fillStyle = '#6ab04c'; // 鮮豔綠茵草皮
+            // 畫球場綠地與白色邊框
+            ctx.fillStyle = '#72c84b';
+            ctx.beginPath(); ctx.rect(0, fieldTop, gameWidth, fieldBottom - fieldTop); ctx.fill();
             
-            // 畫主球場底色 (含圓角與陰影)
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; ctx.shadowBlur = 15; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 10;
-            ctx.beginPath(); ctx.roundRect(0, fieldTop, gameWidth, fieldBottom - fieldTop, 15); ctx.fill();
-            
-            // 畫凸出的球門底色
-            ctx.beginPath(); ctx.roundRect(leftW, fieldTop - goalH, goalW, goalH + 10, 10); ctx.fill();
-            ctx.beginPath(); ctx.roundRect(leftW, fieldBottom - 10, goalW, goalH + 10, 10); ctx.fill();
-            ctx.shadowColor = 'transparent'; // 關閉陰影
-
-            // 畫主球場草皮紋路
-            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillStyle = 'rgba(0,0,0,0.05)'; // 草皮深淺紋路
             for(let y = fieldTop; y < fieldBottom; y += 80) { ctx.fillRect(0, y, gameWidth, 40); }
 
-            // 畫白色邊線
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
             ctx.strokeRect(0, fieldTop, gameWidth, fieldBottom - fieldTop);
             
@@ -294,24 +330,20 @@
             ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 50, 0, 2*Math.PI); ctx.stroke();
             ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 8, 0, 2*Math.PI); ctx.fill();
             
-            // 🌟 繪製 U 型球框與球網
+            // 畫凸出的球網與ㄇ字框
             function drawGoal(x, y, isTop) {
-                // 球網格子
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
-                ctx.beginPath();
-                for(let i=5; i<goalW; i+=12) { ctx.moveTo(x+i, y); ctx.lineTo(x+i, y+goalH); }
-                for(let i=5; i<goalH; i+=12) { ctx.moveTo(x, y+i); ctx.lineTo(x+goalW, y+i); }
+                ctx.fillStyle = isTop ? '#4ea8de' : '#ff6b6b'; ctx.fillRect(x, y, goalW, goalH);
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath();
+                for(let i=6; i<goalW; i+=12) { ctx.moveTo(x+i, y); ctx.lineTo(x+i, y+goalH); }
+                for(let i=6; i<goalH; i+=12) { ctx.moveTo(x, y+i); ctx.lineTo(x+goalW, y+i); }
                 ctx.stroke();
 
-                // ㄇ字型彩色外框
-                ctx.strokeStyle = isTop ? '#4ea8de' : '#ff6b6b'; ctx.lineWidth = 8;
-                ctx.beginPath();
+                ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 8; ctx.beginPath();
                 if(isTop) { ctx.moveTo(x, y+goalH); ctx.lineTo(x, y); ctx.lineTo(x+goalW, y); ctx.lineTo(x+goalW, y+goalH); } 
                 else { ctx.moveTo(x, y); ctx.lineTo(x, y+goalH); ctx.lineTo(x+goalW, y+goalH); ctx.lineTo(x+goalW, y); }
                 ctx.stroke();
 
-                // 門柱圓點
-                ctx.fillStyle = '#ecf0f1'; ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 2;
+                ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 3;
                 let postY = isTop ? y+goalH : y;
                 ctx.beginPath(); ctx.arc(x, postY, 6, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
                 ctx.beginPath(); ctx.arc(x+goalW, postY, 6, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
@@ -320,32 +352,32 @@
             drawGoal(leftW, fieldBottom, false);
 
             // 拖尾特效
-            trails.forEach(t => {
-                ctx.globalAlpha = t.alpha; ctx.fillStyle = t.color;
-                ctx.beginPath(); ctx.arc(t.x, t.y, t.size, 0, Math.PI*2); ctx.fill();
-            });
+            trails.forEach(t => { ctx.globalAlpha = t.alpha; ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x, t.y, t.size, 0, Math.PI*2); ctx.fill(); });
             ctx.globalAlpha = 1.0;
 
             // 扇形瞄準區
-            if (dragState.isDragging && dragState.player) {
+            if (dragState.isDragging && dragState.player && roomStatus === 'playing') {
                 let dx = dragState.currentX - dragState.startX; let dy = dragState.currentY - dragState.startY;
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist > 10) { 
-                    let angle = Math.atan2(dy, dx); let fanRadius = Math.min(dist * 1.5, 200); let spread = 0.35; 
+                    let angle = Math.atan2(dy, dx); let fanRadius = Math.min(dist * 1.5, 200); 
                     ctx.beginPath(); ctx.moveTo(dragState.player.position.x, dragState.player.position.y);
-                    ctx.arc(dragState.player.position.x, dragState.player.position.y, fanRadius, angle - spread, angle + spread);
+                    ctx.arc(dragState.player.position.x, dragState.player.position.y, fanRadius, angle - 0.35, angle + 0.35);
                     ctx.closePath(); ctx.fillStyle = 'rgba(74, 59, 50, 0.4)'; ctx.fill(); 
                 }
             }
 
-            // 🌟 物理物體立體陰影
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; ctx.shadowBlur = 6; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
+            // 🌟 繪製分離式扁平陰影 (Drop Shadow) -> 偏移 (0, 5)
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath(); ctx.arc(ball.position.x, ball.position.y + 4, 12, 0, 2*Math.PI); ctx.fill();
+            players.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.position.x, p.position.y + 6, 22, 0, 2*Math.PI); ctx.fill();
+            });
 
-            // 足球
+            // 繪製足球
             ctx.save(); ctx.translate(ball.position.x, ball.position.y); ctx.rotate(ball.angle); 
             ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 2*Math.PI); ctx.fill(); 
-            ctx.lineWidth = 2.5; ctx.strokeStyle = '#2d3436'; ctx.stroke();
-            ctx.shadowColor = 'transparent'; // 關閉內部圖案陰影
+            ctx.lineWidth = 3; ctx.strokeStyle = '#2d3436'; ctx.stroke();
             ctx.fillStyle = '#2d3436';
             ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, 2*Math.PI); ctx.fill(); 
             ctx.beginPath(); ctx.arc(8, 0, 3, 0, 2*Math.PI); ctx.fill(); 
@@ -353,23 +385,18 @@
             ctx.beginPath(); ctx.arc(-5, -6, 3, 0, 2*Math.PI); ctx.fill(); 
             ctx.restore();
 
-            // 球員
+            // 繪製球員
             players.forEach(p => {
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // 開啟球員本體陰影
-                if(p.team === currentTurn && !isMoving && currentTurn === myTeam) {
-                    ctx.save(); ctx.translate(p.position.x, p.position.y); ctx.rotate(time * 0.004);
-                    ctx.setLineDash([10, 10]); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 4;
-                    ctx.shadowColor = 'transparent'; // 光圈不需要陰影
+                if(p.team === currentTurn && !isMoving && currentTurn === myTeam && roomStatus === 'playing') {
+                    ctx.save(); ctx.translate(p.position.x, p.position.y); ctx.rotate(time * 0.003);
+                    ctx.setLineDash([10, 10]); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 4;
                     ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI*2); ctx.stroke(); ctx.restore();
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // 恢復
                 }
                 ctx.fillStyle = p.team === 'red' ? '#ff6b6b' : '#4ea8de';
                 ctx.beginPath(); ctx.arc(p.position.x, p.position.y, 22, 0, 2*Math.PI); ctx.fill(); 
-                ctx.lineWidth = 4.5; ctx.strokeStyle = '#2d3436'; ctx.stroke();
-                ctx.shadowColor = 'transparent'; // 星星不需要陰影
+                ctx.lineWidth = 4; ctx.strokeStyle = '#2d3436'; ctx.stroke();
                 drawStar(ctx, p.position.x, p.position.y, 5, 12, 5.5);
             });
-            ctx.shadowColor = 'transparent';
         }
 
         function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
@@ -378,16 +405,16 @@
                 x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
                 x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
             }
-            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fillStyle = 'white'; ctx.fill();
+            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fillStyle = '#ffffff'; ctx.fill();
         }
 
         function physicsUpdate() {
-            // 🌟 防卡死機制：如果「球員」在球門區內，把他移出來
+            // 🌟 防卡死機制：球員不能進球門區
             players.forEach(p => {
-                if (p.position.y < fieldTop) {
+                if (p.position.y < fieldTop + 15) {
                     Matter.Body.setPosition(p, { x: p.position.x, y: fieldTop + 25 });
                     Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.max(0, p.velocity.y) });
-                } else if (p.position.y > fieldBottom) {
+                } else if (p.position.y > fieldBottom - 15) {
                     Matter.Body.setPosition(p, { x: p.position.x, y: fieldBottom - 25 });
                     Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.min(0, p.velocity.y) });
                 }
@@ -396,8 +423,8 @@
             checkTurnState();
             
             if (isMoving) {
-                players.forEach(p => { if (p.speed > 3) trails.push({ x: p.position.x, y: p.position.y, size: 8, alpha: 0.6, color: p.team === 'red' ? '#ff6b6b' : '#4ea8de' }); });
-                if (ball.speed > 3) trails.push({ x: ball.position.x, y: ball.position.y, size: 6, alpha: 0.6, color: 'rgba(255,255,255,0.9)' });
+                players.forEach(p => { if (p.speed > 3) trails.push({ x: p.position.x, y: p.position.y, size: 8, alpha: 0.5, color: p.team === 'red' ? '#ff6b6b' : '#4ea8de' }); });
+                if (ball.speed > 3) trails.push({ x: ball.position.x, y: ball.position.y, size: 6, alpha: 0.5, color: 'rgba(255,255,255,0.8)' });
             }
             for (let i = trails.length - 1; i >= 0; i--) { trails[i].alpha -= 0.03; trails[i].size -= 0.15; if (trails[i].alpha <= 0 || trails[i].size <= 0) trails.splice(i, 1); }
         }
@@ -412,6 +439,7 @@
             };
 
             const onStart = (e) => {
+                if (roomStatus !== 'playing') return; // 🌟 必須在遊玩狀態才能操作
                 if (isMoving || currentTurn !== myTeam) return; 
                 const pos = getTouchPos(e);
                 let myPlayer = Matter.Query.point(players, pos).find(b => b.team === myTeam);
@@ -422,6 +450,7 @@
                 }
             };
             const onMove = (e) => {
+                if(e.touches) e.preventDefault(); // 防止滑動
                 if (!dragState.isDragging) return;
                 const pos = getTouchPos(e);
                 dragState.currentX = pos.x; dragState.currentY = pos.y;
@@ -430,11 +459,14 @@
                 if (!dragState.isDragging) return;
                 let dx = dragState.startX - dragState.currentX; let dy = dragState.startY - dragState.currentY;
                 
-                let pullDist = Math.sqrt(dx*dx + dy*dy); const maxPull = 220; 
+                let pullDist = Math.sqrt(dx*dx + dy*dy); const maxPull = 200; 
                 if (pullDist > maxPull) { dx = (dx/pullDist) * maxPull; dy = (dy/pullDist) * maxPull; }
 
-                let forceMultiplier = 0.008; 
+                let forceMultiplier = 0.009; 
                 let forceX = dx * forceMultiplier; let forceY = dy * forceMultiplier;
+
+                // 🌟 發射前再次驗證防連點作弊
+                if (gameMode === 'multi' && currentTurn !== myTeam) { dragState.isDragging = false; return; }
 
                 applyAction(players.indexOf(dragState.player), forceX, forceY);
                 if (gameMode === 'multi' && db) set(ref(db, `rooms/${currentRoom}/action`), { playerId: players.indexOf(dragState.player), forceX, forceY, timestamp: Date.now() });
@@ -447,17 +479,18 @@
 
         function applyAction(playerId, forceX, forceY) {
             const player = players[playerId];
-            if (player) { Matter.Body.applyForce(player, player.position, { x: forceX, y: forceY }); isMoving = true; updateTurnBanner(); }
+            if (player) { Matter.Body.applyForce(player, player.position, { x: forceX, y: forceY }); isMoving = true; hideBanners(); }
         }
 
         function checkTurnState() {
-            // 判斷進球 (球越過球場邊界進入球網區)
-            if (ball.position.y < fieldTop - 5) scoreGoal('red'); 
-            else if (ball.position.y > fieldBottom + 5) scoreGoal('blue');
+            // 🌟 嚴格的 X 軸與 Y 軸進球判定，保證只有進 U 型門才算分
+            let inGoalX = ball.position.x > leftW && ball.position.x < (gameWidth - leftW);
+            if (inGoalX && ball.position.y < fieldTop - 5) scoreGoal('red'); 
+            else if (inGoalX && ball.position.y > fieldBottom + 5) scoreGoal('blue');
 
             if (isMoving) {
                 let totalSpeed = ball.speed + players.reduce((sum, p) => sum + p.speed, 0);
-                if (totalSpeed < 0.3) { 
+                if (totalSpeed < 0.4) { 
                     isMoving = false;
                     Matter.Body.setVelocity(ball, {x:0, y:0}); players.forEach(p => Matter.Body.setVelocity(p, {x:0, y:0}));
                     currentTurn = currentTurn === 'red' ? 'blue' : 'red';
@@ -477,15 +510,16 @@
         function checkWin(team) {
             if (scores[team] >= WIN_SCORE) {
                 const isWin = (team === myTeam);
-                document.getElementById('win-text').innerText = isWin ? "🎉 恭喜獲勝！" : (gameMode==='single' ? "🤖 電腦獲勝" : "💀 挑戰失敗");
+                document.getElementById('win-text').innerText = isWin ? "YOU WON!" : "YOU LOST!";
                 document.getElementById('win-text').style.color = isWin ? '#ff6b6b' : '#4ea8de';
                 document.getElementById('win-modal').style.display = 'flex';
+                roomStatus = 'ended';
                 if(gameMode === 'multi' && db && myTeam === 'red') update(ref(db, `rooms/${currentRoom}`), { status: 'ended' });
             }
         }
 
         function triggerBotAITurn() {
-            if (currentTurn !== 'blue' || isMoving) return;
+            if (currentTurn !== 'blue' || isMoving || roomStatus !== 'playing') return;
             let bot = null; let minDist = Infinity;
             players.filter(p => p.team === 'blue').forEach(p => {
                 let dist = Vector.magnitude(Vector.sub(ball.position, p.position));
@@ -494,101 +528,135 @@
             if(bot) {
                 let dir = Vector.normalise(Vector.sub(ball.position, bot.position));
                 let errorAngle = (Math.random() - 0.5) * 0.15; let finalDir = Vector.rotate(dir, errorAngle);
-                applyAction(players.indexOf(bot), finalDir.x * 0.6, finalDir.y * 0.6);
+                applyAction(players.indexOf(bot), finalDir.x * 0.7, finalDir.y * 0.7);
             }
         }
 
-        // 🌟 橫幅顯示與自動淡出
         function updateTurnBanner() {
-            const bBot = document.getElementById('bot-banner');
-            const bPlayer = document.getElementById('player-banner');
+            const bBot = document.getElementById('bot-banner'); const bPlayer = document.getElementById('player-banner');
             bBot.classList.remove('active'); bPlayer.classList.remove('active');
-            clearTimeout(bannerTimer); // 清除之前的計時器
+            clearTimeout(bannerTimer); 
             
-            if(document.getElementById('win-modal').style.display === 'flex' || isMoving) return;
+            if(roomStatus !== 'playing' || isMoving) return;
             
             if (gameMode === 'single') { 
-                if (currentTurn === 'red') bPlayer.classList.add('active'); 
-                else bBot.classList.add('active'); 
+                if (currentTurn === 'red') bPlayer.classList.add('active'); else bBot.classList.add('active'); 
             } else {
-                if (currentTurn === myTeam) { bPlayer.innerText = "換你開火！"; bPlayer.classList.add('active'); } 
-                else { bBot.innerText = "對手思考中..."; bBot.classList.add('active'); }
+                if (currentTurn === myTeam) { bPlayer.innerText = "YOUR TURN!"; bPlayer.classList.add('active'); } 
+                else { bBot.innerText = "OPPONENT THINKING..."; bBot.classList.add('active'); }
             }
 
-            // 兩秒後自動淡出
-            bannerTimer = setTimeout(() => {
-                bBot.classList.remove('active'); bPlayer.classList.remove('active');
-            }, 2000);
+            bannerTimer = setTimeout(() => { bBot.classList.remove('active'); bPlayer.classList.remove('active'); }, 2000);
         }
-
+        function hideBanners() { document.getElementById('bot-banner').classList.remove('active'); document.getElementById('player-banner').classList.remove('active'); }
         function updateScoreUI() { document.getElementById('score-red').innerText = scores.red; document.getElementById('score-blue').innerText = scores.blue; }
 
+        // === 選單與流程控制 ===
         const menuContainer = document.getElementById('menu-container'); const gameUI = document.getElementById('game-ui');
 
+        function exitToMenu() {
+            if (gameMode === 'multi' && currentRoom && db) { set(ref(db, `rooms/${currentRoom}`), null); } // 清除房間
+            gameMode = 'single'; currentRoom = null; roomStatus = 'ended';
+            document.getElementById('win-modal').style.display = 'none';
+            document.getElementById('waiting-overlay').style.display = 'none';
+            gameUI.style.display = 'none'; menuContainer.style.display = 'flex';
+            if(engine) { Matter.Engine.clear(engine); Render.stop(render); Runner.stop(runner); }
+        }
+
+        document.getElementById('btn-exit').addEventListener('click', () => { if(confirm("確定要離開遊戲嗎？")) exitToMenu(); });
+        document.getElementById('btn-home').addEventListener('click', exitToMenu);
+
         document.getElementById('btn-single').addEventListener('click', () => {
-            gameMode = 'single'; myTeam = 'red'; document.getElementById('p2-name').innerText = "電腦 (藍)";
-            document.getElementById('room-display').innerText = ""; menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame();
+            gameMode = 'single'; myTeam = 'red'; roomStatus = 'playing';
+            document.getElementById('p2-name').innerText = "BOT";
+            document.getElementById('p2-name').style.color = "#4ea8de";
+            menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame();
         });
 
-        // 🌟 創建房間秒進畫面體驗
-        document.getElementById('btn-create').addEventListener('click', () => {
-            if(!db) { showToast("⚠️ Firebase 未連線！請檢查設定", true); return; }
-            
-            // 搶先顯示畫面
-            menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
-            document.getElementById('room-display').innerText = `創建房間中...`;
-            document.getElementById('p2-name').innerText = "對手 (藍)"; 
-            
-            const roomId = Math.floor(1000 + Math.random() * 9000).toString(); 
-            set(ref(db, `rooms/${roomId}`), { scores: { red: 0, blue: 0 }, turn: 'red', status: 'playing' }).then(() => {
-                gameMode = 'multi'; myTeam = 'red'; currentRoom = roomId; 
-                document.getElementById('room-display').innerText = `房號：${roomId} (等待對手加入)`;
+        // 🌟 防撞號創建與斷線保護
+        async function generateRoom() {
+            let roomId; let exists = true;
+            while(exists) {
+                roomId = Math.floor(1000 + Math.random() * 9000).toString();
+                const snapshot = await get(ref(db, `rooms/${roomId}`));
+                exists = snapshot.exists();
+            }
+            return roomId;
+        }
+
+        document.getElementById('btn-create').addEventListener('click', async () => {
+            if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
+            const btn = document.getElementById('btn-create');
+            btn.innerText = "創建中..."; btn.disabled = true;
+
+            try {
+                const roomId = await generateRoom();
+                const roomRef = ref(db, `rooms/${roomId}`);
+                await set(roomRef, { scores: { red: 0, blue: 0 }, turn: 'red', status: 'waiting' });
+                
+                // 斷線自動刪除房間
+                onDisconnect(roomRef).remove();
+
+                gameMode = 'multi'; myTeam = 'red'; currentRoom = roomId; roomStatus = 'waiting';
+                document.getElementById('p2-name').innerText = "OPPONENT";
+                
+                menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
+                document.getElementById('waiting-overlay').style.display = 'flex';
+                document.getElementById('waiting-room-id').innerText = roomId;
+                
                 initGame(); listenToRoom();
-                showToast("✅ 房間創建成功！");
-            }).catch(e => {
-                menuContainer.style.display = 'flex'; gameUI.style.display = 'none'; 
-                showToast("❌ 創建失敗！請至 Firebase 開啟 rules 權限", true);
-            });
+                btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false;
+            } catch(e) {
+                btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false;
+                showToast("❌ 創建失敗，請檢查權限", true);
+            }
         });
 
         document.getElementById('btn-join').addEventListener('click', () => {
             if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
             const roomId = document.getElementById('input-room').value.trim();
-            if (!roomId) { showToast("請輸入 4 位數房號", true); return; }
+            if (roomId.length !== 4) { showToast("請輸入 4 位數房號", true); return; }
             
-            const btn = document.getElementById('btn-join');
-            btn.innerText = "尋找中..."; btn.disabled = true;
+            const btn = document.getElementById('btn-join'); btn.innerText = "..."; btn.disabled = true;
 
             get(ref(db, `rooms/${roomId}`)).then((snapshot) => {
-                btn.innerText = "🔗 加入對戰"; btn.disabled = false;
-                if (snapshot.exists()) {
-                    gameMode = 'multi'; myTeam = 'blue'; currentRoom = roomId; 
-                    document.getElementById('p2-name').innerText = "房主 (紅)"; 
-                    document.getElementById('room-display').innerText = `目前房號：${roomId}`;
+                btn.innerText = "GO"; btn.disabled = false;
+                if (snapshot.exists() && snapshot.val().status === 'waiting') {
+                    // 加入成功，更新狀態為 playing
+                    update(ref(db, `rooms/${roomId}`), { status: 'playing' });
+                    // 斷線自動刪除房間
+                    onDisconnect(ref(db, `rooms/${roomId}`)).remove();
+
+                    gameMode = 'multi'; myTeam = 'blue'; currentRoom = roomId; roomStatus = 'playing';
+                    document.getElementById('p2-name').innerText = "HOST";
                     menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
+                    document.getElementById('waiting-overlay').style.display = 'none';
                     initGame(); listenToRoom();
-                    showToast("✅ 成功加入對戰！");
-                } else { showToast("❌ 找不到該房號！", true); }
-            }).catch(e => {
-                btn.innerText = "🔗 加入對戰"; btn.disabled = false;
-                showToast("❌ 加入失敗，請檢查網路或權限", true);
-            });
+                } else { showToast("❌ 房間不存在或已滿", true); }
+            }).catch(e => { btn.innerText = "GO"; btn.disabled = false; showToast("加入失敗", true); });
         });
 
         document.getElementById('btn-rematch').addEventListener('click', () => {
-            document.getElementById('win-modal').style.display = 'none';
+            document.getElementById('win-modal').style.display = 'none'; roomStatus = 'playing';
             if(gameMode === 'multi' && myTeam === 'red' && db) set(ref(db, `rooms/${currentRoom}`), { scores: { red: 0, blue: 0 }, turn: 'red', status: 'playing', resetFlag: Date.now() });
             else if (gameMode === 'single') resetFormation(true);
-        });
-        document.getElementById('btn-home').addEventListener('click', () => {
-            document.getElementById('win-modal').style.display = 'none'; gameUI.style.display = 'none'; menuContainer.style.display = 'flex';
-            if(engine) { Matter.Engine.clear(engine); Render.stop(render); Runner.stop(runner); }
         });
 
         let lastActionTime = 0; let lastResetTime = 0;
         function listenToRoom() {
             onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
-                const data = snapshot.val(); if (!data) return;
+                const data = snapshot.val(); 
+                if (!data) {
+                    // 房間被刪除 (對手離開)
+                    if(roomStatus !== 'ended') { showToast("⚠️ 對手已離開房間", true); setTimeout(exitToMenu, 1500); }
+                    return;
+                }
+                
+                // 狀態切換：對手加入
+                if (roomStatus === 'waiting' && data.status === 'playing') {
+                    roomStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none'; updateTurnBanner();
+                }
+
                 scores = data.scores || { red: 0, blue: 0 }; updateScoreUI();
                 if (data.status === 'ended' && document.getElementById('win-modal').style.display !== 'flex') { checkWin('red'); checkWin('blue'); }
                 if (data.resetFlag && data.resetFlag > lastResetTime) { document.getElementById('win-modal').style.display = 'none'; resetFormation(true); lastResetTime = data.resetFlag; }
