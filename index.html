@@ -2,654 +2,256 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>迷你彈射足球 精裝版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 WBC 經典賽 - 終極球員資料庫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@700;900&display=swap');
-
-        /* 鎖定全螢幕 */
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #f3a683; 
-            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            overflow: hidden; position: fixed; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none;
+        body {
+            /* WBC 經典深藍背景 */
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
+            color: #f8fafc;
+            font-family: 'Noto Sans TC', sans-serif;
+            min-height: 100vh;
         }
-
-        #toast {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            background-color: #2d3436; color: white; padding: 12px 24px; border-radius: 30px;
-            font-size: 15px; font-family: 'Noto Sans TC', sans-serif; font-weight: bold; 
-            z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); text-align: center; white-space: nowrap;
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        
+        /* WBC 幾何斜角與金屬質感設計 */
+        .wbc-card {
+            background: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
+            border-top: 2px solid #38bdf8;
+            border-bottom: 2px solid #ef4444;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+            transition: all 0.3s ease;
         }
-
-        /* ===== 主選單 UI (保持專業扁平) ===== */
-        #menu-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; width: 100%; z-index: 50; position: absolute; 
-            background-color: #a4c639; 
-        }
-        .menu-title {
-            color: white; font-size: 48px; margin-bottom: 20px;
-            text-shadow: 3px 3px 0px rgba(0,0,0,0.15); letter-spacing: 2px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .menu-subtitle {
-            font-size: 16px; color: #f1f2f6; font-family: 'Noto Sans TC', sans-serif;
-            text-align: center; margin-bottom: 50px; line-height: 1.5; font-weight: bold;
+        .wbc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.4);
         }
         
-        .menu-btn {
-            width: 280px; padding: 15px 20px; font-size: 24px; border: none; border-radius: 12px;
-            cursor: pointer; margin-bottom: 20px; transition: transform 0.1s;
-            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif; color: white; 
-            display: flex; align-items: center; justify-content: center; gap: 15px;
-            box-shadow: 0 6px 0px rgba(0,0,0,0.2);
-        }
-        .menu-btn:active { transform: translateY(6px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
-        .btn-single { background-color: #54a0ff; }
-        .btn-multi { background-color: #ff6b6b; }
-        
-        .input-group { display: flex; width: 280px; gap: 10px; margin-bottom: 20px; }
-        .input-box {
-            flex-grow: 1; padding: 15px; font-size: 20px; border-radius: 12px; border: none;
-            text-align: center; font-family: 'Fredoka One', sans-serif; outline: none;
-            box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .btn-join {
-            width: 80px; padding: 15px; background-color: #1dd1a1; color: white; 
-            border: none; border-radius: 12px; font-size: 20px; font-weight: bold;
-            box-shadow: 0 6px 0px rgba(0,0,0,0.2); cursor: pointer;
-        }
-        .btn-join:active { transform: translateY(6px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
+        /* 細節視窗的金色點綴 */
+        .gold-accent { color: #fbbf24; }
+        .gold-border { border-color: #fbbf24; }
 
-        /* ===== 遊戲畫面 UI (全新升級) ===== */
-        #game-ui { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; position: relative; }
-        
-        /* 🌟 全新整合式頂部欄 */
-        #top-bar {
-            width: 100%; height: 70px; background: rgba(0,0,0,0.3);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px; box-sizing: border-box; z-index: 10;
-            backdrop-filter: blur(5px); border-bottom: 2px solid rgba(255,255,255,0.1);
-        }
-        #btn-exit {
-            width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 12px;
-            display: flex; justify-content: center; align-items: center; color: white;
-            font-size: 20px; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.3);
-            transition: all 0.2s;
-        }
-        #btn-exit:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
-
-        /* 🌟 升級版計分板 */
-        #scoreboard {
-            display: flex; align-items: center; gap: 15px;
-        }
-        .score-badge {
-            display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.4);
-            padding: 5px 15px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);
-        }
-        .team-icon { font-size: 18px; }
-        .score-num { font-size: 24px; color: white; font-family: 'Fredoka One'; }
-        .score-vs { font-size: 18px; color: rgba(255,255,255,0.6); font-family: 'Fredoka One'; }
-        .team-red { color: #ff6b6b; }
-        .team-blue { color: #4ea8de; }
-
-        #scaling-wrapper { position: relative; width: 400px; height: 720px; transform-origin: top center; margin-top: 10px;}
-        canvas { display: block; width: 100%; height: 100%; outline: none; }
-
-        /* 🌟 精緻化橫幅 */
-        .turn-banner {
-            position: absolute; padding: 12px 35px; border-radius: 30px; font-size: 22px; font-weight: normal;
-            color: white; z-index: 20; transition: all 0.3s ease;
-            pointer-events: none; opacity: 0; box-shadow: 0 8px 20px rgba(0,0,0,0.3); left: 50%; transform: translateX(-50%) scale(0.8);
-            border: 3px solid rgba(255,255,255,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-        .turn-banner.active { opacity: 1; transform: translateX(-50%) scale(1); }
-        #bot-banner { top: 100px; background: linear-gradient(to right, #4a3b32, #635147); }
-        #player-banner { bottom: 100px; background: linear-gradient(to right, #ff6b6b, #ff8e8e); }
-        
-        #waiting-overlay {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95); padding: 30px 40px; border-radius: 25px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align: center; z-index: 30;
-            display: none; flex-direction: column; align-items: center; border: 5px solid #ff6b6b;
-        }
-        #waiting-room-id { font-size: 48px; color: #ff6b6b; margin: 15px 0; letter-spacing: 4px; font-family: 'Fredoka One';}
-        .waiting-text { font-size: 18px; color: #2d3436; font-family: 'Noto Sans TC'; font-weight: bold;}
-        .waiting-sub { font-size: 14px; color: #636e72; margin-top: 10px; }
-
-        #win-modal {
-            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .win-box { background: #fff; padding: 40px; border-radius: 30px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5); border: 8px solid #2d3436; width: 85%; max-width: 320px; }
-        #win-text { font-size: 42px; color: #ff6b6b; margin-bottom: 30px; text-transform: uppercase; text-shadow: 2px 2px 0 rgba(0,0,0,0.1);}
+        /* 自定義捲軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <div id="toast">提示訊息</div>
-
-    <div id="menu-container">
-        <div class="menu-title">
-            ⚽ POCKET<br>SOCCER
-        </div>
-        <div class="menu-subtitle">
-            拖動球員控制你的小隊，<br>率先獲得 3 粒進球贏得勝利！
-        </div>
-
-        <button class="menu-btn btn-single" id="btn-single">👤 VS 🤖</button>
-        <button class="menu-btn btn-multi" id="btn-create">👤 VS 👤 (建立)</button>
+    <header class="max-w-7xl mx-auto mb-12 text-center relative">
+        <div class="absolute inset-0 bg-blue-500 blur-[100px] opacity-20 z-0 pointer-events-none"></div>
+        <h1 class="text-5xl md:text-7xl font-roboto font-black italic tracking-wider mb-2 relative z-10 drop-shadow-lg">
+            WORLD BASEBALL <span class="text-red-500">CLASSIC</span> 2026
+        </h1>
+        <p class="text-xl md:text-2xl text-blue-300 font-bold mb-8 relative z-10">THE ULTIMATE ROSTER DATABASE</p>
         
-        <div class="input-group">
-            <input type="text" id="input-room" class="input-box" placeholder="輸入房號加入..." maxlength="4">
-            <button class="btn-join" id="btn-join">GO</button>
+        <div class="flex flex-wrap justify-center gap-3 relative z-10" id="team-buttons">
+            <button onclick="loadTeam('Taiwan')" class="team-btn px-8 py-3 bg-blue-800 hover:bg-blue-600 border border-blue-400 font-bold text-lg rounded shadow-[0_0_15px_rgba(59,130,246,0.5)] transition">中華臺北</button>
+            <button onclick="loadTeam('Japan')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-red-800 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">日本武士</button>
+            <button onclick="loadTeam('USA')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-blue-900 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">美國夢幻</button>
+            <button onclick="loadTeam('Dominican')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-teal-800 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">多明尼加</button>
         </div>
-    </div>
+    </header>
 
-    <div id="game-ui">
-        <div id="top-bar">
-            <button id="btn-exit">✕</button>
-            <div id="scoreboard">
-                <div class="score-badge team-red">
-                    <span class="team-icon">🛡️</span>
-                    <span class="score-num" id="score-red">0</span>
-                </div>
-                <span class="score-vs">VS</span>
-                <div class="score-badge team-blue">
-                    <span class="score-num" id="score-blue">0</span>
-                    <span class="team-icon">🛡️</span>
+    <main class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="player-grid">
+        <div class="col-span-full text-center text-gray-400 py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            正在載入頂級球員資料庫...
+        </div>
+    </main>
+
+    <div id="player-modal" class="fixed inset-0 bg-black/90 hidden z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 text-center">
+            <span class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block w-full max-w-5xl text-left align-middle transition-all transform bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden my-8">
+                
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-4xl font-black z-10">&times;</button>
+                
+                <div class="flex flex-col md:flex-row h-full">
+                    <div class="w-full md:w-1/3 relative bg-gradient-to-b from-slate-800 to-black p-6 border-r border-slate-700">
+                        <div class="absolute top-0 left-0 text-[150px] font-roboto font-black text-white/5 -mt-10 -ml-4" id="modal-bg-number"></div>
+                        
+                        <div class="relative z-10 flex flex-col items-center h-full">
+                            <div class="w-48 h-48 bg-slate-800 rounded-full border-4 border-blue-500 mb-6 flex items-center justify-center overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+                                <span class="text-sm text-center text-gray-500" id="modal-img-hint">球員圖片<br>(檔名對應)</span>
+                            </div>
+                            
+                            <h2 id="modal-name" class="text-4xl font-black mb-1 text-center"></h2>
+                            <p id="modal-org" class="text-blue-400 font-bold text-lg mb-4 text-center"></p>
+                            
+                            <div class="flex gap-4 mb-6">
+                                <span class="px-3 py-1 bg-slate-700 rounded text-sm font-bold" id="modal-role"></span>
+                                <span class="px-3 py-1 bg-red-900/50 text-red-300 border border-red-700 rounded text-sm font-bold" id="modal-position"></span>
+                            </div>
+
+                            <div class="w-full bg-slate-800/50 rounded-lg p-4 mt-auto">
+                                <p class="text-sm text-gray-400 flex justify-between mb-2"><span>身高/體重：</span><span class="text-white font-bold" id="modal-hw"></span></p>
+                                <p class="text-sm text-gray-400 flex justify-between mb-2"><span>出生日期：</span><span class="text-white font-bold" id="modal-birth"></span></p>
+                                <p class="text-sm text-gray-400 flex justify-between"><span>背號：</span><span class="text-white font-bold text-xl" id="modal-number-display"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-2/3 p-6 md:p-8 bg-slate-900 overflow-y-auto max-h-[80vh]">
+                        
+                        <div class="mb-8">
+                            <h3 class="text-2xl font-black border-l-4 gold-border pl-3 mb-4 flex items-center gap-2">
+                                <span class="text-xl">📋</span> 2026 戰力分析 / 球探報告
+                            </h3>
+                            <p id="modal-scouting" class="text-gray-300 leading-relaxed text-justify bg-slate-800/30 p-4 rounded-lg border border-slate-700"></p>
+                        </div>
+
+                        <div class="mb-8">
+                            <h3 class="text-2xl font-black border-l-4 border-blue-500 pl-3 mb-4 flex items-center gap-2">
+                                <span class="text-xl">🏆</span> 生涯榮譽榜
+                            </h3>
+                            <div id="modal-accolades" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-black border-l-4 border-red-500 pl-3 mb-4 flex items-center gap-2">
+                                <span class="text-xl">📊</span> 關鍵數據表現
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-800 text-gray-400 text-sm uppercase font-roboto">
+                                        <tr id="stats-header">
+                                            </tr>
+                                    </thead>
+                                    <tbody class="text-white font-roboto font-bold text-lg border-b border-slate-700" id="stats-body">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
-            <div style="width: 40px;"></div> </div>
-
-        <div id="scaling-wrapper">
-            <canvas id="game-canvas"></canvas>
-            
-            <div class="turn-banner" id="bot-banner">OPPONENT THINKING...</div>
-            <div class="turn-banner" id="player-banner">YOUR TURN!</div>
-            
-            <div id="waiting-overlay">
-                <div class="waiting-text">正在等待對手加入...</div>
-                <div id="waiting-room-id">0000</div>
-                <div class="waiting-sub">請將上方的房號告訴你的朋友</div>
-            </div>
         </div>
     </div>
 
-    <div id="win-modal">
-        <div class="win-box">
-            <div id="win-text">YOU WON!</div>
-            <button class="menu-btn btn-single" style="width: 100%; font-size: 20px;" id="btn-rematch">PLAY AGAIN</button>
-            <button class="menu-btn btn-multi" style="width: 100%; font-size: 20px;" id="btn-home">MAIN MENU</button>
-        </div>
-    </div>
+    <script>
+        let allPlayersData = [];
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.style.backgroundColor = isError ? '#e74c3c' : '#2ecc71';
-            toast.style.top = '40px'; 
-            setTimeout(() => { toast.style.top = '-100px'; }, 3000); 
-        }
-
-        let db = null;
-        try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
-                authDomain: "airplane-game-68f8f.firebaseapp.com",
-                projectId: "airplane-game-68f8f",
-                storageBucket: "airplane-game-68f8f.firebasestorage.app",
-                messagingSenderId: "215248477446",
-                appId: "1:215248477446:web:f1d9dbb69b759118125287",
-                databaseURL: "https://airplane-game-68f8f-default-rtdb.asia-southeast1.firebasedatabase.app/" 
-            };
-            db = getDatabase(initializeApp(firebaseConfig));
-        } catch (e) { console.warn("Firebase 初始化失敗"); }
-
-        const scaleWrapper = document.getElementById('scaling-wrapper');
-        let currentScale = 1;
-        function resizeGame() {
-            const topBarHeight = document.getElementById('top-bar').offsetHeight;
-            const availableHeight = window.innerHeight - topBarHeight - 20; 
-            const availableWidth = window.innerWidth - 20;
-            currentScale = Math.min(availableWidth / 400, availableHeight / 720);
-            scaleWrapper.style.transform = `scale(${currentScale})`;
-        }
-        window.addEventListener('resize', resizeGame);
-        setTimeout(resizeGame, 100);
-
-        let gameMode = 'single', currentRoom = null, myTeam = 'red', currentTurn = 'red', isMoving = false;
-        let roomStatus = 'ended'; 
-        let scores = { red: 0, blue: 0 };
-        const WIN_SCORE = 3;
-        let opponentAim = null; 
-
-        const Engine = Matter.Engine, Render = Matter.Render, Runner = Matter.Runner,
-              Bodies = Matter.Bodies, Composite = Matter.Composite, Events = Matter.Events, Vector = Matter.Vector;
-        
-        const gameWidth = 400, gameHeight = 720;
-        const fieldTop = 80, fieldBottom = 640; 
-        const goalW = 150, goalH = 45;
-        const leftW = (gameWidth - goalW) / 2;
-
-        let engine, render, runner, ball, players = [];
-        let trails = [];
-        let bannerTimer = null;
-
-        function initGame() {
-            if(engine) { Matter.Engine.clear(engine); Render.stop(render); Runner.stop(runner); document.getElementById('game-canvas').remove(); }
-            
-            const canvasObj = document.createElement('canvas'); canvasObj.id = 'game-canvas';
-            scaleWrapper.insertBefore(canvasObj, scaleWrapper.firstChild);
-
-            engine = Engine.create(); engine.world.gravity.y = 0; 
-            render = Render.create({ canvas: canvasObj, engine: engine, options: { width: gameWidth, height: gameHeight, wireframes: false, background: 'transparent' } });
-
-            createBoundaries(); resetFormation(true);
-            Events.on(render, 'afterRender', customDraw); 
-            Events.on(engine, 'afterUpdate', physicsUpdate);
-            
-            Events.on(engine, 'collisionStart', function(event) {
-                event.pairs.forEach((pair) => {
-                    if (pair.bodyA.label === 'ball' || pair.bodyB.label === 'ball') {
-                        Matter.Body.setVelocity(ball, { x: ball.velocity.x * 0.85, y: ball.velocity.y * 0.85 });
-                    }
-                });
-            });
-
-            Render.run(render); runner = Runner.create(); Runner.run(runner, engine);
-            setupSlingshot(canvasObj); resizeGame();
-        }
-
-        function createBoundaries() {
-            const wallOpts = { isStatic: true, render: { visible: false }, restitution: 0.9, friction: 0, frictionStatic: 0 };
-            const postOpts = { isStatic: true, render: { visible: false }, restitution: 0.8, friction: 0, frictionStatic: 0 };
-            const thick = 100; 
-
-            const walls = [
-                Bodies.rectangle(-thick/2, gameHeight/2, thick, gameHeight, wallOpts), 
-                Bodies.rectangle(gameWidth+thick/2, gameHeight/2, thick, gameHeight, wallOpts),
-                Bodies.rectangle(leftW/2, fieldTop-thick/2, leftW, thick, wallOpts), 
-                Bodies.rectangle(gameWidth - leftW/2, fieldTop-thick/2, leftW, thick, wallOpts),
-                Bodies.rectangle(leftW/2, fieldBottom+thick/2, leftW, thick, wallOpts), 
-                Bodies.rectangle(gameWidth - leftW/2, fieldBottom+thick/2, leftW, thick, wallOpts),
-                Bodies.rectangle(gameWidth/2, fieldTop - goalH - thick/2, goalW, thick, wallOpts), 
-                Bodies.rectangle(gameWidth/2, fieldBottom + goalH + thick/2, goalW, thick, wallOpts),
-                Bodies.rectangle(leftW-thick/2, fieldTop - goalH/2, thick, goalH, wallOpts), 
-                Bodies.rectangle(gameWidth-leftW+thick/2, fieldTop - goalH/2, thick, goalH, wallOpts),
-                Bodies.rectangle(leftW-thick/2, fieldBottom + goalH/2, thick, goalH, wallOpts), 
-                Bodies.rectangle(gameWidth-leftW+thick/2, fieldBottom + goalH/2, thick, goalH, wallOpts),
-                Bodies.circle(leftW, fieldTop, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldTop, 8, postOpts),
-                Bodies.circle(leftW, fieldBottom, 8, postOpts), Bodies.circle(gameWidth - leftW, fieldBottom, 8, postOpts)
-            ];
-            Composite.add(engine.world, walls);
-        }
-
-        function resetFormation(fullReset = false) {
-            if(ball) Composite.remove(engine.world, ball);
-            players.forEach(p => Composite.remove(engine.world, p)); players = []; trails = [];
-            if(fullReset) { scores = { red: 0, blue: 0 }; updateScoreUI(); }
-
-            ball = Bodies.circle(gameWidth/2, gameHeight/2, 12, { 
-                restitution: 0.9, frictionAir: 0.015, friction: 0, frictionStatic: 0, density: 0.002, render: { visible: false }, label: 'ball'
-            });
-            Composite.add(engine.world, ball);
-
-            const pOpts = { restitution: 0.85, frictionAir: 0.03, friction: 0, frictionStatic: 0, density: 0.05, render: { visible: false } };
-            
-            const bluePos = [ {x: gameWidth/2, y: fieldTop + 130}, {x: gameWidth/2 - 80, y: fieldTop + 220}, {x: gameWidth/2 + 80, y: fieldTop + 220}, {x: gameWidth/2 - 70, y: fieldTop + 50}, {x: gameWidth/2 + 70, y: fieldTop + 50} ];
-            const redPos = [ {x: gameWidth/2, y: fieldBottom - 130}, {x: gameWidth/2 - 80, y: fieldBottom - 220}, {x: gameWidth/2 + 80, y: fieldBottom - 220}, {x: gameWidth/2 - 70, y: fieldBottom - 50}, {x: gameWidth/2 + 70, y: fieldBottom - 50} ];
-
-            bluePos.forEach(p => { let b = Bodies.circle(p.x, p.y, 22, pOpts); b.team = 'blue'; players.push(b); });
-            redPos.forEach(p => { let b = Bodies.circle(p.x, p.y, 22, pOpts); b.team = 'red'; players.push(b); });
-            Composite.add(engine.world, players);
-            
-            isMoving = false; currentTurn = 'red'; 
-            if(roomStatus === 'playing') updateTurnBanner();
-        }
-
-        function customDraw() {
-            const ctx = render.context; const time = engine.timing.timestamp;
-            
-            // 草皮背景
-            ctx.fillStyle = '#72c84b';
-            ctx.beginPath(); ctx.rect(0, fieldTop, gameWidth, fieldBottom - fieldTop); ctx.fill();
-            
-            // 草皮紋路
-            ctx.fillStyle = 'rgba(0,0,0,0.05)';
-            for(let y = fieldTop; y < fieldBottom; y += 80) { ctx.fillRect(0, y, gameWidth, 40); }
-
-            // 白色邊線
-            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
-            ctx.strokeRect(0, fieldTop, gameWidth, fieldBottom - fieldTop);
-            
-            // 中線
-            ctx.beginPath(); ctx.moveTo(0, gameHeight/2); ctx.lineTo(gameWidth, gameHeight/2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 50, 0, 2*Math.PI); ctx.stroke();
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gameWidth/2, gameHeight/2, 8, 0, 2*Math.PI); ctx.fill();
-            
-            // 繪製球門 (包含網子與門柱)
-            function drawGoal(x, y, isTop) {
-                ctx.fillStyle = isTop ? 'rgba(78, 168, 222, 0.8)' : 'rgba(255, 107, 107, 0.8)'; ctx.fillRect(x, y, goalW, goalH);
-                // 球網紋路
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2; ctx.beginPath();
-                for(let i=6; i<goalW; i+=12) { ctx.moveTo(x+i, y); ctx.lineTo(x+i, y+goalH); }
-                for(let i=6; i<goalH; i+=12) { ctx.moveTo(x, y+i); ctx.lineTo(x+goalW, y+i); }
-                ctx.stroke();
-                // ㄇ字外框
-                ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 6; ctx.beginPath();
-                if(isTop) { ctx.moveTo(x, y+goalH); ctx.lineTo(x, y); ctx.lineTo(x+goalW, y); ctx.lineTo(x+goalW, y+goalH); } 
-                else { ctx.moveTo(x, y); ctx.lineTo(x, y+goalH); ctx.lineTo(x+goalW, y+goalH); ctx.lineTo(x+goalW, y); }
-                ctx.stroke();
-                // 門柱點
-                ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 3;
-                let postY = isTop ? y+goalH : y;
-                ctx.beginPath(); ctx.arc(x, postY, 7, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.arc(x+goalW, postY, 7, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
-            }
-            drawGoal(leftW, fieldTop - goalH, true);
-            drawGoal(leftW, fieldBottom, false);
-
-            // 拖尾特效
-            trails.forEach(t => { ctx.globalAlpha = t.alpha; ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x, t.y, t.size, 0, Math.PI*2); ctx.fill(); });
-            ctx.globalAlpha = 1.0;
-
-            // 瞄準扇形
-            if (dragState.isDragging && dragState.player && roomStatus === 'playing') {
-                drawAimCone(ctx, dragState.player.position.x, dragState.player.position.y, dragState.currentX - dragState.startX, dragState.currentY - dragState.startY);
-            } else if (opponentAim && currentTurn !== myTeam && roomStatus === 'playing') {
-                let oppPlayer = players[opponentAim.pId];
-                if(oppPlayer) drawAimCone(ctx, oppPlayer.position.x, oppPlayer.position.y, opponentAim.cx - opponentAim.sx, opponentAim.cy - opponentAim.sy);
-            }
-
-            // 🌟 分離式扁平陰影 (Drop Shadow)
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            ctx.beginPath(); ctx.arc(ball.position.x + 3, ball.position.y + 5, 12, 0, 2*Math.PI); ctx.fill();
-            players.forEach(p => { ctx.beginPath(); ctx.arc(p.position.x + 4, p.position.y + 6, 22, 0, 2*Math.PI); ctx.fill(); });
-
-            // 足球本體
-            ctx.save(); ctx.translate(ball.position.x, ball.position.y); ctx.rotate(ball.angle); 
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 2*Math.PI); ctx.fill(); 
-            ctx.lineWidth = 3; ctx.strokeStyle = '#2d3436'; ctx.stroke();
-            ctx.fillStyle = '#2d3436';
-            ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, 2*Math.PI); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(8, 0, 3, 0, 2*Math.PI); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(-5, 6, 3, 0, 2*Math.PI); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(-5, -6, 3, 0, 2*Math.PI); ctx.fill(); 
-            ctx.restore();
-
-            // 🌟 繪製全新「籌碼徽章」風格球員
-            players.forEach(p => {
-                ctx.save(); ctx.translate(p.position.x, p.position.y);
-                
-                // 光圈 (輪到該隊時顯示)
-                if(p.team === currentTurn && !isMoving && roomStatus === 'playing') {
-                    ctx.save(); ctx.rotate(time * 0.003);
-                    ctx.setLineDash([10, 10]); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 4;
-                    ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI*2); ctx.stroke(); ctx.restore();
-                }
-
-                // 1. 外圈金屬邊框
-                ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI*2); ctx.fill();
-                // 2. 隊伍顏色主體
-                ctx.fillStyle = p.team === 'red' ? '#ff6b6b' : '#4ea8de';
-                ctx.beginPath(); ctx.arc(0, 0, 21, 0, Math.PI*2); ctx.fill(); 
-                // 3. 內部白色基底
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
-                // 4. 內部隊伍顏色徽章 (星星)
-                ctx.fillStyle = p.team === 'red' ? '#ff6b6b' : '#4ea8de';
-                drawStar(ctx, 0, 0, 5, 10, 5);
-                
-                ctx.restore();
-            });
-        }
-
-        function drawAimCone(ctx, px, py, dx, dy) {
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 10) { 
-                let angle = Math.atan2(dy, dx); let fanRadius = Math.min(dist * 1.5, 200); 
-                ctx.beginPath(); ctx.moveTo(px, py);
-                ctx.arc(px, py, fanRadius, angle - 0.35, angle + 0.35);
-                ctx.closePath(); ctx.fillStyle = 'rgba(74, 59, 50, 0.4)'; ctx.fill(); 
-            }
-        }
-
-        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-            let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes; ctx.beginPath();
-            for (let i = 0; i < spikes; i++) {
-                x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
-                x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
-            }
-            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fill();
-        }
-
-        function physicsUpdate() {
-            players.forEach(p => {
-                if (p.position.y < fieldTop + 15) {
-                    Matter.Body.setPosition(p, { x: p.position.x, y: fieldTop + 25 });
-                    Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.max(0, p.velocity.y) });
-                } else if (p.position.y > fieldBottom - 15) {
-                    Matter.Body.setPosition(p, { x: p.position.x, y: fieldBottom - 25 });
-                    Matter.Body.setVelocity(p, { x: p.velocity.x, y: Math.min(0, p.velocity.y) });
-                }
-            });
-
-            checkTurnState();
-            
-            if (isMoving) {
-                players.forEach(p => { if (p.speed > 3) trails.push({ x: p.position.x, y: p.position.y, size: 8, alpha: 0.5, color: p.team === 'red' ? '#ff6b6b' : '#4ea8de' }); });
-                if (ball.speed > 3) trails.push({ x: ball.position.x, y: ball.position.y, size: 6, alpha: 0.5, color: 'rgba(255,255,255,0.8)' });
-            }
-            for (let i = trails.length - 1; i >= 0; i--) { trails[i].alpha -= 0.03; trails[i].size -= 0.15; if (trails[i].alpha <= 0 || trails[i].size <= 0) trails.splice(i, 1); }
-        }
-
-        let dragState = { isDragging: false, player: null, startX: 0, startY: 0, currentX: 0, currentY: 0 };
-        let lastAimSyncTime = 0; 
-
-        function setupSlingshot(canvas) {
-            const getTouchPos = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: (clientX - rect.left) / currentScale, y: (clientY - rect.top) / currentScale };
-            };
-
-            const onStart = (e) => {
-                if (roomStatus !== 'playing') return; 
-                if (isMoving || currentTurn !== myTeam) return; 
-                const pos = getTouchPos(e);
-                let myPlayer = Matter.Query.point(players, pos).find(b => b.team === myTeam);
-                if (myPlayer) {
-                    dragState.isDragging = true; dragState.player = myPlayer;
-                    dragState.startX = pos.x; dragState.startY = pos.y;
-                    dragState.currentX = pos.x; dragState.currentY = pos.y;
-                }
-            };
-            const onMove = (e) => {
-                if(e.touches) e.preventDefault(); 
-                if (!dragState.isDragging) return;
-                const pos = getTouchPos(e);
-                dragState.currentX = pos.x; dragState.currentY = pos.y;
-                if (gameMode === 'multi' && db && Date.now() - lastAimSyncTime > 50) {
-                    set(ref(db, `rooms/${currentRoom}/aiming`), { pId: players.indexOf(dragState.player), sx: dragState.startX, sy: dragState.startY, cx: pos.x, cy: pos.y });
-                    lastAimSyncTime = Date.now();
-                }
-            };
-            const onEnd = () => {
-                if (!dragState.isDragging) return;
-                let dx = dragState.startX - dragState.currentX; let dy = dragState.startY - dragState.currentY;
-                let pullDist = Math.sqrt(dx*dx + dy*dy); const maxPull = 200; 
-                if (pullDist > maxPull) { dx = (dx/pullDist) * maxPull; dy = (dy/pullDist) * maxPull; }
-                let forceMultiplier = 0.012; let forceX = dx * forceMultiplier; let forceY = dy * forceMultiplier;
-                if (gameMode === 'multi' && currentTurn !== myTeam) { dragState.isDragging = false; set(ref(db, `rooms/${currentRoom}/aiming`), null); return; }
-                applyAction(players.indexOf(dragState.player), forceX, forceY);
-                if (gameMode === 'multi' && db) {
-                    set(ref(db, `rooms/${currentRoom}/action`), { playerId: players.indexOf(dragState.player), forceX, forceY, timestamp: Date.now() });
-                    set(ref(db, `rooms/${currentRoom}/aiming`), null);
-                }
-                dragState.isDragging = false; dragState.player = null;
-            };
-
-            canvas.addEventListener('mousedown', onStart); canvas.addEventListener('mousemove', onMove); canvas.addEventListener('mouseup', onEnd);
-            canvas.addEventListener('touchstart', onStart, {passive: false}); canvas.addEventListener('touchmove', onMove, {passive: false}); canvas.addEventListener('touchend', onEnd);
-        }
-
-        function applyAction(playerId, forceX, forceY) {
-            const player = players[playerId];
-            if (player) { Matter.Body.applyForce(player, player.position, { x: forceX, y: forceY }); isMoving = true; updateTurnBanner(); }
-        }
-
-        function checkTurnState() {
-            let inGoalX = ball.position.x > leftW && ball.position.x < (gameWidth - leftW);
-            if (inGoalX && ball.position.y < fieldTop - 5) scoreGoal('red'); 
-            else if (inGoalX && ball.position.y > fieldBottom + 5) scoreGoal('blue');
-
-            if (isMoving) {
-                let totalSpeed = ball.speed + players.reduce((sum, p) => sum + p.speed, 0);
-                if (totalSpeed < 0.6) { 
-                    isMoving = false;
-                    Matter.Body.setVelocity(ball, {x:0, y:0}); players.forEach(p => Matter.Body.setVelocity(p, {x:0, y:0}));
-                    currentTurn = currentTurn === 'red' ? 'blue' : 'red';
-                    if (gameMode === 'multi' && myTeam === 'red' && db) update(ref(db, `rooms/${currentRoom}`), { turn: currentTurn });
-                    else if (gameMode === 'single') { updateTurnBanner(); if(currentTurn === 'blue') setTimeout(triggerBotAITurn, 800); }
-                }
-            }
-        }
-
-        function scoreGoal(team) {
-            if (gameMode === 'multi' && myTeam !== 'red') return; 
-            let newScores = { ...scores }; newScores[team] += 1;
-            if (gameMode === 'multi' && db) update(ref(db, `rooms/${currentRoom}`), { scores: newScores, resetFlag: Date.now() });
-            else { scores = newScores; updateScoreUI(); checkWin(team); if(scores[team] < WIN_SCORE) resetFormation(false); }
-        }
-
-        function checkWin(team) {
-            if (scores[team] >= WIN_SCORE) {
-                const isWin = (team === myTeam);
-                document.getElementById('win-text').innerText = isWin ? "YOU WON!" : "YOU LOST!";
-                document.getElementById('win-text').style.color = isWin ? '#ff6b6b' : '#4ea8de';
-                document.getElementById('win-modal').style.display = 'flex';
-                roomStatus = 'ended';
-                if(gameMode === 'multi' && db && myTeam === 'red') update(ref(db, `rooms/${currentRoom}`), { status: 'ended' });
-            }
-        }
-
-        function triggerBotAITurn() {
-            if (currentTurn !== 'blue' || isMoving || roomStatus !== 'playing') return;
-            let bot = null; let minDist = Infinity;
-            players.filter(p => p.team === 'blue').forEach(p => {
-                let dist = Vector.magnitude(Vector.sub(ball.position, p.position));
-                if(dist < minDist){ bot = p; minDist = dist; }
-            });
-            if(bot) {
-                let dir = Vector.normalise(Vector.sub(ball.position, bot.position));
-                let errorAngle = (Math.random() - 0.5) * 0.15; let finalDir = Vector.rotate(dir, errorAngle);
-                applyAction(players.indexOf(bot), finalDir.x * 0.8, finalDir.y * 0.8);
-            }
-        }
-
-        function updateTurnBanner() {
-            const bBot = document.getElementById('bot-banner'); const bPlayer = document.getElementById('player-banner');
-            bBot.classList.remove('active'); bPlayer.classList.remove('active');
-            clearTimeout(bannerTimer); 
-            if(roomStatus !== 'playing' || isMoving) return;
-            if (gameMode === 'single') { if (currentTurn === 'red') bPlayer.classList.add('active'); else bBot.classList.add('active'); } 
-            else { if (currentTurn === myTeam) bPlayer.classList.add('active'); else bBot.classList.add('active'); }
-            bannerTimer = setTimeout(() => { bBot.classList.remove('active'); bPlayer.classList.remove('active'); }, 2000);
-        }
-        function updateScoreUI() { document.getElementById('score-red').innerText = scores.red; document.getElementById('score-blue').innerText = scores.blue; }
-
-        const menuContainer = document.getElementById('menu-container'); const gameUI = document.getElementById('game-ui');
-
-        function exitToMenu() {
-            if (gameMode === 'multi' && currentRoom && db) { set(ref(db, `rooms/${currentRoom}`), null); } 
-            gameMode = 'single'; currentRoom = null; roomStatus = 'ended'; opponentAim = null;
-            document.getElementById('win-modal').style.display = 'none';
-            document.getElementById('waiting-overlay').style.display = 'none';
-            gameUI.style.display = 'none'; menuContainer.style.display = 'flex';
-            if(engine) { Matter.Engine.clear(engine); Render.stop(render); Runner.stop(runner); }
-        }
-
-        document.getElementById('btn-exit').addEventListener('click', () => { if(confirm("確定要離開遊戲嗎？")) exitToMenu(); });
-        document.getElementById('btn-home').addEventListener('click', exitToMenu);
-
-        document.getElementById('btn-single').addEventListener('click', () => {
-            gameMode = 'single'; myTeam = 'red'; roomStatus = 'playing';
-            menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; initGame();
-        });
-
-        async function generateRoom() {
-            let roomId; let exists = true;
-            while(exists) { roomId = Math.floor(1000 + Math.random() * 9000).toString(); const snapshot = await get(ref(db, `rooms/${roomId}`)); exists = snapshot.exists(); }
-            return roomId;
-        }
-
-        document.getElementById('btn-create').addEventListener('click', async () => {
-            if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
-            const btn = document.getElementById('btn-create'); btn.innerText = "創建中..."; btn.disabled = true;
+        // 讀取外部 JSON 檔案
+        async function fetchPlayersData() {
             try {
-                const roomId = await generateRoom();
-                const roomRef = ref(db, `rooms/${roomId}`);
-                await set(roomRef, { scores: { red: 0, blue: 0 }, turn: 'red', status: 'waiting' });
-                onDisconnect(roomRef).remove();
-                gameMode = 'multi'; myTeam = 'red'; currentRoom = roomId; roomStatus = 'waiting';
-                menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
-                document.getElementById('waiting-overlay').style.display = 'flex';
-                document.getElementById('waiting-room-id').innerText = roomId;
-                initGame(); listenToRoom();
-                btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false;
-            } catch(e) { btn.innerText = "👤 VS 👤 (建立)"; btn.disabled = false; showToast("❌ 創建失敗", true); }
-        });
+                // 這裡我們預期會有一個 players.json 檔案
+                const response = await fetch('players.json');
+                if (!response.ok) throw new Error('找不到 players.json 檔案！');
+                allPlayersData = await response.json();
+                
+                // 預設載入中華隊
+                loadTeam('Taiwan');
+            } catch (error) {
+                console.error("讀取資料失敗:", error);
+                document.getElementById('player-grid').innerHTML = `
+                    <div class="col-span-full text-center py-10">
+                        <p class="text-red-400 text-xl font-bold mb-4">⚠️ 無法載入資料庫 (players.json)</p>
+                        <p class="text-gray-400">因為目前是直接雙擊開啟 HTML，瀏覽器基於安全性可能會阻擋讀取本地 JSON。<br>
+                        請在 VS Code 中使用「Live Server」套件開啟，或是等待我為你生成包含在檔案內的測試版資料。</p>
+                    </div>
+                `;
+            }
+        }
 
-        document.getElementById('btn-join').addEventListener('click', () => {
-            if(!db) { showToast("⚠️ Firebase 未連線！", true); return; }
-            const roomId = document.getElementById('input-room').value.trim();
-            if (roomId.length !== 4) { showToast("請輸入 4 位數房號", true); return; }
-            const btn = document.getElementById('btn-join'); btn.innerText = "..."; btn.disabled = true;
-            get(ref(db, `rooms/${roomId}`)).then((snapshot) => {
-                btn.innerText = "GO"; btn.disabled = false;
-                if (snapshot.exists() && snapshot.val().status === 'waiting') {
-                    update(ref(db, `rooms/${roomId}`), { status: 'playing' });
-                    onDisconnect(ref(db, `rooms/${roomId}`)).remove();
-                    gameMode = 'multi'; myTeam = 'blue'; currentRoom = roomId; roomStatus = 'playing';
-                    menuContainer.style.display = 'none'; gameUI.style.display = 'flex'; 
-                    document.getElementById('waiting-overlay').style.display = 'none';
-                    initGame(); listenToRoom();
-                } else { showToast("❌ 房間不存在或已滿", true); }
-            }).catch(e => { btn.innerText = "GO"; btn.disabled = false; showToast("加入失敗", true); });
-        });
-
-        document.getElementById('btn-rematch').addEventListener('click', () => {
-            document.getElementById('win-modal').style.display = 'none'; roomStatus = 'playing';
-            if(gameMode === 'multi' && myTeam === 'red' && db) set(ref(db, `rooms/${currentRoom}`), { scores: { red: 0, blue: 0 }, turn: 'red', status: 'playing', resetFlag: Date.now() });
-            else if (gameMode === 'single') resetFormation(true);
-        });
-
-        let lastActionTime = 0; let lastResetTime = 0;
-        function listenToRoom() {
-            onValue(ref(db, `rooms/${currentRoom}`), (snapshot) => {
-                const data = snapshot.val(); 
-                if (!data) { if(roomStatus !== 'ended') { showToast("⚠️ 對手已離開房間", true); setTimeout(exitToMenu, 1500); } return; }
-                if (roomStatus === 'waiting' && data.status === 'playing') { roomStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none'; updateTurnBanner(); }
-                scores = data.scores || { red: 0, blue: 0 }; updateScoreUI();
-                if (data.status === 'ended' && document.getElementById('win-modal').style.display !== 'flex') { checkWin('red'); checkWin('blue'); }
-                if (data.resetFlag && data.resetFlag > lastResetTime) { document.getElementById('win-modal').style.display = 'none'; resetFormation(true); lastResetTime = data.resetFlag; }
-                if (data.turn && data.turn !== currentTurn && !isMoving && data.status === 'playing') { currentTurn = data.turn; updateTurnBanner(); }
-                if (data.aiming) opponentAim = data.aiming; else opponentAim = null;
+        function loadTeam(teamId) {
+            // 更新按鈕樣式
+            document.querySelectorAll('.team-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-800', 'border-blue-400', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
+                btn.classList.add('bg-slate-800', 'border-gray-500');
+                if(btn.getAttribute('onclick').includes(teamId)) {
+                    btn.classList.remove('bg-slate-800', 'border-gray-500');
+                    btn.classList.add('bg-blue-800', 'border-blue-400', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
+                }
             });
-            onValue(ref(db, `rooms/${currentRoom}/action`), (snapshot) => {
-                const action = snapshot.val();
-                if (action && action.timestamp > lastActionTime) { lastActionTime = action.timestamp; applyAction(action.playerId, action.forceX, action.forceY); }
+
+            const grid = document.getElementById('player-grid');
+            grid.innerHTML = '';
+            
+            const teamPlayers = allPlayersData.filter(p => p.team === teamId);
+            
+            teamPlayers.forEach(player => {
+                const card = document.createElement('div');
+                card.className = 'wbc-card p-5 cursor-pointer flex flex-col h-full';
+                card.onclick = () => showModal(player);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-roboto font-black text-3xl text-gray-500/50">#${player.number}</span>
+                        <span class="text-xs font-bold px-2 py-1 bg-slate-800 border border-slate-600 rounded text-gray-300">${player.position}</span>
+                    </div>
+                    <h3 class="text-2xl font-black mb-1 text-white">${player.name}</h3>
+                    <p class="text-xs text-blue-400 font-bold mb-4 line-clamp-1">${player.organization}</p>
+                    <div class="mt-auto border-t border-slate-700/50 pt-3 flex justify-between items-center text-sm font-bold text-gray-400">
+                        <span>${player.role}</span>
+                        <span class="text-red-500 flex items-center gap-1">DETAILS <span class="text-lg">»</span></span>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
         }
+
+        function showModal(player) {
+            document.getElementById('modal-bg-number').textContent = player.number;
+            document.getElementById('modal-number-display').textContent = player.number;
+            document.getElementById('modal-name').textContent = player.name;
+            document.getElementById('modal-org').textContent = player.organization;
+            document.getElementById('modal-role').textContent = player.role;
+            document.getElementById('modal-position').textContent = player.position;
+            document.getElementById('modal-hw').textContent = player.physical;
+            document.getElementById('modal-birth').textContent = player.birth;
+            document.getElementById('modal-img-hint').innerHTML = `${player.name}.png`;
+            document.getElementById('modal-scouting').innerHTML = player.scoutingReport;
+
+            // 榮譽榜
+            const accoladesDiv = document.getElementById('modal-accolades');
+            accoladesDiv.innerHTML = player.accolades.map(acc => 
+                `<div class="bg-slate-800/50 p-3 rounded border border-slate-700/50 flex items-start gap-2">
+                    <span class="gold-accent mt-0.5">★</span>
+                    <span class="text-sm font-bold text-gray-200">${acc}</span>
+                </div>`
+            ).join('');
+
+            // 數據表處理 (區分投手與打者)
+            const statsHeader = document.getElementById('stats-header');
+            const statsBody = document.getElementById('stats-body');
+            
+            if (player.statsType === 'pitcher') {
+                statsHeader.innerHTML = '<th class="py-3 px-4">W-L</th><th class="py-3 px-4">ERA</th><th class="py-3 px-4">IP</th><th class="py-3 px-4">SO</th><th class="py-3 px-4">WHIP</th>';
+                statsBody.innerHTML = `<tr>
+                    <td class="py-4 px-4">${player.stats.wl}</td>
+                    <td class="py-4 px-4 text-blue-400">${player.stats.era}</td>
+                    <td class="py-4 px-4">${player.stats.ip}</td>
+                    <td class="py-4 px-4">${player.stats.so}</td>
+                    <td class="py-4 px-4 text-red-400">${player.stats.whip}</td>
+                </tr>`;
+            } else {
+                statsHeader.innerHTML = '<th class="py-3 px-4">AVG</th><th class="py-3 px-4">HR</th><th class="py-3 px-4">RBI</th><th class="py-3 px-4">OBP</th><th class="py-3 px-4">OPS</th>';
+                statsBody.innerHTML = `<tr>
+                    <td class="py-4 px-4 text-blue-400">${player.stats.avg}</td>
+                    <td class="py-4 px-4">${player.stats.hr}</td>
+                    <td class="py-4 px-4">${player.stats.rbi}</td>
+                    <td class="py-4 px-4">${player.stats.obp}</td>
+                    <td class="py-4 px-4 text-red-400">${player.stats.ops}</td>
+                </tr>`;
+            }
+
+            document.getElementById('player-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('player-modal').classList.add('hidden');
+        }
+
+        // 啟動
+        window.onload = fetchPlayersData;
     </script>
 </body>
 </html>
