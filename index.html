@@ -1,257 +1,1759 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 WBC 經典賽 - 終極球員資料庫</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            /* WBC 經典深藍背景 */
-            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
-            color: #f8fafc;
-            font-family: 'Noto Sans TC', sans-serif;
-            min-height: 100vh;
-        }
-        .font-roboto { font-family: 'Roboto', sans-serif; }
-        
-        /* WBC 幾何斜角與金屬質感設計 */
-        .wbc-card {
-            background: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
-            border-top: 2px solid #38bdf8;
-            border-bottom: 2px solid #ef4444;
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-            transition: all 0.3s ease;
-        }
-        .wbc-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.4);
-        }
-        
-        /* 細節視窗的金色點綴 */
-        .gold-accent { color: #fbbf24; }
-        .gold-border { border-color: #fbbf24; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>臺灣政治戰 v5 · Taiwan Political War</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════ CSS VARIABLES ═══════════════ */
+:root {
+  --gold:#e8b830;--gold2:#f5d060;--gold3:#c89018;--gold4:#7a5210;
+  --gg:rgba(232,184,48,.35);--gg2:rgba(232,184,48,.12);
+  --red:#c83030;--red2:#ff4444;--red3:rgba(200,48,48,.18);
+  --kmt:#1e4d9e;--kmt2:#5a90e8;--kmtg:rgba(30,77,158,.25);
+  --dpp:#1a7a3a;--dpp2:#42c868;--dppg:rgba(26,122,58,.25);
+  --tpp:#147878;--tpp2:#30d0d0;--tppg:rgba(20,120,120,.25);
+  --plr:#6a28a8;--plr2:#c060ff;--plrg:rgba(106,40,168,.25);
+  --bg0:#030508;--bg1:#070a12;--bg2:#0d1220;--bg3:#131a2e;--bg4:#1a2540;
+  --panel:rgba(13,18,32,.96);
+  --brd:rgba(232,184,48,.18);--brd2:rgba(232,184,48,.45);--brd3:rgba(232,184,48,.08);
+  --tx:#d8ceb8;--tx2:#9a8e78;--tx3:#58503e;--tx4:#2e2a22;
+  --sh:0 8px 48px rgba(0,0,0,.9);
+  --radius:2px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg0)}
+body{font-family:'Noto Sans TC',sans-serif;color:var(--tx);user-select:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg0)}
+::-webkit-scrollbar-thumb{background:var(--gold4);border-radius:2px}
+.screen{display:none;position:absolute;inset:0}
+.screen.active{display:flex}
 
-        /* 自定義捲軸 */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-    </style>
+/* ══ TITLE SCREEN ══ */
+#ts{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 160% 110% at 50% 70%,#0e1a2e 0%,#030508 65%);
+  overflow:hidden}
+#tc{position:absolute;inset:0;pointer-events:none;z-index:0}
+.t-wrap{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
+.t-crown{font-size:clamp(50px,9vw,96px);
+  filter:drop-shadow(0 0 60px rgba(232,184,48,.7)) drop-shadow(0 0 20px rgba(232,184,48,.5));
+  animation:crown-float 3s ease-in-out infinite;margin-bottom:8px}
+@keyframes crown-float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+.t-en{font-family:'Cinzel Decorative',serif;font-size:clamp(9px,1.6vw,18px);
+  color:var(--gold2);letter-spacing:.35em;margin-bottom:8px;opacity:.85}
+.t-zh{font-family:'Noto Serif TC',serif;font-size:clamp(38px,7vw,78px);font-weight:700;
+  letter-spacing:.18em;background:linear-gradient(170deg,#fff8e0 0%,var(--gold) 42%,var(--gold3) 68%,#5a3a08 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 24px rgba(232,184,48,.5));margin-bottom:5px}
+.t-sub{font-size:clamp(9px,1.2vw,12px);letter-spacing:.5em;color:var(--tx3);margin-bottom:54px}
+.t-divider{width:280px;height:1px;background:linear-gradient(90deg,transparent,var(--gold3),transparent);margin-bottom:36px}
+.t-btns{display:flex;flex-direction:column;gap:13px;align-items:center}
+.tbtn{padding:14px 56px;font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;
+  letter-spacing:.2em;cursor:pointer;border:none;outline:none;transition:all .25s;position:relative;overflow:hidden}
+.tbtn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);pointer-events:none}
+.tbtn-p{background:linear-gradient(135deg,var(--gold4),var(--gold3) 40%,var(--gold) 70%,var(--gold2));
+  color:#050710;clip-path:polygon(16px 0,100% 0,calc(100% - 16px) 100%,0 100%);
+  box-shadow:0 0 32px var(--gg),0 0 8px rgba(232,184,48,.2)}
+.tbtn-p:hover{transform:scale(1.05);box-shadow:0 0 52px rgba(232,184,48,.6),0 0 16px rgba(232,184,48,.3)}
+.tbtn-s{background:transparent;color:var(--gold);border:1px solid rgba(232,184,48,.3);
+  font-size:12px;padding:9px 38px;letter-spacing:.18em}
+.tbtn-s:hover{border-color:var(--gold);background:rgba(232,184,48,.06)}
+.t-deco{position:absolute;font-size:200px;opacity:.025;pointer-events:none;user-select:none;z-index:1}
+.t-deco1{top:-40px;left:-60px;transform:rotate(-20deg)}
+.t-deco2{bottom:-60px;right:-40px;transform:rotate(15deg)}
+
+/* ══ CREATE SCREEN ══ */
+#cs{flex-direction:column;align-items:center;background:var(--bg1);overflow-y:auto;padding:20px 14px 50px}
+.cw{width:100%;max-width:640px}
+.ch{text-align:center;margin-bottom:24px;padding-top:8px}
+.ch h1{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);letter-spacing:.16em;
+  text-shadow:0 0 20px var(--gg)}
+.ch p{font-size:10px;color:var(--tx3);letter-spacing:.22em;margin-top:4px}
+.cpanel{background:var(--bg2);border:1px solid var(--brd);margin-bottom:16px;
+  position:relative;overflow:hidden}
+.cpanel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.cpanel::after{content:'';position:absolute;top:2px;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,rgba(232,184,48,.02) 0%,transparent 40%);pointer-events:none}
+.cph{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.22em;
+  padding:12px 16px 10px;border-bottom:1px solid var(--brd3);display:flex;align-items:center;justify-content:space-between}
+.cpb{padding:14px 16px}
+.fr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.fr:last-child{margin-bottom:0}
+.fl{font-size:11px;color:var(--tx2);min-width:48px}
+.fi,.fsel{flex:1;background:var(--bg0);border:1px solid var(--brd);color:var(--tx);
+  padding:9px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fi:focus,.fsel:focus{border-color:var(--gold)}
+.fsel option{background:var(--bg1)}
+.pts-badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg0);
+  border:1px solid var(--brd);padding:3px 12px;font-size:11px}
+.pts-n{font-size:18px;font-weight:900;color:var(--gold)}
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.slbl{font-size:11px;color:var(--tx2);min-width:70px;display:flex;align-items:center;gap:5px}
+.sbtn{width:26px;height:26px;background:var(--bg0);border:1px solid var(--brd);color:var(--gold);
+  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sbtn:hover{background:rgba(232,184,48,.12);border-color:var(--gold)}
+.strack{flex:1;height:14px;background:var(--bg0);border:1px solid rgba(232,184,48,.12);position:relative}
+.sfill{height:100%;background:linear-gradient(90deg,var(--gold4),var(--gold3) 50%,var(--gold));transition:width .2s}
+.sval{font-size:13px;font-weight:700;color:var(--gold2);min-width:28px;text-align:center}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tcard{background:var(--bg0);border:1px solid var(--brd);padding:12px;cursor:pointer;
+  transition:all .2s;position:relative}
+.tcard:hover{border-color:var(--brd2);background:rgba(232,184,48,.04)}
+.tcard.sel{border-color:var(--gold);background:rgba(232,184,48,.06)}
+.tcard.sel::after{content:'✓';position:absolute;top:6px;right:8px;color:var(--gold);font-size:11px;font-weight:700}
+.tc-name{font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:4px}
+.tc-desc{font-size:10px;color:var(--tx2);line-height:1.55}
+.cbtns{display:flex;gap:10px;margin-top:16px}
+.cbtn{flex:1;padding:13px;font-family:'Noto Serif TC',serif;font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid var(--brd);background:var(--bg0);color:var(--tx2);
+  letter-spacing:.1em;transition:all .2s}
+.cbtn:hover{border-color:var(--gold);color:var(--gold)}
+.cbtn-p{flex:2;background:linear-gradient(135deg,var(--gold4),var(--gold3) 50%,var(--gold));
+  color:var(--bg0);border:none;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+.cbtn-p:hover{filter:brightness(1.1);transform:scale(1.02)}
+
+/* ══ MAP SELECT ══ */
+#ms{flex-direction:column;align-items:center;justify-content:center;background:var(--bg0);padding:10px}
+.ms-hdr{text-align:center;margin-bottom:12px}
+.ms-t{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);letter-spacing:.14em}
+.ms-s{font-size:10px;color:var(--tx3);letter-spacing:.22em;margin-top:3px}
+.ms-body{display:flex;gap:14px;width:100%;max-width:900px;align-items:flex-start}
+.ms-map{flex:1;display:flex;justify-content:center}
+.ms-info{width:250px;flex-shrink:0;background:var(--bg2);border:1px solid var(--brd);position:relative;min-height:420px}
+.ms-info::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+/* ══ GAME SCREEN ══ */
+#gs{flex-direction:column}
+
+/* HUD */
+.hud{display:flex;align-items:center;background:linear-gradient(180deg,var(--bg3),var(--bg2));
+  border-bottom:1px solid var(--brd);flex-shrink:0;height:54px;
+  box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.hud-avatar{width:38px;height:38px;margin:0 12px;
+  background:linear-gradient(135deg,var(--plr),var(--plr2));
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);flex-shrink:0}
+.hud-name{min-width:100px}
+.hud-pname{font-size:13px;font-weight:700;color:var(--gold2)}
+.hud-title{font-size:9px;color:var(--tx3);margin-top:1px}
+.hud-party{font-size:8px;padding:1px 6px;border:1px solid;margin-top:2px;
+  display:inline-block;letter-spacing:.04em}
+.hud-sep{width:1px;height:30px;background:var(--brd);margin:0 4px}
+.hud-res{display:flex;flex:1;height:100%}
+.hres{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 14px;border-right:1px solid var(--brd3);cursor:default;position:relative;min-width:68px}
+.hres:hover{background:rgba(232,184,48,.03)}
+.hres-val{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--gold);line-height:1}
+.hres-lbl{font-size:8px;color:var(--tx3);margin-top:2px;letter-spacing:.06em}
+.hres-ic{font-size:12px;margin-bottom:1px}
+.hud-actions{display:flex;align-items:center;gap:8px;padding:0 14px;border-left:1px solid var(--brd);margin-left:auto;flex-shrink:0}
+.turn-box{text-align:center}
+.turn-n{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--gold);line-height:1}
+.turn-l{font-size:8px;color:var(--tx3);letter-spacing:.16em}
+.end-btn{padding:8px 18px;background:linear-gradient(135deg,rgba(232,184,48,.15),rgba(232,184,48,.08));
+  border:1px solid var(--gold3);color:var(--gold);font-family:'Noto Serif TC',serif;
+  font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;
+  clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%)}
+.end-btn:hover{background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--bg0);
+  box-shadow:0 0 16px var(--gg)}
+
+/* LAYOUT */
+.game-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:174px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--brd);
+  display:flex;flex-direction:column;overflow-y:auto}
+.sb-section{border-bottom:1px solid var(--brd3);padding:6px 0}
+.sb-title{font-size:8px;letter-spacing:.24em;color:var(--tx3);padding:3px 12px 6px;
+  text-transform:uppercase}
+.nav-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 12px;
+  background:transparent;border:none;border-left:2px solid transparent;
+  color:var(--tx2);font-family:'Noto Sans TC',sans-serif;font-size:11px;
+  cursor:pointer;transition:all .14s;text-align:left}
+.nav-btn:hover{background:rgba(232,184,48,.05);color:var(--tx)}
+.nav-btn.active{background:rgba(232,184,48,.09);color:var(--gold);border-left-color:var(--gold)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+
+/* MAP AREA */
+.map-area{flex:1;position:relative;overflow:hidden;background:#040810;
+  display:flex;align-items:center;justify-content:center}
+#gsvg{position:absolute;inset:0;width:100%;height:100%}
+.map-legend{position:absolute;bottom:10px;left:10px;background:rgba(4,8,16,.9);
+  border:1px solid var(--brd);padding:8px 12px;pointer-events:none}
+.leg-title{font-size:7px;letter-spacing:.24em;color:var(--tx3);margin-bottom:5px}
+.leg-item{display:flex;align-items:center;gap:5px;margin-bottom:3px;font-size:9px;color:var(--tx2)}
+.leg-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0}
+.map-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(4,8,16,.88);border:1px solid var(--brd);padding:5px 14px;
+  font-size:9px;color:var(--tx3);letter-spacing:.1em;pointer-events:none;
+  opacity:0;transition:opacity .3s}
+.map-hint.show{opacity:1}
+
+/* RIGHT PANEL */
+.right-panel{width:248px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--brd);
+  display:flex;flex-direction:column;overflow-y:auto}
+.rp-empty{padding:20px;text-align:center;color:var(--tx3);font-size:11px;line-height:1.9;margin-top:20px}
+.terr-header{padding:14px;border-bottom:1px solid var(--brd3)}
+.terr-name{font-size:16px;font-weight:700;color:var(--gold2);margin-bottom:3px}
+.terr-owner{font-size:10px;color:var(--tx3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.terr-special{font-size:8px;background:rgba(232,184,48,.08);border:1px solid rgba(232,184,48,.18);
+  color:var(--gold3);padding:2px 7px;display:inline-block;letter-spacing:.06em;margin-bottom:6px}
+.stat-row{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.stat-lbl{font-size:9px;color:var(--tx3);min-width:42px}
+.stat-bar{flex:1;height:5px;background:var(--bg0);overflow:hidden}
+.stat-fill{height:100%;transition:width .4s}
+.stat-val{font-size:9px;color:var(--tx);min-width:22px;text-align:right}
+.garrison-row{display:flex;align-items:center;gap:5px;margin-top:8px;padding:6px 9px;
+  background:rgba(200,48,48,.07);border:1px solid rgba(200,48,48,.16);font-size:10px}
+
+/* ACTION BUTTONS */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:10px 12px}
+.act-btn{padding:9px 6px;background:var(--bg0);border:1px solid var(--brd);
+  color:var(--tx2);font-family:'Noto Sans TC',sans-serif;font-size:10px;
+  cursor:pointer;transition:all .14s;text-align:center;letter-spacing:.04em;line-height:1.5}
+.act-btn:hover{border-color:var(--gold2);color:var(--gold);background:rgba(232,184,48,.05)}
+.act-btn.danger{border-color:rgba(200,48,48,.3);color:var(--red)}
+.act-btn.danger:hover{border-color:var(--red);background:rgba(200,48,48,.08)}
+.act-btn.wide{grid-column:span 2}
+.act-btn.primary{background:linear-gradient(135deg,rgba(232,184,48,.12),rgba(232,184,48,.06));
+  border-color:var(--gold3);color:var(--gold)}
+
+/* GENERALS IN PANEL */
+.gen-section{padding:10px 12px}
+.gen-section-title{font-size:8px;letter-spacing:.2em;color:var(--tx3);margin-bottom:7px}
+.gen-card{display:flex;align-items:center;gap:7px;padding:7px;background:var(--bg0);
+  border:1px solid rgba(232,184,48,.09);margin-bottom:4px;cursor:pointer;transition:all .14s}
+.gen-card:hover{border-color:var(--gold3)}
+.gen-grade{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;border:1px solid;flex-shrink:0}
+.grade-s{color:#ff9000;border-color:#ff9000;background:rgba(255,144,0,.1)}
+.grade-a{color:#cc44ff;border-color:#cc44ff;background:rgba(204,68,255,.1)}
+.grade-b{color:#4a80d8;border-color:#4a80d8;background:rgba(74,128,216,.1)}
+.grade-c{color:#888;border-color:#666;background:rgba(128,128,128,.08)}
+.gen-info{flex:1;min-width:0}
+.gen-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gen-role{font-size:9px;color:var(--tx3)}
+
+/* LOG */
+.log-area{height:70px;background:var(--bg1);border-top:1px solid var(--brd);
+  padding:5px 14px;overflow-y:auto;flex-shrink:0}
+.log-line{font-size:9px;color:var(--tx3);line-height:1.65;padding:0}
+.log-turn{color:var(--gold3)}.log-warn{color:#d06030}.log-good{color:#40a060}
+.log-event{color:#9060d0}.log-war{color:var(--red2)}
+
+/* ══ BATTLE SCREEN ══ */
+#bs{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%,#180c24 0%,var(--bg0) 70%)}
+.battle-wrap{width:100%;max-width:680px;padding:16px}
+.battle-title{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold);
+  text-align:center;margin-bottom:20px;letter-spacing:.1em;
+  text-shadow:0 0 22px var(--gg)}
+.battle-sides{display:flex;align-items:stretch;gap:16px;margin-bottom:16px}
+.battle-side{flex:1;background:var(--bg2);border:1px solid var(--brd);
+  padding:16px;text-align:center;position:relative;overflow:hidden}
+.battle-side::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.side-p::before{background:linear-gradient(90deg,transparent,var(--plr2),transparent)}
+.side-e::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.battle-icon{font-size:32px;display:block;margin-bottom:8px}
+.battle-name{font-size:13px;font-weight:700;color:var(--gold2);margin-bottom:3px}
+.hp-bar{height:10px;background:var(--bg0);border:1px solid rgba(255,255,255,.07);margin:8px 0;overflow:hidden}
+.hp-fill{height:100%;transition:width .5s ease-out}
+.hp-player{background:linear-gradient(90deg,#1a6838,#34c868)}
+.hp-enemy{background:linear-gradient(90deg,#881818,#d84040)}
+.hp-low{background:linear-gradient(90deg,#600010,#ff2020)!important}
+.battle-troops{font-size:26px;font-weight:900;color:var(--tx);line-height:1}
+.battle-morale{margin-top:6px;font-size:9px;display:flex;align-items:center;justify-content:center;gap:4px}
+.battle-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:46px}
+.vs-text{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--red);
+  text-shadow:0 0 20px rgba(200,48,48,.7);animation:vs-pulse 1.6s ease-in-out infinite}
+@keyframes vs-pulse{0%,100%{opacity:1}50%{opacity:.5;text-shadow:0 0 40px rgba(200,48,48,.9)}}
+.battle-log{background:var(--bg2);border:1px solid var(--brd);
+  padding:10px 14px;height:88px;overflow-y:auto;margin-bottom:14px;font-size:10px;line-height:1.75}
+.battle-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.bat-btn{padding:11px 22px;font-family:'Noto Serif TC',serif;font-size:11px;font-weight:700;
+  letter-spacing:.1em;cursor:pointer;border:1px solid;transition:all .2s;
+  clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%)}
+.bat-btn:hover{transform:scale(1.05);filter:brightness(1.2)}
+.bat-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+.bat-atk{background:linear-gradient(135deg,#7a1010,var(--red));border-color:var(--red);color:#fff}
+.bat-def{background:var(--bg2);border-color:var(--kmt2);color:#7098e0}
+.bat-skl{background:linear-gradient(135deg,#38086a,#8822c8);border-color:#a030e0;color:#fff}
+.bat-ret{background:var(--bg0);border-color:var(--brd);color:var(--tx2)}
+
+/* ══ MODALS ══ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
+  align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--brd);width:100%;max-width:520px;
+  max-height:88vh;overflow-y:auto;position:relative}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal-head{padding:15px 18px 12px;border-bottom:1px solid var(--brd3);
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
+  background:var(--bg2);z-index:2}
+.modal-title{font-size:14px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif}
+.modal-close{background:none;border:none;color:var(--tx2);font-size:18px;cursor:pointer;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  transition:color .15s}
+.modal-close:hover{color:var(--tx)}
+.modal-body{padding:18px}
+
+/* NPC card in modal */
+.npc-header{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+.npc-avatar{width:60px;height:60px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;border:2px solid;flex-shrink:0}
+.npc-info{flex:1}
+.npc-name{font-size:18px;font-weight:700;color:var(--gold2);margin-bottom:3px}
+.npc-role{font-size:9px;color:var(--tx3);margin-bottom:5px}
+.npc-skill-tag{font-size:9px;background:rgba(232,184,48,.09);border:1px solid rgba(232,184,48,.2);
+  color:var(--gold3);padding:2px 8px;display:inline-block}
+.npc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px}
+.npc-stat{background:var(--bg0);border:1px solid rgba(232,184,48,.1);
+  padding:9px 6px;text-align:center}
+.npc-stat-val{font-size:20px;font-weight:900;color:var(--gold);display:block;line-height:1}
+.npc-stat-lbl{font-size:8px;color:var(--tx3);margin-top:2px}
+.loyalty-bar{height:6px;background:var(--bg0);border:1px solid rgba(232,184,48,.12);margin-bottom:3px}
+.loyalty-fill{height:100%;background:linear-gradient(90deg,var(--gold4),var(--gold));transition:width .4s}
+.modal-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.mbtn{padding:8px 14px;font-family:'Noto Sans TC',sans-serif;font-size:10px;font-weight:700;
+  cursor:pointer;border:1px solid var(--brd);background:var(--bg0);color:var(--tx2);transition:all .14s}
+.mbtn:hover{border-color:var(--gold2);color:var(--gold)}
+.mbtn-p{background:linear-gradient(135deg,var(--gold4),var(--gold3) 50%,var(--gold));color:var(--bg0);border:none}
+.mbtn-d{border-color:rgba(200,48,48,.35);color:var(--red)}
+.mbtn-d:hover{border-color:var(--red);background:rgba(200,48,48,.07)}
+
+/* Event modal */
+.ev-icon{font-size:48px;text-align:center;padding:20px;background:var(--bg0)}
+.ev-title{font-size:17px;font-weight:700;color:var(--gold);text-align:center;padding:0 20px 5px}
+.ev-text{font-size:11px;color:var(--tx2);line-height:1.8;padding:0 20px 14px;text-align:center}
+.ev-choices{padding:0 18px 18px;display:flex;flex-direction:column;gap:7px}
+.ev-choice{background:var(--bg0);border:1px solid var(--brd);color:var(--tx);
+  font-family:'Noto Sans TC',sans-serif;font-size:11px;padding:12px 14px;cursor:pointer;
+  text-align:left;transition:all .14s;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;width:100%}
+.ev-choice:hover{border-color:var(--brd2);color:var(--gold);background:rgba(232,184,48,.04)}
+.ev-fx{font-size:9px;color:var(--tx3);flex-shrink:0;text-align:right;line-height:1.4}
+
+/* Misc modal list items */
+.list-item{background:var(--bg0);border:1px solid var(--brd3);margin-bottom:5px;
+  padding:9px 12px;cursor:pointer;transition:all .14s}
+.list-item:hover{border-color:var(--brd2)}
+
+/* ══ SYSTEM OVERLAYS ══ */
+#skill-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:600;
+  align-items:center;justify-content:center;flex-direction:column}
+#skill-overlay.show{display:flex}
+.sk-anim{text-align:center;animation:sk-pop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes sk-pop{0%{transform:scale(.2) rotate(-15deg);opacity:0}100%{transform:scale(1);opacity:1}}
+.sk-icon{font-size:92px;display:block;margin-bottom:16px;filter:drop-shadow(0 0 36px var(--gold))}
+.sk-name{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:var(--gold);
+  text-shadow:0 0 40px var(--gg);margin-bottom:8px;letter-spacing:.12em}
+.sk-desc{font-size:12px;color:var(--tx2);max-width:320px;text-align:center}
+
+#turn-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:500;
+  align-items:center;justify-content:center;flex-direction:column;gap:8px}
+#turn-overlay.show{display:flex;animation:turn-flash 2.5s ease-in-out forwards}
+@keyframes turn-flash{0%{opacity:0}10%{opacity:1}82%{opacity:1}100%{opacity:0}}
+.turn-label{font-size:12px;letter-spacing:.45em;color:var(--tx3)}
+.turn-num{font-family:'Cinzel Decorative',serif;font-size:60px;font-weight:700;color:var(--gold);
+  text-shadow:0 0 56px var(--gg)}
+.turn-sub{font-size:10px;color:var(--tx3);letter-spacing:.2em;max-width:320px;text-align:center}
+
+#notif{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--bg2);border:1px solid var(--brd2);padding:9px 24px;font-size:11px;
+  font-weight:700;color:var(--gold);z-index:700;opacity:0;transition:all .3s;
+  pointer-events:none;text-align:center;min-width:180px;letter-spacing:.06em}
+#notif.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+#gameover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:800;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#gameover.show{display:flex}
+.go-title{font-family:'Cinzel',serif;font-size:30px;color:var(--red2);letter-spacing:.1em;
+  text-shadow:0 0 32px rgba(255,68,68,.6)}
+.go-sub{font-size:14px;color:var(--tx2)}
+.go-btn{padding:14px 48px;margin-top:12px;
+  background:linear-gradient(135deg,var(--gold4),var(--gold3) 50%,var(--gold));
+  color:var(--bg0);font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;
+  border:none;cursor:pointer;letter-spacing:.14em;
+  clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+
+/* ══ MISC HELPERS ══ */
+.bar-g{background:linear-gradient(90deg,#1a5828,#28b858)}
+.bar-y{background:linear-gradient(90deg,var(--gold4),var(--gold))}
+.bar-b{background:linear-gradient(90deg,#102868,#3870d0)}
+.bar-r{background:linear-gradient(90deg,#781828,#d84040)}
+.bar-p{background:linear-gradient(90deg,#380a78,#9030e0)}
+
+/* Tooltip */
+.tip{position:absolute;background:var(--bg3);border:1px solid var(--brd);
+  padding:5px 9px;font-size:9px;color:var(--tx2);z-index:999;pointer-events:none;
+  max-width:160px;line-height:1.5;white-space:normal}
+
+/* POLICY panel */
+.policy-item{background:var(--bg0);border:1px solid var(--brd3);padding:11px 12px;
+  margin-bottom:6px;cursor:pointer;transition:border-color .15s;position:relative}
+.policy-item:hover{border-color:var(--brd2)}
+.policy-item.active{border-color:var(--gold3);background:rgba(232,184,48,.04)}
+.policy-item.active::before{content:'▶';position:absolute;right:10px;top:50%;
+  transform:translateY(-50%);color:var(--gold3);font-size:10px}
+.pi-name{font-size:11px;font-weight:700;color:var(--gold2);margin-bottom:3px}
+.pi-desc{font-size:9px;color:var(--tx2);line-height:1.5}
+.pi-cost{font-size:9px;color:var(--tx3);margin-top:3px}
+
+/* Intel report */
+.intel-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:var(--bg0);border-bottom:1px solid var(--brd3);font-size:10px}
+.intel-row:last-child{border-bottom:none}
+
+/* Relationship badges */
+.rel-ally{color:#30d070;border-color:#30d070}
+.rel-neutral{color:#888;border-color:#555}
+.rel-war{color:var(--red2);border-color:var(--red)}
+.rel-badge{font-size:9px;padding:1px 6px;border:1px solid;display:inline-block}
+</style>
 </head>
-<body class="p-4 md:p-8">
-
-    <header class="max-w-7xl mx-auto mb-12 text-center relative">
-        <div class="absolute inset-0 bg-blue-500 blur-[100px] opacity-20 z-0 pointer-events-none"></div>
-        <h1 class="text-5xl md:text-7xl font-roboto font-black italic tracking-wider mb-2 relative z-10 drop-shadow-lg">
-            WORLD BASEBALL <span class="text-red-500">CLASSIC</span> 2026
-        </h1>
-        <p class="text-xl md:text-2xl text-blue-300 font-bold mb-8 relative z-10">THE ULTIMATE ROSTER DATABASE</p>
-        
-        <div class="flex flex-wrap justify-center gap-3 relative z-10" id="team-buttons">
-            <button onclick="loadTeam('Taiwan')" class="team-btn px-8 py-3 bg-blue-800 hover:bg-blue-600 border border-blue-400 font-bold text-lg rounded shadow-[0_0_15px_rgba(59,130,246,0.5)] transition">中華臺北</button>
-            <button onclick="loadTeam('Japan')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-red-800 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">日本武士</button>
-            <button onclick="loadTeam('USA')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-blue-900 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">美國夢幻</button>
-            <button onclick="loadTeam('Dominican')" class="team-btn px-8 py-3 bg-slate-800 hover:bg-teal-800 border border-gray-500 hover:border-red-500 font-bold text-lg rounded transition">多明尼加</button>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="player-grid">
-        <div class="col-span-full text-center text-gray-400 py-10">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            正在載入頂級球員資料庫...
-        </div>
-    </main>
-
-    <div id="player-modal" class="fixed inset-0 bg-black/90 hidden z-50 overflow-y-auto">
-        <div class="min-h-screen px-4 text-center">
-            <span class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
-            
-            <div class="inline-block w-full max-w-5xl text-left align-middle transition-all transform bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden my-8">
-                
-                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-4xl font-black z-10">&times;</button>
-                
-                <div class="flex flex-col md:flex-row h-full">
-                    <div class="w-full md:w-1/3 relative bg-gradient-to-b from-slate-800 to-black p-6 border-r border-slate-700">
-                        <div class="absolute top-0 left-0 text-[150px] font-roboto font-black text-white/5 -mt-10 -ml-4" id="modal-bg-number"></div>
-                        
-                        <div class="relative z-10 flex flex-col items-center h-full">
-                            <div class="w-48 h-48 bg-slate-800 rounded-full border-4 border-blue-500 mb-6 flex items-center justify-center overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                                <span class="text-sm text-center text-gray-500" id="modal-img-hint">球員圖片<br>(檔名對應)</span>
-                            </div>
-                            
-                            <h2 id="modal-name" class="text-4xl font-black mb-1 text-center"></h2>
-                            <p id="modal-org" class="text-blue-400 font-bold text-lg mb-4 text-center"></p>
-                            
-                            <div class="flex gap-4 mb-6">
-                                <span class="px-3 py-1 bg-slate-700 rounded text-sm font-bold" id="modal-role"></span>
-                                <span class="px-3 py-1 bg-red-900/50 text-red-300 border border-red-700 rounded text-sm font-bold" id="modal-position"></span>
-                            </div>
-
-                            <div class="w-full bg-slate-800/50 rounded-lg p-4 mt-auto">
-                                <p class="text-sm text-gray-400 flex justify-between mb-2"><span>身高/體重：</span><span class="text-white font-bold" id="modal-hw"></span></p>
-                                <p class="text-sm text-gray-400 flex justify-between mb-2"><span>出生日期：</span><span class="text-white font-bold" id="modal-birth"></span></p>
-                                <p class="text-sm text-gray-400 flex justify-between"><span>背號：</span><span class="text-white font-bold text-xl" id="modal-number-display"></span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-full md:w-2/3 p-6 md:p-8 bg-slate-900 overflow-y-auto max-h-[80vh]">
-                        
-                        <div class="mb-8">
-                            <h3 class="text-2xl font-black border-l-4 gold-border pl-3 mb-4 flex items-center gap-2">
-                                <span class="text-xl">📋</span> 2026 戰力分析 / 球探報告
-                            </h3>
-                            <p id="modal-scouting" class="text-gray-300 leading-relaxed text-justify bg-slate-800/30 p-4 rounded-lg border border-slate-700"></p>
-                        </div>
-
-                        <div class="mb-8">
-                            <h3 class="text-2xl font-black border-l-4 border-blue-500 pl-3 mb-4 flex items-center gap-2">
-                                <span class="text-xl">🏆</span> 生涯榮譽榜
-                            </h3>
-                            <div id="modal-accolades" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                </div>
-                        </div>
-
-                        <div>
-                            <h3 class="text-2xl font-black border-l-4 border-red-500 pl-3 mb-4 flex items-center gap-2">
-                                <span class="text-xl">📊</span> 關鍵數據表現
-                            </h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="bg-slate-800 text-gray-400 text-sm uppercase font-roboto">
-                                        <tr id="stats-header">
-                                            </tr>
-                                    </thead>
-                                    <tbody class="text-white font-roboto font-bold text-lg border-b border-slate-700" id="stats-body">
-                                        </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
+<body>
+<!-- TITLE -->
+<div id="ts" class="screen active">
+  <canvas id="tc"></canvas>
+  <div class="t-deco t-deco1">⚔</div>
+  <div class="t-deco t-deco2">🗺</div>
+  <div class="t-wrap">
+    <div class="t-crown">👑</div>
+    <div class="t-en">TAIWAN POLITICAL WAR</div>
+    <div class="t-zh">臺灣政治戰</div>
+    <div class="t-sub">亂世崛起 · 爭霸天下</div>
+    <div class="t-divider"></div>
+    <div class="t-btns">
+      <button class="tbtn tbtn-p" onclick="G.show('cs')">⚔ 開始新遊戲</button>
+      <button class="tbtn tbtn-s" onclick="G.load()">📂 繼續遊戲</button>
     </div>
+  </div>
+</div>
 
-    <script>
-        let allPlayersData = [];
+<!-- CREATE -->
+<div id="cs" class="screen">
+<div class="cw">
+  <div class="ch"><h1>⚔ 創建角色</h1><p>打造你的政治傳奇</p></div>
+  <div class="cpanel">
+    <div class="cph">👤 基本資料</div>
+    <div class="cpb">
+      <div class="fr"><span class="fl">姓名</span><input class="fi" id="cn" placeholder="你的名字" maxlength="8"></div>
+      <div class="fr"><span class="fl">政黨</span>
+        <select class="fsel" id="cpty" onchange="G.onPartyChange()">
+          <option value="new">🌟 建立新政黨（自訂）</option>
+          <option value="kmt">🔵 中國國民黨</option>
+          <option value="dpp">🟢 民主進步黨</option>
+          <option value="tpp">⚪ 台灣民眾黨</option>
+          <option value="ind">⚫ 無黨籍獨立勢力</option>
+        </select>
+      </div>
+      <div class="fr" id="pnrow" style="display:none"><span class="fl">黨名</span><input class="fi" id="cpn" placeholder="自訂政黨名稱" maxlength="10"></div>
+    </div>
+  </div>
+  <div class="cpanel">
+    <div class="cph"><span>📊 能力點分配</span><div class="pts-badge">剩餘 <span class="pts-n" id="pts-left">15</span> 點</div></div>
+    <div class="cpb" id="stat-rows"></div>
+  </div>
+  <div class="cpanel">
+    <div class="cph">✨ 天賦技能（選一）</div>
+    <div class="cpb"><div class="tgrid" id="talent-grid"></div></div>
+  </div>
+  <div class="cbtns">
+    <button class="cbtn" onclick="G.show('ts')">← 返回</button>
+    <button class="cbtn cbtn-p" onclick="G.startGame()">出征！⚔</button>
+  </div>
+</div>
+</div>
 
-        // 讀取外部 JSON 檔案
-        async function fetchPlayersData() {
-            try {
-                // 這裡我們預期會有一個 players.json 檔案
-                const response = await fetch('players.json');
-                if (!response.ok) throw new Error('找不到 players.json 檔案！');
-                allPlayersData = await response.json();
-                
-                // 預設載入中華隊
-                loadTeam('Taiwan');
-            } catch (error) {
-                console.error("讀取資料失敗:", error);
-                document.getElementById('player-grid').innerHTML = `
-                    <div class="col-span-full text-center py-10">
-                        <p class="text-red-400 text-xl font-bold mb-4">⚠️ 無法載入資料庫 (players.json)</p>
-                        <p class="text-gray-400">因為目前是直接雙擊開啟 HTML，瀏覽器基於安全性可能會阻擋讀取本地 JSON。<br>
-                        請在 VS Code 中使用「Live Server」套件開啟，或是等待我為你生成包含在檔案內的測試版資料。</p>
-                    </div>
-                `;
-            }
+<!-- MAP SELECT -->
+<div id="ms" class="screen">
+  <div class="ms-hdr"><div class="ms-t">🗺 選擇初始根據地</div><div class="ms-s">點選地圖縣市 · 作為你的起點</div></div>
+  <div class="ms-body">
+    <div class="ms-map"><svg id="msvg" viewBox="118 0 292 522" style="height:min(80vh,560px);width:auto;display:block;cursor:pointer" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="ms-info" id="ms-info"><div style="padding:36px 16px;text-align:center;color:var(--tx3);font-size:11px;line-height:2">👆<br><br>點選左側地圖<br>選擇你的根據地</div></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="gs" class="screen">
+  <div class="hud">
+    <div class="hud-avatar">👑</div>
+    <div class="hud-name">
+      <div class="hud-pname" id="h-name">領主</div>
+      <div class="hud-title" id="h-title">初出茅廬</div>
+      <div class="hud-party" id="h-party" style="border-color:var(--gold3);color:var(--gold)">新勢力</div>
+    </div>
+    <div class="hud-sep"></div>
+    <div class="hud-res">
+      <div class="hres" title="政治獻金"><div class="hres-ic">💰</div><div class="hres-val" id="h-gold">500</div><div class="hres-lbl">獻金</div></div>
+      <div class="hres" title="軍糧儲備"><div class="hres-ic">🌾</div><div class="hres-val" id="h-food">300</div><div class="hres-lbl">軍糧</div></div>
+      <div class="hres" title="總兵力"><div class="hres-ic">⚔️</div><div class="hres-val" id="h-troops">1000</div><div class="hres-lbl">兵力</div></div>
+      <div class="hres" title="民意支持率"><div class="hres-ic">❤️</div><div class="hres-val" id="h-approve">55%</div><div class="hres-lbl">民心</div></div>
+      <div class="hres" title="控制縣市數"><div class="hres-ic">🏛️</div><div class="hres-val" id="h-terr">1</div><div class="hres-lbl">縣市</div></div>
+      <div class="hres" title="政治聲望"><div class="hres-ic">⭐</div><div class="hres-val" id="h-fame">0</div><div class="hres-lbl">聲望</div></div>
+    </div>
+    <div class="hud-actions">
+      <div class="turn-box"><div class="turn-n" id="h-turn">1</div><div class="turn-l">回合</div></div>
+      <button class="end-btn" onclick="G.endTurn()">⏭ 結束回合</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="sidebar">
+      <div class="sb-section"><div class="sb-title">版圖</div>
+        <button class="nav-btn active" id="nb-map" onclick="G.nav('map',this)"><span class="nav-icon">🗺️</span>臺灣地圖</button>
+        <button class="nav-btn" onclick="G.nav('myterr',this)"><span class="nav-icon">🏯</span>我的領地</button>
+      </div>
+      <div class="sb-section"><div class="sb-title">軍政</div>
+        <button class="nav-btn" onclick="G.nav('gens',this)"><span class="nav-icon">👥</span>武將名冊</button>
+        <button class="nav-btn" onclick="G.nav('recruit',this)"><span class="nav-icon">📣</span>招募人才</button>
+        <button class="nav-btn" onclick="G.nav('policy',this)"><span class="nav-icon">📜</span>政策法令</button>
+      </div>
+      <div class="sb-section"><div class="sb-title">發展</div>
+        <button class="nav-btn" onclick="G.nav('tech',this)"><span class="nav-icon">💻</span>網軍科技</button>
+        <button class="nav-btn" onclick="G.nav('intel',this)"><span class="nav-icon">🔍</span>情報中心</button>
+      </div>
+      <div class="sb-section"><div class="sb-title">外交</div>
+        <button class="nav-btn" onclick="G.nav('diplo',this)"><span class="nav-icon">🤝</span>外交談判</button>
+        <button class="nav-btn" onclick="G.nav('rank',this)"><span class="nav-icon">📊</span>勢力排行</button>
+      </div>
+      <div class="sb-section"><div class="sb-title">系統</div>
+        <button class="nav-btn" onclick="G.save()"><span class="nav-icon">💾</span>存檔</button>
+        <button class="nav-btn" onclick="G.show('ts')"><span class="nav-icon">🚪</span>主選單</button>
+      </div>
+    </div>
+    <div class="map-area">
+      <svg id="gsvg" viewBox="118 0 292 522" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="map-legend">
+        <div class="leg-title">勢力圖例</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#3d1f5a"></div>你的勢力</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#1a2855"></div>國民黨</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#0e2e18"></div>民進黨</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#0a2428"></div>民眾黨</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#1c1c28"></div>中立</div>
+      </div>
+      <div class="map-hint" id="map-hint">📌 點選目標縣市完成調兵</div>
+    </div>
+    <div class="right-panel" id="rp"><div class="rp-empty">👆<br><br>點選地圖縣市<br>查看詳細資訊</div></div>
+  </div>
+  <div class="log-area" id="log"></div>
+</div>
+
+<!-- BATTLE -->
+<div id="bs" class="screen">
+  <div class="battle-wrap">
+    <div class="battle-title" id="bat-title">⚔️ 出征</div>
+    <div class="battle-sides">
+      <div class="battle-side side-p">
+        <span class="battle-icon">👑</span>
+        <div class="battle-name" id="bat-pname">你</div>
+        <div class="hp-bar"><div class="hp-fill hp-player" id="bat-php" style="width:100%"></div></div>
+        <div class="battle-troops" id="bat-ptroops">0</div>
+        <div style="font-size:8px;color:var(--tx3);margin-top:2px">兵力</div>
+        <div class="battle-morale" id="bat-pmoral">⬆ 士氣旺盛</div>
+      </div>
+      <div class="battle-vs"><div class="vs-text">VS</div></div>
+      <div class="battle-side side-e">
+        <span class="battle-icon" id="bat-eicon">🔴</span>
+        <div class="battle-name" id="bat-ename">敵軍</div>
+        <div class="hp-bar"><div class="hp-fill hp-enemy" id="bat-ehp" style="width:100%"></div></div>
+        <div class="battle-troops" id="bat-etroops">0</div>
+        <div style="font-size:8px;color:var(--tx3);margin-top:2px">兵力</div>
+        <div class="battle-morale" id="bat-emoral" style="color:var(--red)">⚔ 嚴陣以待</div>
+      </div>
+    </div>
+    <div class="battle-log" id="bat-log"></div>
+    <div class="battle-actions">
+      <button class="bat-btn bat-atk" id="bat-a" onclick="G.bact('atk')">⚔ 強攻</button>
+      <button class="bat-btn bat-def" id="bat-d" onclick="G.bact('def')">🛡 固守反擊</button>
+      <button class="bat-btn bat-skl" id="bat-s" onclick="G.bact('skl')">✨ 大絕招</button>
+      <button class="bat-btn bat-ret" onclick="G.bret()">🏃 撤退</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="ov-npc"><div class="modal"><div class="modal-head"><div class="modal-title" id="npc-t">武將</div><button class="modal-close" onclick="G.cm('ov-npc')">✕</button></div><div class="modal-body" id="npc-b"></div></div></div>
+<div class="overlay" id="ov-event"><div class="modal"><div class="ev-icon" id="ev-icon">📰</div><div class="ev-title" id="ev-title">事件</div><div class="ev-text" id="ev-text"></div><div class="ev-choices" id="ev-choices"></div></div></div>
+<div class="overlay" id="ov-scheme"><div class="modal"><div class="modal-head"><div class="modal-title">🕵️ 計謀</div><button class="modal-close" onclick="G.cm('ov-scheme')">✕</button></div><div class="modal-body" id="scheme-b"></div></div></div>
+<div class="overlay" id="ov-main"><div class="modal" style="max-width:580px"><div class="modal-head"><div class="modal-title" id="main-t">資訊</div><button class="modal-close" onclick="G.cm('ov-main')">✕</button></div><div class="modal-body" id="main-b"></div></div></div>
+
+<!-- SYSTEM -->
+<div id="skill-overlay"><div class="sk-anim"><span class="sk-icon" id="sk-icon">⚡</span><div class="sk-name" id="sk-name">大絕招！</div><div class="sk-desc" id="sk-desc"></div></div></div>
+<div id="turn-overlay"><div class="turn-label">第</div><div class="turn-num" id="to-num">2</div><div class="turn-label">回合</div><div class="turn-sub" id="to-sub"></div></div>
+<div id="notif"></div>
+<div id="gameover"><div class="go-title" id="go-title">💀 政治生涯終結</div><div class="go-sub" id="go-sub">你已失去所有領地</div><button class="go-btn" onclick="document.getElementById('gameover').classList.remove('show');G.show('ts')">返回主選單</button></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// TAIWAN SVG MAP — Real administrative boundaries
+// ViewBox 0 0 400 522, displayed cropped to 118 0 292 522
+// ══════════════════════════════════════════════════════
+const TPATHS = {
+  keelung:  "M282,44 L298,38 L315,50 L311,68 L295,74 L278,62 L276,50 Z",
+  taipei:   "M242,58 L268,48 L282,56 L282,44 L278,62 L295,74 L289,94 L269,104 L248,108 L238,90 L238,68 Z",
+  newtaipei:"M195,38 L242,28 L268,48 L242,58 L238,68 L238,90 L226,108 L204,118 L182,110 L161,100 L149,82 L153,56 L172,40 Z",
+  taoyuan:  "M149,82 L161,100 L182,110 L186,132 L166,148 L143,152 L121,140 L115,120 L121,100 L135,88 Z",
+  hsinchuC: "M121,140 L137,136 L145,148 L139,162 L123,164 L113,154 L113,140 Z",
+  hsinchuX: "M115,120 L121,140 L113,140 L113,154 L97,162 L81,150 L75,132 L89,118 L108,116 Z",
+  yilan:    "M311,68 L324,62 L350,58 L368,80 L366,116 L344,142 L320,148 L303,134 L293,110 L295,86 L289,94 L295,74 Z",
+  miaoli:   "M75,132 L89,118 L115,120 L121,140 L113,154 L97,162 L81,164 L69,176 L55,170 L49,152 L57,136 Z",
+  taichung: "M69,176 L81,164 L97,162 L113,154 L123,164 L145,148 L166,148 L176,170 L176,202 L159,226 L135,240 L111,244 L89,232 L71,212 L63,194 Z",
+  hualien:  "M303,134 L320,148 L344,142 L366,116 L382,128 L388,172 L386,222 L372,264 L351,284 L333,286 L317,274 L303,248 L299,204 L291,174 L293,148 Z",
+  changhua: "M71,212 L89,232 L111,244 L113,268 L97,288 L77,290 L59,276 L51,254 L57,234 Z",
+  nantou:   "M111,244 L135,240 L159,226 L176,202 L198,214 L207,244 L203,278 L187,298 L165,306 L145,302 L125,288 L113,268 Z",
+  yunlin:   "M51,254 L59,276 L77,290 L81,314 L65,330 L45,326 L33,310 L35,286 L43,266 Z",
+  chiayiC:  "M83,326 L95,322 L103,336 L95,350 L83,350 L77,338 Z",
+  chiayiX:  "M45,326 L65,330 L83,326 L95,322 L103,336 L95,350 L83,350 L89,368 L73,378 L51,372 L35,354 L33,332 Z",
+  taitung:  "M317,274 L333,286 L351,284 L363,304 L365,356 L355,394 L333,422 L309,436 L289,432 L273,412 L271,370 L279,328 L289,302 Z",
+  tainan:   "M35,354 L51,372 L73,378 L89,368 L103,356 L109,372 L107,402 L91,420 L67,430 L43,422 L25,402 L21,378 Z",
+  kaohsiung:"M67,430 L91,420 L107,402 L109,372 L125,380 L137,402 L145,432 L137,460 L115,480 L89,486 L65,474 L49,454 L43,438 Z",
+  pingtung: "M115,480 L137,460 L145,432 L161,430 L183,440 L191,464 L189,498 L171,520 L147,530 L123,528 L103,510 L97,494 Z",
+};
+
+// ══════════════════════════════════════════════════════
+// TERRITORY DATA
+// ══════════════════════════════════════════════════════
+const TD_BASE = {
+  keelung:  {name:'基隆市', cx:295,cy:58,  icon:'⚓',special:'港口城市',   owner:'kmt', agri:28,comm:65,sec:58,pop:58,def:70,troops:850,  desc:'東北角海港門戶，港口貿易加成。每回合可從海路援軍。'},
+  taipei:   {name:'臺北市', cx:263,cy:82,  icon:'🏙',special:'首善之區',   owner:'dpp', agri:42,comm:95,sec:74,pop:70,def:88,troops:2400, desc:'政治權力核心。商業收入翻倍，招募費用-20%。'},
+  newtaipei:{name:'新北市', cx:207,cy:78,  icon:'🌆',special:'衛星都市',   owner:'kmt', agri:57,comm:76,sec:64,pop:64,def:75,troops:2000, desc:'環繞首都，人口最多縣市。駐軍自然補充+30%。'},
+  taoyuan:  {name:'桃園市', cx:150,cy:122, icon:'✈',special:'航空樞紐',   owner:'none',agri:64,comm:74,sec:68,pop:65,def:64,troops:1200, desc:'桃園國際機場，外資湧入。每回合外交成功率+15%。'},
+  hsinchuC: {name:'新竹市', cx:127,cy:152, icon:'💻',special:'矽盾之都',   owner:'none',agri:34,comm:92,sec:76,pop:72,def:60,troops:900,  desc:'台積電大本營。控制此地計謀成功率+25%，科技研發費-30%。'},
+  hsinchuX: {name:'新竹縣', cx:93, cy:138, icon:'🌾',special:'客家重鎮',   owner:'none',agri:68,comm:62,sec:60,pop:60,def:55,troops:700,  desc:'農業與客家文化重地。農業產出+15%。'},
+  yilan:    {name:'宜蘭縣', cx:336,cy:104, icon:'🏔',special:'蘭陽平原',   owner:'dpp', agri:82,comm:52,sec:62,pop:68,def:50,troops:700,  desc:'太平洋門戶，農業豐饒。每回合糧食+100。'},
+  miaoli:   {name:'苗栗縣', cx:75, cy:153, icon:'🛢',special:'石油之鄉',   owner:'none',agri:74,comm:46,sec:57,pop:57,def:48,troops:580,  desc:'石油天然氣資源。每回合獻金額外+60。'},
+  taichung: {name:'臺中市', cx:125,cy:202, icon:'🏭',special:'工業重鎮',   owner:'kmt', agri:62,comm:84,sec:68,pop:65,def:80,troops:2100, desc:'中部工業中心。徵兵效率+30%，可生產重型裝備。'},
+  hualien:  {name:'花蓮縣', cx:344,cy:214, icon:'🦅',special:'太魯閣',     owner:'kmt', agri:76,comm:48,sec:58,pop:60,def:52,troops:650,  desc:'花東縱谷，地形易守難攻。防禦加算+20。'},
+  changhua: {name:'彰化縣', cx:83, cy:256, icon:'🌻',special:'台灣穀倉',   owner:'none',agri:90,comm:54,sec:62,pop:68,def:48,troops:620,  desc:'台灣農業大縣。控制此地全域糧食產出+15%。'},
+  nantou:   {name:'南投縣', cx:163,cy:268, icon:'⛰',special:'中央山脈',   owner:'none',agri:72,comm:42,sec:54,pop:60,def:46,troops:480,  desc:'唯一內陸縣，山地地形。防禦力額外+15，難以攻克。'},
+  yunlin:   {name:'雲林縣', cx:59, cy:294, icon:'🌽',special:'農業大縣',   owner:'none',agri:94,comm:40,sec:50,pop:62,def:40,troops:450,  desc:'嘉南平原北緣。每回合糧食+150，農業最高。'},
+  chiayiC:  {name:'嘉義市', cx:90, cy:338, icon:'🎭',special:'文化古都',   owner:'none',agri:46,comm:66,sec:62,pop:66,def:52,troops:340,  desc:'台灣小巴黎。招募武將成功率+20%，魅力加成。'},
+  chiayiX:  {name:'嘉義縣', cx:63, cy:352, icon:'🌲',special:'阿里山',     owner:'none',agri:80,comm:46,sec:54,pop:60,def:42,troops:390,  desc:'阿里山觀光聖地。每回合獻金+80，糧食+60。'},
+  taitung:  {name:'臺東縣', cx:322,cy:360, icon:'🌾',special:'後山淨土',   owner:'none',agri:72,comm:40,sec:51,pop:58,def:44,troops:350,  desc:'台灣後山，天然屏障。農業豐富，後勤補給優。'},
+  tainan:   {name:'臺南市', cx:69, cy:394, icon:'🏛',special:'民主聖地',   owner:'dpp', agri:67,comm:74,sec:68,pop:78,def:72,troops:1700, desc:'台灣歷史文化之都。民心自然回復+5/回合，計謀抵抗+20%。'},
+  kaohsiung:{name:'高雄市', cx:95, cy:452, icon:'🚢',special:'工業港都',   owner:'none',agri:60,comm:82,sec:69,pop:72,def:76,troops:1800, desc:'最大港口城市，重工業核心。徵兵上限+500，兵力補充快。'},
+  pingtung: {name:'屏東縣', cx:147,cy:492, icon:'🌴',special:'熱帶農業',   owner:'none',agri:78,comm:46,sec:52,pop:62,def:42,troops:400,  desc:'最南端縣份，熱帶農業。農業效率最高，農糧+20%。'},
+};
+
+// ══════════════════════════════════════════════════════
+// NPCS — 30 politicians, diverse grades
+// ══════════════════════════════════════════════════════
+const NPCS=[
+  {id:'n01',name:'韓國瑜',  grade:'A',icon:'🐟',party:'kmt',role:'前高雄市長', cmd:72,force:68,intel:55,pol:70,charm:92,  skill:'愛情摩天輪',sd:'友軍士氣+35%，敵方計謀成功率-20%',        desc:'藍波草根天王，超高魅力，群眾動員力無與倫比。'},
+  {id:'n02',name:'柯文哲',  grade:'S',icon:'🔬',party:'tpp',role:'民眾黨主席', cmd:70,force:60,intel:96,pol:78,charm:72,  skill:'數據治理',  sd:'計謀成功率+60%，每回合情報+3',               desc:'前外科醫師，以理性數據治國，智力台灣第一。'},
+  {id:'n03',name:'賴清德',  grade:'S',icon:'👔',party:'dpp',role:'現任總統',   cmd:78,force:68,intel:85,pol:96,charm:82,  skill:'台灣主體', sd:'外交成功率+80%，佔領縣市民心+10',            desc:'現任中華民國總統，民主進步黨旗手。'},
+  {id:'n04',name:'蔡英文',  grade:'A',icon:'💙',party:'dpp',role:'前總統',     cmd:75,force:65,intel:88,pol:90,charm:82,  skill:'民主台灣', sd:'國際形象+80，國防力+15%',                     desc:'首位女性總統，以穩健著稱。'},
+  {id:'n05',name:'馬英九',  grade:'A',icon:'⚖',party:'kmt',role:'前總統',     cmd:68,force:58,intel:80,pol:88,charm:70,  skill:'九二共識', sd:'兩岸貿易收入+40%，但民心-5',                  desc:'哈佛法學博士，以清廉與法治形象著稱。'},
+  {id:'n06',name:'蘇貞昌',  grade:'A',icon:'🌀',party:'dpp',role:'前行政院長', cmd:75,force:65,intel:78,pol:88,charm:70,  skill:'強颱來了', sd:'行政效率+30%，緊急動員額外+400兵',            desc:'以硬派風格著稱的老練政治人物，抗壓性強。'},
+  {id:'n07',name:'侯友宜',  grade:'A',icon:'🛡',party:'kmt',role:'新北市長',   cmd:82,force:77,intel:65,pol:80,charm:72,  skill:'鐵血警察', sd:'治安+25，防禦力+18%，城防不跌破50',          desc:'前警政署長，強硬執法，城防能力台灣最強。'},
+  {id:'n08',name:'盧秀燕',  grade:'A',icon:'🌸',party:'kmt',role:'臺中市長',   cmd:68,force:55,intel:72,pol:86,charm:86,  skill:'清淨台中', sd:'民心+8/回合，臺中系縣市民心額外+5',          desc:'台中市長，最高魅力之一，親民政策廣受好評。'},
+  {id:'n09',name:'陳其邁',  grade:'A',icon:'💚',party:'dpp',role:'高雄市長',   cmd:65,force:55,intel:74,pol:82,charm:80,  skill:'高雄速度', sd:'建設效率+60%，建設費用-25%',                  desc:'高雄市長，推動快速發展，建設能力一流。'},
+  {id:'n10',name:'王金平',  grade:'A',icon:'🕊',party:'kmt',role:'前立法院長', cmd:70,force:55,intel:80,pol:90,charm:85,  skill:'百年老店', sd:'跨黨派談判+50%，外交永遠不失敗',             desc:'台灣政壇不倒翁，人脈無可比擬。'},
+  {id:'n11',name:'蕭美琴',  grade:'A',icon:'🌏',party:'dpp',role:'現任副總統', cmd:70,force:60,intel:86,pol:82,charm:80,  skill:'外交天后', sd:'美日關係+外援每回合+200獻金，計謀不被識破', desc:'現任副總統，台灣最強外交官。'},
+  {id:'n12',name:'郭台銘',  grade:'A',icon:'💰',party:'ind',role:'鴻海創辦人', cmd:66,force:62,intel:78,pol:72,charm:80,  skill:'商業帝國', sd:'每回合額外+300獻金，招募時費用-40%',          desc:'全球最大電子製造商創辦人，財力驚人。'},
+  {id:'n13',name:'黃國昌',  grade:'B',icon:'🔥',party:'tpp',role:'立法院長',   cmd:62,force:68,intel:84,pol:74,charm:78,  skill:'議場咆哮', sd:'敵方士氣-30%，計謀被識破時反損敵方',         desc:'太陽花世代議場戰士，最強口才之一。'},
+  {id:'n14',name:'朱立倫',  grade:'A',icon:'🔵',party:'kmt',role:'國民黨主席', cmd:72,force:58,intel:72,pol:85,charm:68,  skill:'藍天再起', sd:'KMT系縣市招募費-30%，藍軍忠誠不跌破60',    desc:'國民黨現任黨主席，黨務運作能手。'},
+  {id:'n15',name:'高嘉瑜',  grade:'B',icon:'💃',party:'dpp',role:'立法委員',   cmd:52,force:52,intel:68,pol:62,charm:90,  skill:'媒體寵兒', sd:'民心+4/回合，每回合有30%機率引發有利事件',   desc:'活潑個性，媒體魅力超群，粉絲群龐大。'},
+  {id:'n16',name:'郝柏村',  grade:'A',icon:'🎖',party:'kmt',role:'前行政院長', cmd:90,force:87,intel:76,pol:78,charm:62,  skill:'鐵漢將軍', sd:'戰鬥力+45%，出征兵力可多送15%',              desc:'前國防部長與參謀總長，軍事最強將領。'},
+  {id:'n17',name:'蔣萬安',  grade:'B',icon:'🏙',party:'kmt',role:'臺北市長',   cmd:64,force:52,intel:72,pol:80,charm:76,  skill:'世代傳承', sd:'北部縣市民心+10，年輕族群動員+30%',          desc:'第四代蔣家人，KMT新生代旗手。'},
+  {id:'n18',name:'林飛帆',  grade:'B',icon:'✊',party:'dpp',role:'社運領袖',   cmd:58,force:62,intel:74,pol:68,charm:84,  skill:'佔領廣場', sd:'年輕族群動員+40%，抗議事件收益翻倍',         desc:'太陽花運動領袖，民主運動象徵人物。'},
+  {id:'n19',name:'李登輝',  grade:'S',icon:'💎',party:'dpp',role:'民主之父',   cmd:78,force:65,intel:92,pol:95,charm:85,  skill:'寧靜革命', sd:'民主化改革:全域民心+20，外交全面改善',       desc:'台灣民主化關鍵推手，歷史評價極高。'},
+  {id:'n20',name:'蔣經國',  grade:'S',icon:'🌟',party:'kmt',role:'前總統',     cmd:85,force:82,intel:88,pol:92,charm:78,  skill:'十大建設', sd:'建設效率翻倍，農業商業同時+8，徵兵上限+300', desc:'推動十大建設，奠定台灣工業基礎，治國最強者。'},
+  {id:'n21',name:'徐巧芯',  grade:'B',icon:'⚡',party:'kmt',role:'立法委員',   cmd:55,force:70,intel:72,pol:66,charm:82,  skill:'反攻猛打', sd:'媒體攻勢:敵方民心-8，流言計謀強化×2',        desc:'積極的KMT年輕女立委，攻擊性強。'},
+  {id:'n22',name:'王世堅',  grade:'B',icon:'🎤',party:'dpp',role:'立法委員',   cmd:55,force:58,intel:68,pol:68,charm:92,  skill:'鋼鐵意志', sd:'守城時兵力損耗-40%，士氣不跌破30%',          desc:'豪邁口吻，人氣超高，守城能力極強。'},
+  {id:'n23',name:'黃偉哲',  grade:'B',icon:'🏛',party:'dpp',role:'臺南市長',   cmd:62,force:50,intel:70,pol:78,charm:72,  skill:'古都精神', sd:'台南民心+15，文化縣市商業+10%',               desc:'台南市長，歷史文化名城治理專家。'},
+  {id:'n24',name:'柯建銘',  grade:'B',icon:'🎩',party:'dpp',role:'立院總召',   cmd:65,force:50,intel:76,pol:86,charm:62,  skill:'議場老鬼', sd:'計謀識別率+40%，立法政策通過率+60%',         desc:'民進黨議場操盤手，政治老辣。'},
+  {id:'n25',name:'游錫堃',  grade:'B',icon:'🌿',party:'dpp',role:'前立法院長', cmd:68,force:58,intel:74,pol:82,charm:70,  skill:'制衡之道', sd:'防禦性計謀成功率+50%，敵方計謀被反將一軍',   desc:'民進黨資深大老，議場防守能手。'},
+  {id:'n26',name:'呂秀蓮',  grade:'A',icon:'🌺',party:'dpp',role:'前副總統',   cmd:65,force:55,intel:80,pol:82,charm:75,  skill:'女力崛起', sd:'女性選票+25%，魅力相關行動效率+20%',          desc:'台灣女性政治先驅，前副總統。'},
+  {id:'n27',name:'連戰',    grade:'B',icon:'🔷',party:'kmt',role:'前副總統',   cmd:65,force:52,intel:72,pol:80,charm:65,  skill:'連宋同心', sd:'KMT系縣市忠誠+15，計謀離間不易成功',         desc:'前副總統，KMT黨內穩定力量。'},
+  {id:'n28',name:'陳水扁',  grade:'A',icon:'🟩',party:'dpp',role:'前總統',     cmd:72,force:62,intel:82,pol:85,charm:78,  skill:'台灣之子', sd:'南部縣市民心+15，本土意識強化',               desc:'台灣本土政治明星，南部票倉象徵。'},
+  {id:'n29',name:'王定宇',  grade:'B',icon:'📡',party:'dpp',role:'立法委員',   cmd:60,force:58,intel:70,pol:68,charm:72,  skill:'國防情報', sd:'情報蒐集+50%，每回合揭露敵方一個行動',       desc:'國防外交專家，情報能力卓越。'},
+  {id:'n30',name:'蕭萬長',  grade:'B',icon:'💹',party:'kmt',role:'前副總統',   cmd:60,force:50,intel:76,pol:82,charm:66,  skill:'財金鐵人', sd:'商業收入+30%，獻金上限+1000',                 desc:'財金出身的前副總統，經濟治理能手。'},
+];
+
+const TALENTS=[
+  {id:'ora',name:'⚡ 演說家', desc:'魅力+5，招募費-25%，民心下降速度-50%',          bonus:p=>{p.stats.charm+=5}},
+  {id:'wlo',name:'⚔ 軍閥',   desc:'武力+5，統率+3，徵兵效率+30%，戰鬥傷害+15%',    bonus:p=>{p.stats.force+=5;p.stats.command+=3}},
+  {id:'str',name:'🧠 謀士',  desc:'智力+6，計謀成功率+40%，識破敵計+35%',           bonus:p=>{p.stats.intel+=6}},
+  {id:'mer',name:'💰 商賈',  desc:'政治+5，起始金+600，每回合商業收入+15%',          bonus:p=>{p.stats.politics+=5;p.gold+=600}},
+  {id:'bld',name:'🏗 建設者',desc:'政治+3，智力+3，建設費-30%，建設效果+20%',        bonus:p=>{p.stats.politics+=3;p.stats.intel+=3}},
+  {id:'dip',name:'🤝 外交家',desc:'魅力+4，政治+3，外交成功率+60%，盟友效益+25%',   bonus:p=>{p.stats.charm+=4;p.stats.politics+=3}},
+];
+
+// ══════════════════════════════════════════════════════
+// POLICIES — New system! Active policies give ongoing bonuses
+// ══════════════════════════════════════════════════════
+const POLICIES=[
+  {id:'p01',name:'👮 強化治安',cost:200,upkeep:30, desc:'每回合治安+2，減少民心流失',     fx:G=>{G.p.territories.forEach(id=>{G.td[id].sec=Math.min(100,G.td[id].sec+2)})}},
+  {id:'p02',name:'📺 媒體管控',cost:250,upkeep:40, desc:'每回合民心+5，但商業-1/縣市',    fx:G=>{G.p.approval+=5;G.p.territories.forEach(id=>{G.td[id].comm=Math.max(20,G.td[id].comm-1)})}},
+  {id:'p03',name:'🌾 農業補貼',cost:180,upkeep:25, desc:'每回合糧食+200',                  fx:G=>{G.p.food+=200}},
+  {id:'p04',name:'🏗 基礎建設',cost:350,upkeep:60, desc:'每回合所有領地商業+1',            fx:G=>{G.p.territories.forEach(id=>{G.td[id].comm=Math.min(100,G.td[id].comm+1)})}},
+  {id:'p05',name:'⚔ 備戰動員',cost:300,upkeep:50, desc:'每回合自動徵兵+200，戰鬥力+10%', fx:G=>{G.p.troops+=200;G.p.territories.forEach(id=>{G.td[id].troops+=100})}},
+  {id:'p06',name:'🎓 教育改革',cost:400,upkeep:70, desc:'每回合全域民心+3，智力事業加成',  fx:G=>{G.p.approval+=3}},
+  {id:'p07',name:'💸 減稅政策',cost:0,  upkeep:120,desc:'民心+8，但獻金減少120/回合',      fx:G=>{G.p.approval+=8}},
+  {id:'p08',name:'🚔 戒嚴令',  cost:500,upkeep:80, desc:'防禦+15全域，但民心-5/回合',     fx:G=>{G.p.approval=Math.max(0,G.p.approval-5);G.p.territories.forEach(id=>{G.td[id].def=Math.min(100,G.td[id].def+3)})}},
+];
+
+// ══════════════════════════════════════════════════════
+// TECH TREE
+// ══════════════════════════════════════════════════════
+const TECH=[
+  {tier:1,id:'fl',icon:'📲',name:'側翼部隊',  cost:200,req:[],      desc:'計謀成功率+20%'},
+  {tier:1,id:'np',icon:'🌐',name:'媒體滲透',  cost:180,req:[],      desc:'每回合民心+2'},
+  {tier:1,id:'dm',icon:'📊',name:'民調監控',  cost:160,req:[],      desc:'情報效率+30%，可查看敵方兵力'},
+  {tier:2,id:'bd',icon:'🔢',name:'大數據分析',cost:400,req:['fl','dm'],desc:'民心+4/回合，計謀精準度+20%'},
+  {tier:2,id:'at',icon:'🤖',name:'機器人大軍',cost:350,req:['np','fl'],desc:'每回合自動減少敵方民心-2'},
+  {tier:2,id:'df',icon:'🎭',name:'深偽技術',  cost:450,req:['np'],   desc:'敵方武將忠誠-4/回合'},
+  {tier:3,id:'iw',icon:'⚡',name:'資訊戰爭',  cost:700,req:['bd','at'],desc:'敵忠誠-6/回合，全域計謀強化'},
+  {tier:3,id:'ca',icon:'💣',name:'網路攻擊',  cost:800,req:['at','df'],desc:'每回合破壞隨機敵方縣市商業-15'},
+  {tier:3,id:'qc',icon:'🔮',name:'量子密碼',  cost:1000,req:['iw','ca'],desc:'我方計謀永不失敗，敵方計謀永不成功'},
+];
+
+// ══════════════════════════════════════════════════════
+// EVENTS — Rich, 22 events with real consequences
+// ══════════════════════════════════════════════════════
+const EVENTS=[
+  {icon:'📰',title:'媒體爆料',text:'有媒體揭露競爭對手涉嫌貪污，輿論沸騰。如何回應？',
+   choices:[
+    {t:'趁勢猛攻宣傳', fx:'+12民心,+20聲望,-150獻金', fn:G=>{G.p.approval=Math.min(100,G.p.approval+12);G.p.fame+=20;G.spend(150);G.log('媒體攻勢奏效！民心聲望大漲！','log-good')}},
+    {t:'中立評論',      fx:'+4民心',                    fn:G=>{G.p.approval+=4;G.log('保持中立，部分民心回升。')}},
+    {t:'聲援對手',      fx:'+8聲望,+20民心，政界好評', fn:G=>{G.p.approval+=20;G.p.fame+=8;G.log('大度聲援贏得部分政界敬意！','log-good')}},
+  ]},
+  {icon:'💰',title:'神秘政治獻金',text:'背景不明的海外富商欲資助你的勢力，接受可能引發爭議。',
+   choices:[
+    {t:'全額接受',   fx:'+600獻金,-15民心,-10聲望', fn:G=>{G.p.gold+=600;G.p.approval=Math.max(0,G.p.approval-15);G.p.fame-=10;G.log('獻金入袋，但醜聞四起...','log-warn')}},
+    {t:'部分接受',   fx:'+250獻金,-4民心',           fn:G=>{G.p.gold+=250;G.p.approval=Math.max(0,G.p.approval-4);G.log('謹慎接受部分獻金。')}},
+    {t:'高調婉拒', fx:'+12民心,+15聲望',           fn:G=>{G.p.approval=Math.min(100,G.p.approval+12);G.p.fame+=15;G.log('廉潔形象大幅提升！','log-good')}},
+  ]},
+  {icon:'🌪',title:'強烈颱風來襲',text:'超強颱風直撲台灣，你控制的縣市受到嚴重衝擊。',
+   choices:[
+    {t:'全力救災（花費重）', fx:'+20民心,+25聲望,-250糧,-150金', fn:G=>{G.p.food=Math.max(0,G.p.food-250);G.spend(150);G.p.approval=Math.min(100,G.p.approval+20);G.p.fame+=25;G.log('積極救災，民心大幅提升！','log-good')}},
+    {t:'適度補助',          fx:'+8民心,-80糧,-60金',             fn:G=>{G.p.food=Math.max(0,G.p.food-80);G.spend(60);G.p.approval+=8;G.log('適度補助，基本民心維持。')}},
+    {t:'袖手旁觀',          fx:'-20民心,-15聲望',                fn:G=>{G.p.approval=Math.max(0,G.p.approval-20);G.p.fame-=15;G.log('怠慢救災，民心暴跌！','log-war')}},
+  ]},
+  {icon:'🤝',title:'敵方武將求投',text:'敵方有能之士因不滿主公，秘密聯絡你欲轉投麾下。',
+   choices:[
+    {t:'熱情接納（-200金）', fx:'獲得武將，忠誠高', fn:G=>{if(G.p.gold<200){G.notify('獻金不足！');return false;}G.spend(200);G.recruitRandom(false);G.log('武將投效！','log-good')}},
+    {t:'接納並考驗',         fx:'獲得武將，忠誠低', fn:G=>{G.recruitRandom(true)}},
+    {t:'婉拒保持警惕',       fx:'無',               fn:G=>{G.log('謹慎婉拒，繼續觀察。')}},
+  ]},
+  {icon:'📢',title:'街頭抗議',text:'你控制縣市爆發大規模抗議，民眾對施政強烈不滿。',
+   choices:[
+    {t:'親自演講',   fx:'依魅力決定效果', fn:G=>{const ok=G.p.stats.charm>=14;G.p.approval+=ok?10:-8;G.p.fame+=ok?8:-5;G.log(ok?'演說大成功，民心逆轉！':'演說效果差，反被噓！',ok?'log-good':'log-war')}},
+    {t:'宣布政策改革',fx:'+7民心,-120金', fn:G=>{G.p.approval+=7;G.spend(120);G.log('政策改革平息部分抗議。')}},
+    {t:'強力清場',  fx:'-25民心,-20聲望', fn:G=>{G.p.approval=Math.max(0,G.p.approval-25);G.p.fame-=20;G.log('強力鎮壓，民心重創！','log-war')}},
+  ]},
+  {icon:'🏆',title:'地方補選',text:'一個縣市發生補選，大好機會降臨！',
+   choices:[
+    {t:'全力投入(-400金)', fx:'有機會獲得領地', fn:G=>{if(G.p.gold<400){G.notify('獻金不足(需400)！');return false;}G.spend(400);G.tryGainTerr();G.p.fame+=15}},
+    {t:'低調支持(-150金)', fx:'+5民心，維持存在感', fn:G=>{if(G.p.gold<150){G.notify('獻金不足！');return false;}G.spend(150);G.p.approval+=5;G.log('低調支持，維持存在感。')}},
+    {t:'保存實力',         fx:'無，但保留資源',     fn:G=>{G.log('你靜觀其變，保存實力。')}},
+  ]},
+  {icon:'💸',title:'財政危機',text:'勢力財政出現重大缺口，各方開支龐大，急需因應。',
+   choices:[
+    {t:'緊急增稅',  fx:'-8民心,+400獻金', fn:G=>{G.p.gold+=400;G.p.approval=Math.max(0,G.p.approval-8);G.log('緊急增稅，民心受損但財政回穩。','log-warn')}},
+    {t:'削減軍費',  fx:'-600兵力',         fn:G=>{G.p.troops=Math.max(200,G.p.troops-600);G.log('大幅削減軍費，軍力受損。','log-warn')}},
+    {t:'發行公債',  fx:'-5民心,+300獻金', fn:G=>{G.p.gold+=300;G.p.approval=Math.max(0,G.p.approval-5);G.log('發行公債，舉債度日。')}},
+  ]},
+  {icon:'🌐',title:'國際聲援',text:'友好國際勢力公開聲援你，國際形象大幅提升！',
+   choices:[
+    {t:'舉行聯合記者會',fx:'+12民心,+20聲望', fn:G=>{G.p.approval=Math.min(100,G.p.approval+12);G.p.fame+=20;G.log('國際聲援大獲全勝！','log-good')}},
+    {t:'低調感謝',      fx:'+5民心,+8聲望',   fn:G=>{G.p.approval+=5;G.p.fame+=8;G.log('低調感謝，形象穩定提升。')}},
+  ]},
+  {icon:'🏭',title:'大型企業投資',text:'國際大廠有意在你控制的縣市投資設廠，帶來大量就業。',
+   choices:[
+    {t:'全力歡迎(-100金)',fx:'+200商業,+15民心', fn:G=>{G.p.territories.forEach(id=>{G.td[id].comm=Math.min(100,G.td[id].comm+12)});G.p.approval+=15;G.spend(100);G.log('成功引資！商業繁榮！','log-good')}},
+    {t:'要求更多條件',    fx:'+80商業,+5民心',   fn:G=>{G.p.territories.forEach(id=>{G.td[id].comm=Math.min(100,G.td[id].comm+5)});G.p.approval+=5;G.log('談判部分成功。')}},
+  ]},
+  {icon:'🎗',title:'重大選舉週年',text:'今天是某重大選舉週年紀念日，民眾情緒高漲。',
+   choices:[
+    {t:'舉辦紀念活動(-80金)',fx:'+10民心,+12聲望', fn:G=>{G.spend(80);G.p.approval+=10;G.p.fame+=12;G.log('紀念活動成功，形象大漲！','log-good')}},
+    {t:'發表政策宣言',       fx:'+5民心',           fn:G=>{G.p.approval+=5;G.log('政策宣言引發迴響。')}},
+  ]},
+  {icon:'⚡',title:'政治醜聞曝光',text:'你的一名幕僚被媒體揭露涉嫌弊案，危機四伏！',
+   choices:[
+    {t:'立即切割開除',fx:'-10聲望但止損', fn:G=>{G.p.fame-=10;G.p.approval=Math.max(0,G.p.approval-5);G.log('緊急切割，損失部分聲望。','log-warn')}},
+    {t:'挺下去護短',  fx:'-20民心,-15聲望', fn:G=>{G.p.approval=Math.max(0,G.p.approval-20);G.p.fame-=15;G.log('護短之舉遭輿論痛批！','log-war')}},
+    {t:'主動道歉調查',fx:'+5民心,-5聲望',  fn:G=>{G.p.approval+=5;G.p.fame-=5;G.log('主動道歉，部分民心回流。')}},
+  ]},
+  {icon:'🎓',title:'知名學者投效',text:'一位著名政治學者公開支持你，並願意提供智囊服務。',
+   choices:[
+    {t:'歡迎入幕(-150金)',fx:'+3所有能力,+10聲望', fn:G=>{G.p.fame+=10;G.p.stats.intel=Math.min(20,G.p.stats.intel+1);G.p.stats.politics=Math.min(20,G.p.stats.politics+1);G.spend(150);G.log('學者加入，能力提升！','log-good')}},
+    {t:'感謝婉拒',        fx:'+5聲望',             fn:G=>{G.p.fame+=5;G.log('婉拒學者，仍獲部分好評。')}},
+  ]},
+];
+
+// ══════════════════════════════════════════════════════
+// GAME ENGINE v5
+// ══════════════════════════════════════════════════════
+const G = {
+  turn:1, selTid:null, pendMove:null, _nt:null, _curEv:null, _schemes:[],
+  _battle:null, _missionCooldown:{},
+  p:{
+    name:'',party:'',partyType:'new',
+    stats:{command:10,force:10,intel:10,politics:10,charm:10},
+    gold:500,food:300,troops:1000,approval:55,fame:0,
+    territories:[],generals:[],talent:'ora',
+    techUnlocked:[],tb:{sr:0,apt:0,ib:0,eld:0,ca:false,ps:false},
+    diplo:{kmt:'neutral',dpp:'neutral',tpp:'neutral'},
+    hostileTurns:{kmt:0,dpp:0,tpp:0},
+    activePolicies:[],
+    tradeRoutes:{},
+  },
+  td:{}, npcs:[],
+
+  // ── Core ──
+  show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id==='cs')this._initCreate();
+  },
+  cm(id){document.getElementById(id).classList.remove('open')},
+  om(id){document.getElementById(id).classList.add('open')},
+  notify(m,type=''){
+    const el=document.getElementById('notif');el.textContent=m;el.className='show'+(type?' '+type:'');
+    clearTimeout(this._nt);this._nt=setTimeout(()=>el.className='',2800);
+  },
+  log(m,cls=''){
+    const a=document.getElementById('log');
+    const d=document.createElement('div');d.className='log-line'+(cls?' '+cls:'');
+    d.innerHTML=`<span style="color:rgba(232,184,48,.35);font-size:8px;margin-right:5px">T${this.turn}</span>${m}`;
+    a.appendChild(d);a.scrollTop=a.scrollHeight;
+    while(a.children.length>80)a.removeChild(a.firstChild);
+  },
+  spend(n){this.p.gold=Math.max(0,this.p.gold-n)},
+
+  // ── CREATE ──
+  _pts:15,_sv:{command:10,force:10,intel:10,politics:10,charm:10},_tal:'ora',
+  _initCreate(){
+    this._pts=15;this._sv={command:10,force:10,intel:10,politics:10,charm:10};this._tal='ora';
+    this._renderStats();this._renderTalents();
+  },
+  onPartyChange(){
+    document.getElementById('pnrow').style.display=
+      document.getElementById('cpty').value==='new'?'flex':'none';
+  },
+  _renderStats(){
+    const used=Object.values(this._sv).reduce((a,b)=>a+b,0)-50;
+    const rem=this._pts-used;
+    const pl=document.getElementById('pts-left');
+    pl.textContent=rem;pl.style.color=rem<=0?'var(--red2)':'var(--gold)';
+    const icons={command:'⚔',force:'💪',intel:'🧠',politics:'🏛',charm:'✨'};
+    const names={command:'統率',force:'武力',intel:'智力',politics:'政治',charm:'魅力'};
+    const c=document.getElementById('stat-rows');c.innerHTML='';
+    Object.entries(this._sv).forEach(([k,v])=>{
+      const d=document.createElement('div');d.className='srow';
+      d.innerHTML=`<span class="slbl">${icons[k]} ${names[k]}</span>
+        <button class="sbtn" onclick="G._adjStat('${k}',-1)">−</button>
+        <div class="strack"><div class="sfill" style="width:${(v/20)*100}%"></div></div>
+        <span class="sval">${v}</span>
+        <button class="sbtn" onclick="G._adjStat('${k}',1)">+</button>`;
+      c.appendChild(d);
+    });
+  },
+  _adjStat(k,d){
+    const used=Object.values(this._sv).reduce((a,b)=>a+b,0)-50;
+    if(d>0&&used>=this._pts)return;
+    if(d<0&&this._sv[k]<=5)return;
+    if(d>0&&this._sv[k]>=20)return;
+    this._sv[k]+=d;this._renderStats();
+  },
+  _renderTalents(){
+    const g=document.getElementById('talent-grid');
+    g.innerHTML=TALENTS.map(t=>`
+      <div class="tcard${this._tal===t.id?' sel':''}" onclick="G._tal='${t.id}';G._renderTalents()">
+        <div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div>
+      </div>`).join('');
+  },
+
+  // ── START GAME ──
+  startGame(){
+    const name=(document.getElementById('cn').value.trim()||'無名英雄').slice(0,8);
+    const pt=document.getElementById('cpty').value;
+    let party=pt==='new'?(document.getElementById('cpn').value.trim()||'新興勢力')+' 黨'
+      :{kmt:'中國國民黨',dpp:'民主進步黨',tpp:'台灣民眾黨',ind:'無黨籍新勢力'}[pt]||'新勢力';
+    this.p={name,party,partyType:pt,
+      stats:{...this._sv},gold:500,food:300,troops:1000,approval:55,fame:0,
+      territories:[],generals:[],talent:this._tal,
+      techUnlocked:[],tb:{sr:0,apt:0,ib:0,eld:0,ca:false,ps:false},
+      diplo:{kmt:'neutral',dpp:'neutral',tpp:'neutral'},
+      hostileTurns:{kmt:0,dpp:0,tpp:0},activePolicies:[],tradeRoutes:{}};
+    const tal=TALENTS.find(t=>t.id===this._tal);if(tal)tal.bonus(this.p);
+    const bonuses={kmt:[()=>{this.p.gold+=300;this.p.diplo.kmt='ally'}],
+      dpp:[()=>{this.p.approval+=8;this.p.diplo.dpp='ally'}],
+      tpp:[()=>{this.p.stats.intel+=3;this.p.stats.politics+=2}],
+      ind:[()=>{this.p.gold+=400;this.p.fame+=10}],
+      new:[()=>{this.p.gold+=250;this.p.fame+=5}]};
+    (bonuses[pt]||bonuses.new)[0]();
+    this.td=JSON.parse(JSON.stringify(TD_BASE));
+    this.npcs=JSON.parse(JSON.stringify(NPCS));
+    this._missionCooldown={};
+    this.turn=1;
+    this.show('ms');
+    this._buildMap(document.getElementById('msvg'),null,tid=>{
+      this._buildMap(document.getElementById('msvg'),tid);
+      this._renderMapInfo(tid);
+    });
+  },
+
+  // ── MAP ──
+  _ownerFill(o){return{player:'#3d1f5a',kmt:'#1a2855',dpp:'#0e2e18',tpp:'#0a2428',none:'#1c1c28'}[o]||'#1c1c28'},
+  _ownerStroke(o){return{player:'rgba(187,96,240,.6)',kmt:'rgba(74,128,216,.5)',dpp:'rgba(58,184,90,.5)',tpp:'rgba(42,184,184,.5)',none:'rgba(232,184,48,.16)'}[o]||'rgba(232,184,48,.16)'},
+  _buildMap(svgEl,selTid,clickFn){
+    svgEl.innerHTML='';
+    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('width',400);bg.setAttribute('height',522);bg.setAttribute('fill','#040810');
+    svgEl.appendChild(bg);
+    const tdSrc=Object.keys(this.td).length>0?this.td:TD_BASE;
+    Object.entries(TPATHS).forEach(([tid,pathD])=>{
+      const t=tdSrc[tid];if(!t)return;
+      const isSel=tid===selTid;
+      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d',pathD);
+      p.setAttribute('fill',this._ownerFill(t.owner));
+      p.setAttribute('stroke',isSel?'#e8b830':this._ownerStroke(t.owner));
+      p.setAttribute('stroke-width',isSel?'2.5':'1.2');
+      p.style.cursor='pointer';p.style.transition='filter .16s,stroke .16s';
+      p.addEventListener('mouseenter',()=>{p.style.filter='brightness(2.4)';p.setAttribute('stroke','#f5d060');p.setAttribute('stroke-width','2.2')});
+      p.addEventListener('mouseleave',()=>{p.style.filter='';p.setAttribute('stroke',isSel?'#e8b830':this._ownerStroke(t.owner));p.setAttribute('stroke-width',isSel?'2.5':'1.2')});
+      p.addEventListener('click',()=>clickFn?clickFn(tid):this.selTerr(tid));
+      svgEl.appendChild(p);
+      if(isSel){const g=document.createElementNS('http://www.w3.org/2000/svg','path');
+        g.setAttribute('d',pathD);g.setAttribute('fill','none');
+        g.setAttribute('stroke','rgba(232,184,48,.3)');g.setAttribute('stroke-width','5');
+        g.setAttribute('pointer-events','none');svgEl.appendChild(g);}
+      const tx=document.createElementNS('http://www.w3.org/2000/svg','text');
+      tx.setAttribute('x',t.cx);tx.setAttribute('y',t.cy-3);
+      tx.setAttribute('text-anchor','middle');tx.setAttribute('dominant-baseline','central');
+      tx.setAttribute('font-family','Noto Sans TC,sans-serif');tx.setAttribute('font-size','7.8');
+      tx.setAttribute('font-weight','700');tx.setAttribute('fill','rgba(218,208,188,.88)');
+      tx.setAttribute('pointer-events','none');
+      tx.textContent=t.name.replace('臺','台').replace('市','').replace('縣','');
+      svgEl.appendChild(tx);
+      if(t.owner!=='none'){
+        const sub=document.createElementNS('http://www.w3.org/2000/svg','text');
+        sub.setAttribute('x',t.cx);sub.setAttribute('y',t.cy+9);sub.setAttribute('text-anchor','middle');
+        sub.setAttribute('font-size','6');
+        sub.setAttribute('fill',{player:'rgba(192,96,255,.9)',kmt:'rgba(90,144,232,.9)',dpp:'rgba(58,200,90,.9)',tpp:'rgba(44,208,208,.9)'}[t.owner]||'#888');
+        sub.setAttribute('pointer-events','none');
+        sub.textContent={player:'★',kmt:'藍',dpp:'綠',tpp:'白'}[t.owner]+Math.round(t.troops/100);
+        svgEl.appendChild(sub);}
+    });
+    if(this.pendMove&&tdSrc[this.pendMove]){
+      const src=tdSrc[this.pendMove];
+      const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      ring.setAttribute('cx',src.cx);ring.setAttribute('cy',src.cy);ring.setAttribute('r',14);
+      ring.setAttribute('fill','none');ring.setAttribute('stroke','#e8b830');ring.setAttribute('stroke-width','2');
+      ring.setAttribute('stroke-dasharray','5 3');ring.setAttribute('pointer-events','none');
+      svgEl.appendChild(ring);}
+  },
+  _renderMapInfo(tid){
+    const t=this.td[tid];if(!t)return;
+    const oLabels={player:'你的領地',kmt:'🔵 國民黨控制',dpp:'🟢 民進黨控制',tpp:'⚪ 民眾黨控制',none:'⚫ 中立地區'};
+    document.getElementById('ms-info').innerHTML=`
+      <div style="padding:14px;border-bottom:1px solid var(--brd3)">
+        <div style="font-size:17px;font-weight:700;color:var(--gold2);margin-bottom:3px">${t.icon} ${t.name}</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">${oLabels[t.owner]||'未知'}</div>
+        <div style="font-size:8px;background:rgba(232,184,48,.08);border:1px solid rgba(232,184,48,.18);color:var(--gold3);padding:2px 7px;display:inline-block;letter-spacing:.06em;margin-bottom:8px">★ ${t.special}</div>
+        ${this._sBar2('🌾 農業',t.agri,'bar-g')}${this._sBar2('💰 商業',t.comm,'bar-y')}
+        ${this._sBar2('🛡 治安',t.sec,'bar-b')}${this._sBar2('❤ 民心',t.pop,'bar-r')}
+        ${this._sBar2('🏰 城防',t.def,'bar-p')}
+        <div style="margin-top:8px;font-size:10px;color:var(--red)">⚔ 守軍: <strong style="color:var(--red2)">${t.troops.toLocaleString()}</strong></div>
+        <div style="margin-top:7px;font-size:9px;color:var(--tx2);line-height:1.6;border-top:1px solid var(--brd3);padding-top:7px">${t.desc}</div>
+      </div>
+      <button style="margin:13px 15px;width:calc(100% - 30px);padding:12px;
+        background:linear-gradient(135deg,var(--gold4),var(--gold3) 50%,var(--gold));
+        color:var(--bg0);font-family:'Noto Serif TC',serif;font-size:12px;font-weight:700;
+        border:none;cursor:pointer;letter-spacing:.14em;
+        clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)"
+        onclick="G.confirmStart('${tid}')">✅ 選擇此地出發！</button>`;
+  },
+  _sBar2(l,v,c){return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:9px;color:var(--tx3);min-width:42px">${l}</span><div style="flex:1;height:6px;background:var(--bg0);overflow:hidden"><div class="${c}" style="height:100%;width:${v}%"></div></div><span style="font-size:9px;color:var(--tx);min-width:20px;text-align:right">${v}</span></div>`},
+
+  confirmStart(tid){
+    this.p.territories=[tid];this.td[tid].owner='player';
+    this.p.troops=1000+(this.p.stats.command*22);
+    this.p.gold=this.p.gold+(this.p.stats.politics*18);
+    this.p.food=350+(this.td[tid].agri*2);
+    this.td[tid].troops=Math.round(this.p.troops*0.5);
+    const sm={kaohsiung:'n00',taipei:'n16',tainan:'n02',taichung:'n07',
+      newtaipei:'n06',keelung:'n09',hualien:'n15',yilan:'n04',hsinchuC:'n01'};
+    const sid=sm[tid]||'n05';
+    const sn=this.npcs.find(n=>n.id===sid)||this.npcs[Math.floor(Math.random()*5)];
+    sn.owned=true;sn.loyalty=88;this.p.generals=[sn.id];
+    this.show('gs');
+    this._buildMap(document.getElementById('gsvg'),null,t=>this.selTerr(t));
+    this.updateHUD();this._renderPanel(tid);
+    this.log(`⚔ ${this.p.name}在${this.td[tid].name}揭竿而起！`,'log-event');
+    this.log(`武將 ${sn.name} 前來投效！`,'log-good');
+  },
+
+  // ── TERRITORY SELECTION ──
+  selTerr(tid){
+    if(this.pendMove){
+      if(tid!==this.pendMove&&this.td[tid]?.owner==='player'){
+        this._execMove(this.pendMove,tid);
+      }else if(tid===this.pendMove){
+        this.notify('已取消調兵。');
+      }else{
+        this.notify('只能調兵到你的領地！');
+      }
+      this.pendMove=null;
+      document.getElementById('map-hint').classList.remove('show');
+      this._buildMap(document.getElementById('gsvg'),tid,t=>this.selTerr(t));
+      this._renderPanel(tid);return;
+    }
+    this.selTid=tid;
+    this._buildMap(document.getElementById('gsvg'),tid,t=>this.selTerr(t));
+    this._renderPanel(tid);
+  },
+  _execMove(from,to){
+    const n=Math.floor(this.td[from].troops*0.5);
+    if(n<50){this.notify('駐軍太少，無法調兵！');return;}
+    this.td[from].troops-=n;this.td[to].troops+=n;
+    this.log(`從${this.td[from].name}調兵${n}至${this.td[to].name}`,'log-good');
+    this.notify(`調兵${n}人完成！`);
+  },
+
+  // ── RIGHT PANEL ──
+  _renderPanel(tid){
+    const rp=document.getElementById('rp');
+    if(!tid){rp.innerHTML='<div class="rp-empty">👆<br><br>點選地圖縣市<br>查看詳細資訊</div>';return;}
+    const t=this.td[tid];if(!t){return;}
+    const isP=t.owner==='player';
+    const oLabels={player:'✅ 你的領地',kmt:'🔵 國民黨',dpp:'🟢 民進黨',tpp:'⚪ 民眾黨',none:'⚫ 中立'};
+    const myGens=this.p.generals.map(id=>this.npcs.find(n=>n.id===id)).filter(Boolean);
+    rp.innerHTML=`
+      <div class="terr-header">
+        <div class="terr-name">${t.icon} ${t.name}</div>
+        <div class="terr-owner">${oLabels[t.owner]||'未知'}</div>
+        ${t.special?`<div class="terr-special">★ ${t.special}</div>`:''}
+        ${this._sBarP('🌾 農業',t.agri,'bar-g')}${this._sBarP('💰 商業',t.comm,'bar-y')}
+        ${this._sBarP('🛡 治安',t.sec,'bar-b')}${this._sBarP('❤ 民心',t.pop,'bar-r')}
+        ${this._sBarP('🏰 城防',t.def,'bar-p')}
+        <div class="garrison-row">⚔️ 駐軍<span style="margin-left:auto;font-weight:700;color:var(--red2)">${t.troops.toLocaleString()}</span></div>
+      </div>
+      <div class="action-grid">
+        ${isP?`
+          <button class="act-btn" onclick="G._doAdmin('${tid}')">🏗 建設<br><span style="font-size:8px;color:var(--tx3)">80獻金</span></button>
+          <button class="act-btn" onclick="G._doRecruit('${tid}')">🪖 徵兵<br><span style="font-size:8px;color:var(--tx3)">100糧</span></button>
+          <button class="act-btn" onclick="G._doReinforce('${tid}')">🛡 加固<br><span style="font-size:8px;color:var(--tx3)">60獻金</span></button>
+          <button class="act-btn" onclick="G._doScheme('${tid}')">🕵 計謀<br><span style="font-size:8px;color:var(--tx3)">消耗獻金</span></button>
+          <button class="act-btn primary wide" onclick="G._doMove('${tid}')">🚀 調兵遣將（點此→點目標）</button>
+        `:`
+          <button class="act-btn wide" onclick="G._doScheme('${tid}')">🕵 對此地施計謀</button>
+          <button class="act-btn wide" onclick="G._showDiplo()">🤝 外交接觸</button>
+          <button class="act-btn danger wide" onclick="G._doAttack('${tid}')">⚔ 出兵攻佔</button>
+        `}
+      </div>
+      <div class="gen-section">
+        <div class="gen-section-title">⭐ 麾下武將（${myGens.length}人）</div>
+        ${myGens.length?myGens.slice(0,3).map(n=>`
+          <div class="gen-card" onclick="G._showNPC('${n.id}')">
+            <div class="gen-grade grade-${n.grade.toLowerCase()}">${n.grade}</div>
+            <div class="gen-info"><div class="gen-name">${n.icon} ${n.name}</div><div class="gen-role">${n.role}</div></div>
+            <div style="font-size:9px;color:var(--gold3)">✨${n.skill}</div>
+          </div>`).join(''):'<div style="font-size:10px;color:var(--tx3);padding:8px 0">尚無武將</div>'}
+      </div>`;
+  },
+  _sBarP(l,v,c){return`<div class="stat-row"><span class="stat-lbl">${l}</span><div class="stat-bar"><div class="stat-fill ${c}" style="width:${v}%"></div></div><span class="stat-val">${v}</span></div>`},
+
+  // ── ACTIONS ──
+  _doAdmin(tid){
+    if(this.p.gold<80){this.notify('獻金不足(需80)');return;}
+    this.spend(80);const t=this.td[tid];
+    t.agri=Math.min(100,t.agri+4);t.comm=Math.min(100,t.comm+4);t.pop=Math.min(100,t.pop+3);
+    this.updateHUD();this._renderPanel(tid);
+    this.log(`${t.name} 建設完成：農業+4，商業+4，民心+3`,'log-good');this.notify('建設完成！');
+  },
+  _doRecruit(tid){
+    if(this.p.food<100){this.notify('軍糧不足(需100)');return;}
+    const hasTaichung=this.p.territories.includes('taichung');
+    const hasKaohsiung=this.p.territories.includes('kaohsiung');
+    const bonus=(hasTaichung?1.3:1)*(hasKaohsiung?1.2:1);
+    const base=this.p.talent==='wlo'?Math.round(400+this.p.stats.command*10):Math.round(300+this.p.stats.command*8);
+    const amt=Math.round(base*bonus);
+    this.p.food-=100;this.p.troops+=amt;
+    this.td[tid].troops+=Math.round(amt*0.5);
+    this.td[tid].pop=Math.max(15,this.td[tid].pop-4);
+    this.updateHUD();this._renderPanel(tid);
+    this.log(`${this.td[tid].name} 徵兵 ${amt} 人`);this.notify(`徵兵${amt}人！`);
+  },
+  _doReinforce(tid){
+    if(this.p.gold<60){this.notify('獻金不足(需60)');return;}
+    this.spend(60);this.td[tid].def=Math.min(100,this.td[tid].def+12);
+    this.updateHUD();this._renderPanel(tid);this.notify('城防+12！');
+  },
+  _doMove(tid){
+    this.pendMove=tid;
+    document.getElementById('map-hint').classList.add('show');
+    this.notify('📌 選擇目標領地移入兵力');
+    this._buildMap(document.getElementById('gsvg'),tid,t=>this.selTerr(t));
+  },
+  _doScheme(tid){
+    const t=this.td[tid];
+    const scList=[
+      {name:'流言散播', icon:'📢',cost:100,req:7, desc:`${t.name}民心-18，治安-10`,  fn:()=>this._sfx(tid,{pop:-18,sec:-10},'流言散播')},
+      {name:'破壞設施', icon:'💣',cost:180,req:11,desc:`${t.name}城防-22，商業-12`,  fn:()=>this._sfx(tid,{def:-22,comm:-12},'破壞設施')},
+      {name:'間諜滲透', icon:'🎭',cost:230,req:13,desc:`${t.name}商業-18，情報+5`,   fn:()=>this._sfx(tid,{comm:-18},'間諜滲透')},
+      {name:'策反武將', icon:'🌟',cost:320,req:15,desc:'嘗試招募敵方武將',          fn:()=>this.recruitRandom()},
+      {name:'煽動民變', icon:'🔥',cost:280,req:14,desc:'民心-22，守軍-20%',         fn:()=>this._sRebel(tid)},
+      {name:'政治暗殺', icon:'🗡',cost:500,req:18,desc:'降低敵領袖影響力，民心-30', fn:()=>this._sfx(tid,{pop:-30,def:-15},'政治暗殺')},
+    ];
+    this._schemes=scList;
+    document.getElementById('scheme-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:11px">目標：<strong style="color:var(--gold)">${t.name}</strong>
+        · 當前智力：<strong style="color:var(--gold2)">${this.p.stats.intel}</strong></div>
+      ${scList.map((s,i)=>{
+        const ca=this.p.gold>=s.cost;
+        const rate=this.p.tb.ps?100:Math.max(10,Math.min(92,Math.round(30+(this.p.stats.intel-s.req)*6+this.p.tb.sr*100)));
+        return`<div style="${!ca?'opacity:.38;pointer-events:none':''};display:flex;align-items:center;gap:9px;padding:10px;background:var(--bg0);border:1px solid var(--brd);margin-bottom:5px;cursor:pointer;transition:border-color .14s"
+          onmouseenter="this.style.borderColor='var(--brd2)'" onmouseleave="this.style.borderColor='var(--brd)'"
+          onclick="G._execScheme(${i})">
+          <span style="font-size:18px">${s.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;color:var(--gold2)">${s.name}</div>
+            <div style="font-size:9px;color:var(--tx2);margin-top:2px">${s.desc}</div>
+          </div>
+          <div style="text-align:right;font-size:9px;flex-shrink:0">
+            <div style="color:var(--gold)">💰 ${s.cost}</div>
+            <div style="color:${rate>=60?'#40a060':rate>=35?'var(--gold3)':'var(--red2)'}">${rate}% 成功</div>
+          </div>
+        </div>`;}).join('')}`;
+    this.om('ov-scheme');
+  },
+  _execScheme(i){
+    const s=this._schemes[i];if(this.p.gold<s.cost){this.notify('獻金不足！');return;}
+    this.spend(s.cost);this.cm('ov-scheme');
+    const rate=this.p.tb.ps?1:Math.max(.1,Math.min(.92,.3+(this.p.stats.intel-s.req)*.06+this.p.tb.sr));
+    if(Math.random()<rate){s.fn();this.updateHUD();}
+    else{this.spend(Math.round(s.cost*.3));this.updateHUD();this.log(`【${s.name}】失敗！損失部分獻金`,'log-warn');this.notify('計謀失敗！被識破！');}
+  },
+  _sfx(tid,effects,name){
+    const t=this.td[tid];
+    Object.entries(effects).forEach(([k,v])=>{if(k in t)t[k]=Math.max(0,Math.min(100,t[k]+v));});
+    this.log(`【${name}】成功！${t.name}受重創`,'log-good');this.notify(`${name}成功！`);this._renderPanel(tid);
+  },
+  _sRebel(tid){
+    const t=this.td[tid];t.pop=Math.max(5,t.pop-22);t.troops=Math.round(t.troops*.78);
+    this.log(`【煽動民變】成功！${t.name}守軍-22%，民心-22`,'log-good');this.notify('民變成功！');this._renderPanel(tid);
+  },
+  recruitRandom(lowLoyalty=false){
+    const av=this.npcs.filter(n=>!n.owned);
+    if(av.length){
+      const n=av[Math.floor(Math.random()*Math.min(5,av.length))];
+      n.owned=true;n.loyalty=lowLoyalty?38:72;
+      if(!this.p.generals.includes(n.id))this.p.generals.push(n.id);
+      this.log(`${n.name} 前來投效！`,'log-good');this.notify(`${n.name}加入！`);
+      this._renderPanel(this.selTid);
+    }else this.log('目前無可策反的武將。','log-warn');
+  },
+
+  // ── ATTACK / BATTLE ──
+  _doAttack(tid){
+    const t=this.td[tid];
+    if(t.owner==='player'){this.notify('那是你的領地！');return;}
+    if(this.p.troops<300){this.notify('兵力不足(需300)');return;}
+    const sent=Math.round(this.p.troops*.65);
+    const extraDef=tid==='nantou'?15:0;
+    const eDef=t.troops+Math.round((t.def+extraDef)*6);
+    this._battle={tid,sent,pt:sent,et:eDef,ptMax:sent,etMax:Math.max(1,eDef),round:0,sklUsed:false,defUsed:false};
+    const oi={kmt:'🔵',dpp:'🟢',tpp:'⚪',none:'⚫'};
+    document.getElementById('bat-title').textContent=`⚔️ 出征 ${t.name}`;
+    document.getElementById('bat-pname').textContent=this.p.name;
+    document.getElementById('bat-ename').textContent=`${t.name}守軍`;
+    document.getElementById('bat-eicon').textContent=oi[t.owner]||'⚔️';
+    ['bat-a','bat-d','bat-s'].forEach(id=>document.getElementById(id).disabled=false);
+    document.getElementById('bat-s').textContent='✨ 大絕招';
+    this._updBattle();
+    document.getElementById('bat-log').innerHTML=`<div style="color:var(--gold)">出征${t.name}！守軍${eDef.toLocaleString()}人嚴陣以待！</div>`;
+    this.show('bs');
+  },
+  _updBattle(){
+    const b=this._battle;if(!b)return;
+    document.getElementById('bat-ptroops').textContent=b.pt.toLocaleString();
+    document.getElementById('bat-etroops').textContent=b.et.toLocaleString();
+    const pp=Math.max(0,b.pt/b.ptMax*100),ep=Math.max(0,b.et/b.etMax*100);
+    const pf=document.getElementById('bat-php'),ef=document.getElementById('bat-ehp');
+    pf.style.width=pp+'%';ef.style.width=ep+'%';
+    if(pp<30)pf.classList.add('hp-low');else pf.classList.remove('hp-low');
+    const pm=document.getElementById('bat-pmoral');
+    pm.textContent=pp>65?'⬆ 士氣旺盛':pp>30?'⬇ 士氣低落':'💀 瀕臨潰敗';
+    pm.style.color=pp>65?'#34c868':pp>30?'var(--gold)':'var(--red2)';
+  },
+  bact(type){
+    const b=this._battle;if(!b)return;b.round++;
+    const gen=this.p.generals.length?this.npcs.find(n=>n.id===this.p.generals[0]):null;
+    const genBonus=gen?1+(gen.force/100)*.4:1;
+    const talBonus=this.p.talent==='wlo'?1.15:1;
+    const baseAtk=Math.round((this.p.stats.force*11+this.p.stats.command*7+Math.random()*100)*genBonus*talBonus);
+    const baseEAtk=Math.round(60+Math.random()*90+this.td[b.tid].def*2.8);
+    let pd=0,ed=0,html='';
+    if(type==='atk'){pd=baseAtk;ed=baseEAtk;
+      html=`<div>⚔ 強攻 → 傷害 <b style="color:var(--red2)">${pd}</b>，受傷 <b style="color:var(--red2)">${ed}</b></div>`;}
+    else if(type==='def'){pd=Math.round(baseAtk*.52);ed=Math.round(baseEAtk*.32);
+      document.getElementById('bat-d').disabled=true;b.defUsed=true;
+      html=`<div>🛡 固守 → 傷害 <b style="color:#7098e0">${pd}</b>，受傷 <b style="color:var(--red2)">${ed}</b></div>`;}
+    else if(type==='skl'){
+      const sk=gen?gen.skill:'全力一擊',sd=gen?gen.sd:'造成強力打擊';
+      this._showSkill(gen?gen.icon:'⚡',sk,sd);
+      pd=Math.round(baseAtk*2.6);ed=Math.round(baseEAtk*.22);
+      document.getElementById('bat-s').disabled=true;document.getElementById('bat-s').textContent='✨(已用)';
+      html=`<div style="color:var(--plr2)">✨【${sk}】！傷害 <b style="color:var(--red2)">${pd}</b>，受傷 ${ed}</div>`;}
+    b.et=Math.max(0,b.et-pd);b.pt=Math.max(0,b.pt-ed);
+    const bl=document.getElementById('bat-log');bl.innerHTML+=html;bl.scrollTop=bl.scrollHeight;
+    this._updBattle();
+    if(b.round>=1)setTimeout(()=>{if(b.et<=0)this._bWin();else if(b.pt<=0)this._bLose();},400);
+  },
+  bret(){
+    const b=this._battle;if(!b)return;
+    this.p.troops=Math.max(100,this.p.troops-b.sent+Math.round(b.pt*.82));
+    this.updateHUD();this.log('主動撤退，保存實力。','log-warn');this.show('gs');
+  },
+  _bWin(){
+    const b=this._battle,t=this.td[b.tid];
+    t.owner='player';if(!this.p.territories.includes(b.tid))this.p.territories.push(b.tid);
+    this.p.troops=Math.max(100,this.p.troops-b.sent+b.pt);
+    t.troops=Math.round(b.pt*.4);t.def=Math.max(10,t.def-22);t.pop=Math.max(15,t.pop-10);
+    const gl=Math.round(t.comm*4.5+t.agri*1.5+Math.random()*200);
+    const fl=Math.round(t.agri*3.5+Math.random()*80);
+    this.p.gold+=gl;this.p.food+=fl;this.p.fame+=10+Math.round(t.def/10);
+    this.updateHUD();
+    this.log(`🎉 勝利！攻佔${t.name}！+${gl}獻金 +${fl}糧 +聲望`,'log-event');
+    document.getElementById('bat-log').innerHTML+=`<div style="color:var(--gold);font-weight:700">🎉 勝利！${t.name}已納入版圖！</div>`;
+    ['bat-a','bat-d','bat-s'].forEach(id=>document.getElementById(id).disabled=true);
+    setTimeout(()=>{this.show('gs');this._buildMap(document.getElementById('gsvg'),b.tid,t=>this.selTerr(t));this._renderPanel(b.tid);this.notify(`🎉 攻佔${t.name}成功！`);this._checkWin();},2100);
+  },
+  _bLose(){
+    const b=this._battle;
+    this.p.troops=Math.max(100,this.p.troops-b.sent+b.pt);this.p.fame=Math.max(0,this.p.fame-5);
+    this.updateHUD();this.log(`💀 戰敗！從${this.td[b.tid].name}撤退！`,'log-war');
+    document.getElementById('bat-log').innerHTML+=`<div style="color:var(--red2);font-weight:700">💀 戰敗！撤退！</div>`;
+    setTimeout(()=>{this.show('gs');this.notify('戰敗！損失兵力！');},2100);
+  },
+
+  // ── NPC ──
+  _showNPC(id){
+    const n=this.npcs.find(n=>n.id===id);if(!n)return;
+    const gc={S:'#ff9000',A:'#cc44ff',B:'#4a80d8',C:'#888'};
+    const pn={kmt:'國民黨',dpp:'民進黨',tpp:'民眾黨',ind:'無黨籍'}[n.party]||n.party;
+    document.getElementById('npc-t').textContent=`${n.icon} ${n.name}`;
+    document.getElementById('npc-b').innerHTML=`
+      <div class="npc-header">
+        <div class="npc-avatar grade-${n.grade.toLowerCase()}" style="border-color:${gc[n.grade]}">${n.grade}</div>
+        <div class="npc-info">
+          <div class="npc-name">${n.icon} ${n.name}</div>
+          <div class="npc-role">${n.role} · ${pn}</div>
+          <div class="npc-skill-tag">✨ ${n.skill}：${n.sd}</div>
+        </div>
+      </div>
+      <div class="npc-stats">
+        ${[['cmd','⚔統率'],['force','💪武力'],['intel','🧠智力'],['pol','🏛政治'],['charm','✨魅力'],['loyalty','❤忠誠']].map(([k,l])=>`
+          <div class="npc-stat"><span class="npc-stat-val" style="${k==='loyalty'?`color:${n[k]>65?'#40c870':'var(--red2)'}`:''}">${n[k]}</span><div class="npc-stat-lbl">${l}</div></div>`).join('')}
+      </div>
+      <div style="font-size:9px;color:var(--tx3);margin-bottom:4px">忠誠度</div>
+      <div class="loyalty-bar"><div class="loyalty-fill" style="width:${n.loyalty}%"></div></div>
+      <p style="font-size:10px;color:var(--tx2);margin-top:10px;line-height:1.65">${n.desc}</p>
+      <div class="modal-actions">
+        ${n.owned?`
+          <button class="mbtn mbtn-p" onclick="G._assignNPC('${id}')">📋 派遣任務</button>
+          <button class="mbtn" onclick="G._rewardNPC('${id}')">🎁 賞賜(-100)</button>
+          <button class="mbtn" onclick="G._trainNPC('${id}')">📚 培訓(-200)</button>
+        `:` <button class="mbtn mbtn-p" onclick="G._recruitNPC('${id}')">📣 招募</button>`}
+      </div>`;
+    this.om('ov-npc');
+  },
+  _assignNPC(id){
+    // FIXED: Mission cooldown to prevent spam gold farming
+    const cd=this._missionCooldown[id]||0;
+    if(this.turn-cd<3){this.notify(`${this.npcs.find(n=>n.id===id)?.name}需要休息（3回合冷卻）`);return;}
+    const n=this.npcs.find(n=>n.id===id);if(!n)return;
+    this._missionCooldown[id]=this.turn;
+    this.cm('ov-npc');
+    // Varied mission outcomes based on stats
+    const outcomes=[
+      {cond:n.intel>75,  gold:Math.round(n.intel*2+50),  food:0, msg:`情報任務，帶回${Math.round(n.intel*2+50)}獻金`},
+      {cond:n.charm>75,  gold:Math.round(n.charm*1.5+30),food:50,msg:`外交任務，帶回${Math.round(n.charm*1.5+30)}獻金+50糧`},
+      {cond:n.force>75,  gold:80,                         food:Math.round(n.force+20),msg:`軍事任務，帶回80獻金+${Math.round(n.force+20)}糧`},
+      {cond:true,        gold:Math.round(n.pol*1.2+20),   food:0, msg:`政治任務，帶回${Math.round(n.pol*1.2+20)}獻金`},
+    ];
+    const o=outcomes.find(x=>x.cond)||outcomes[3];
+    if(Math.random()<.12){n.loyalty=Math.max(0,n.loyalty-5);this.log(`${n.name}任務失敗，忠誠-5`,'log-warn');this.notify(`${n.name}任務失敗！`);return;}
+    this.p.gold+=o.gold;this.p.food+=o.food;
+    n.loyalty=Math.min(100,n.loyalty+2);
+    this.updateHUD();this.log(`${n.name}：${o.msg}`,'log-good');this.notify(`${n.name}完成任務！`);
+  },
+  _rewardNPC(id){
+    if(this.p.gold<100){this.notify('獻金不足！');return;}
+    const n=this.npcs.find(n=>n.id===id);this.spend(100);n.loyalty=Math.min(100,n.loyalty+14);
+    this.cm('ov-npc');this.log(`賞賜${n.name}，忠誠+14`,'log-good');this.notify('忠誠大增！');
+  },
+  _trainNPC(id){
+    if(this.p.gold<200){this.notify('獻金不足(需200)！');return;}
+    const n=this.npcs.find(n=>n.id===id);this.spend(200);
+    const stats=['cmd','force','intel','pol','charm'];
+    const s=stats[Math.floor(Math.random()*stats.length)];
+    n[s]=Math.min(100,n[s]+2);
+    this.cm('ov-npc');this.log(`培訓${n.name}，${s}+2`,'log-good');this.notify(`${n.name}成長了！`);
+  },
+  _recruitNPC(id){
+    const n=this.npcs.find(n=>n.id===id);
+    const cost={S:700,A:350,B:180,C:90}[n.grade]||180;
+    if(this.p.gold<cost){this.notify(`需要${cost}獻金`);return;}
+    this.spend(cost);
+    const hasChiayiC=this.p.territories.includes('chiayiC');
+    const hasTaipei=this.p.territories.includes('taipei');
+    const rate=Math.min(.92,.18+this.p.stats.charm*.028+(hasChiayiC?.05:0)+(hasTaipei?.04:0));
+    this.cm('ov-npc');
+    if(Math.random()<rate){n.owned=true;n.loyalty=62;if(!this.p.generals.includes(id))this.p.generals.push(id);
+      this.updateHUD();this.log(`成功招募${n.name}！`,'log-event');this.notify(`🎉 ${n.name}加入！`);this._renderPanel(this.selTid);}
+    else{this.updateHUD();this.log(`招募${n.name}失敗，損失${cost}獻金`,'log-warn');this.notify(`${n.name}婉拒了...`);}
+  },
+
+  // ── NAV ──
+  nav(sec,btn){
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    const handlers={
+      map:()=>{this._buildMap(document.getElementById('gsvg'),this.selTid,t=>this.selTerr(t));this._renderPanel(this.selTid)},
+      myterr:()=>this._showMyTerr(),
+      gens:()=>this._showGens(),
+      recruit:()=>this._showRecruit(),
+      policy:()=>this._showPolicy(),
+      tech:()=>this._showTech(),
+      intel:()=>this._showIntel(),
+      diplo:()=>this._showDiplo(),
+      rank:()=>this._showRank(),
+    };
+    if(handlers[sec])handlers[sec]();
+  },
+
+  _showMyTerr(){
+    document.getElementById('main-t').textContent='🏯 我的領地';
+    document.getElementById('main-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">控制 ${this.p.territories.length} 個縣市 · 目標：15個統一臺灣</div>
+      ${this.p.territories.map(id=>{const t=this.td[id];return`
+        <div class="list-item" onclick="G.cm('ov-main');G.selTerr('${id}')">
+          <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:5px">${t.icon} ${t.name} <span style="font-size:9px;color:var(--tx3)">${t.special}</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center;margin-top:5px">
+            ${['agri','comm','sec','pop','def'].map((k,i)=>`<div>
+              <div style="font-size:14px;font-weight:900;color:var(--gold)">${t[k]}</div>
+              <div style="font-size:8px;color:var(--tx3)">${['農業','商業','治安','民心','城防'][i]}</div>
+            </div>`).join('')}
+          </div>
+          <div style="margin-top:6px;font-size:9px;color:var(--red);display:flex;justify-content:space-between">
+            <span>⚔ 駐軍 ${t.troops.toLocaleString()}</span>
+            <span style="color:var(--gold3)">每回合+${Math.round(t.comm*1.8+t.agri*.3)}金 +${Math.round(t.agri*1.5+t.comm*.2)}糧</span>
+          </div>
+        </div>`}).join('')||'<div style="color:var(--tx3);text-align:center;padding:20px">尚無領地</div>'}`;
+    this.om('ov-main');
+  },
+  _showGens(){
+    const owned=this.npcs.filter(n=>n.owned);
+    document.getElementById('main-t').textContent='👥 武將名冊';
+    document.getElementById('main-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">麾下武將：${owned.length}人</div>
+      ${owned.map(n=>`<div class="list-item" onclick="G.cm('ov-main');G._showNPC('${n.id}')">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="gen-grade grade-${n.grade.toLowerCase()}">${n.grade}</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:var(--gold2)">${n.icon} ${n.name} <span style="font-size:9px;color:var(--tx3)">${n.role}</span></div>
+            <div style="font-size:9px;color:var(--tx3);margin-top:2px">統${n.cmd} 力${n.force} 智${n.intel} 政${n.pol} 魅${n.charm} ❤${n.loyalty}</div>
+          </div>
+          <div style="font-size:9px;color:var(--gold3);text-align:right">✨${n.skill}<br>
+            ${this._missionCooldown[n.id]&&this.turn-this._missionCooldown[n.id]<3?`<span style="color:var(--tx3)">冷卻${3-(this.turn-(this._missionCooldown[n.id]||0))}回合</span>`:'<span style="color:#40a060">可派遣</span>'}</div>
+        </div>
+      </div>`).join('')};
+    this.om('ov-main');
+  },
+  _showRecruit(){
+    const av=this.npcs.filter(n=>!n.owned);
+    const cost={S:700,A:350,B:180,C:90};
+    document.getElementById('ev-icon').textContent='📣';
+    document.getElementById('ev-title').textContent='招募人才';
+    document.getElementById('ev-text').textContent='消耗獻金招募政治人物加入你的陣營。魅力越高、控制越多縣市，成功率越高。';
+    document.getElementById('ev-choices').innerHTML=av.slice(0,9).map(n=>{
+      const c=cost[n.grade]||180;
+      const r=Math.min(92,Math.round(18+this.p.stats.charm*2.8));
+      return`<button class="ev-choice" onclick="G._recruitNPC('${n.id}');G.cm('ov-event')">
+        <span>${n.icon} <strong>${n.name}</strong> [${n.grade}] · ${n.role} · ✨${n.skill}</span>
+        <span class="ev-fx">💰${c}<br>${r}%</span>
+      </button>`;}).join('')+`<button class="mbtn" style="width:100%;margin-top:8px" onclick="G.cm('ov-event')">關閉</button>`;
+    this.om('ov-event');
+  },
+  _showPolicy(){
+    document.getElementById('main-t').textContent='📜 政策法令';
+    const active=this.p.activePolicies;
+    document.getElementById('main-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">
+        已啟用 ${active.length} 項政策 · 每回合政策維持費 ${active.reduce((a,id)=>{const p=POLICIES.find(p=>p.id===id);return a+(p?.upkeep||0)},0)} 獻金
+      </div>
+      ${POLICIES.map(pol=>{
+        const isActive=active.includes(pol.id);
+        return`<div class="policy-item${isActive?' active':''}" onclick="G._togglePolicy('${pol.id}')">
+          <div class="pi-name">${pol.name}</div>
+          <div class="pi-desc">${pol.desc}</div>
+          <div class="pi-cost">${isActive?`✅ 運行中 · 每回合維持費${pol.upkeep}金`:`啟用費${pol.cost}金 · 維持費${pol.upkeep}/回合`}</div>
+        </div>`;}).join('')}`;
+    this.om('ov-main');
+  },
+  _togglePolicy(pid){
+    const pol=POLICIES.find(p=>p.id===pid);if(!pol)return;
+    const idx=this.p.activePolicies.indexOf(pid);
+    if(idx>=0){this.p.activePolicies.splice(idx,1);this.notify(`停止政策：${pol.name}`);this.log(`停止政策：${pol.name}`,'log-warn');}
+    else{
+      if(pol.cost>0&&this.p.gold<pol.cost){this.notify('獻金不足！');return;}
+      if(pol.cost>0)this.spend(pol.cost);
+      this.p.activePolicies.push(pid);
+      this.notify(`啟用政策：${pol.name}！`);this.log(`啟用政策：${pol.name}`,'log-good');
+    }
+    this.updateHUD();this._showPolicy();
+  },
+  _showTech(){
+    document.getElementById('main-t').textContent='💻 網軍科技樹';
+    let html='';
+    [1,2,3].forEach(tier=>{
+      const tName={1:'初階：側翼建軍',2:'中階：大數據風向',3:'高階：全面出征'}[tier];
+      html+=`<div style="margin-bottom:16px"><div style="font-size:8px;letter-spacing:.22em;color:var(--tx3);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--brd3)">${tName}</div>`;
+      TECH.filter(n=>n.tier===tier).forEach(node=>{
+        const un=this.p.techUnlocked.includes(node.id);
+        const pre=node.req.every(r=>this.p.techUnlocked.includes(r));
+        const ca=this.p.gold>=node.cost&&pre;
+        html+=`<div style="${un?'border:1px solid var(--gold3);background:rgba(232,184,48,.06)':'border:1px solid var(--brd);background:var(--bg0)'};${(!ca&&!un)?'opacity:.38':''}
+          display:flex;align-items:flex-start;gap:10px;padding:10px;margin-bottom:5px;cursor:${!un&&ca?'pointer':'default'};transition:border-color .14s"
+          ${!un&&ca?`onmouseenter="this.style.borderColor='var(--brd2)'" onmouseleave="this.style.borderColor='${un?'var(--gold3)':'var(--brd)'}'"`:''}"
+          onclick="${!un&&ca?`G._unlockTech('${node.id}')`:''} ">
+          <span style="font-size:18px;flex-shrink:0">${node.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;color:var(--gold2)">${node.name}${un?' <span style="color:var(--gold);font-size:10px">✓ 已解鎖</span>':''}</div>
+            <div style="font-size:9px;color:var(--tx2);margin-top:2px">${node.desc}</div>
+            <div style="font-size:9px;color:var(--tx3);margin-top:3px">💰 ${node.cost}${node.req.length?` · 需先解鎖：${node.req.join('+')}`:''}</div>
+          </div>
+        </div>`;});
+      html+='</div>';
+    });
+    document.getElementById('main-b').innerHTML=html;this.om('ov-main');
+  },
+  _unlockTech(id){
+    const node=TECH.find(n=>n.id===id);if(!node||this.p.techUnlocked.includes(id))return;
+    if(this.p.gold<node.cost){this.notify('獻金不足！');return;}
+    this.spend(node.cost);this.p.techUnlocked.push(id);
+    // Apply tech effect
+    const fx={fl:()=>{this.p.tb.sr+=.2},np:()=>{this.p.tb.apt+=2},dm:()=>{this.p.tb.ib+=.3},
+      bd:()=>{this.p.tb.apt+=4},at:()=>{},df:()=>{this.p.tb.eld+=4},
+      iw:()=>{this.p.tb.eld+=6;this.p.tb.sr+=.25},ca:()=>{this.p.tb.ca=true},qc:()=>{this.p.tb.ps=true}};
+    if(fx[id])fx[id]();
+    this.updateHUD();this.cm('ov-main');
+    this.log(`科技解鎖：【${node.name}】`,'log-good');this.notify(`✅ 解鎖【${node.name}】！`);
+  },
+  _showIntel(){
+    document.getElementById('main-t').textContent='🔍 情報中心';
+    const factions=[
+      {id:'kmt',name:'中國國民黨',icon:'🔵',color:'var(--kmt2)'},
+      {id:'dpp',name:'民主進步黨',icon:'🟢',color:'var(--dpp2)'},
+      {id:'tpp',name:'台灣民眾黨',icon:'⚪',color:'var(--tpp2)'},
+    ];
+    const hasIntel=this.p.techUnlocked.includes('dm');
+    document.getElementById('main-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">情報等級：${hasIntel?'★★ 高級（已解鎖民調監控）':'★ 基礎'}</div>
+      ${factions.map(f=>{
+        const terrs=Object.entries(this.td).filter(([,t])=>t.owner===f.id);
+        const totalTroops=terrs.reduce((a,[,t])=>a+t.troops,0);
+        const rel=this.p.diplo[f.id];
+        const relBadge=`<span class="rel-badge rel-${rel}">${{ally:'盟友',neutral:'中立',war:'交戰'}[rel]}</span>`;
+        return`<div style="background:var(--bg0);border:1px solid var(--brd3);margin-bottom:8px">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--brd3);display:flex;align-items:center;gap:8px">
+            <span style="font-size:17px">${f.icon}</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700">${f.name}</div>
+              <div style="font-size:9px;color:var(--tx3);margin-top:2px">控制${terrs.length}縣市 ${relBadge}</div>
+            </div>
+          </div>
+          ${terrs.map(([tid,t])=>`<div class="intel-row">
+            <span>${t.icon} ${t.name}</span>
+            <span style="color:var(--tx3)">${hasIntel?`守軍 <strong style="color:var(--red2)">${t.troops.toLocaleString()}</strong>`:''}</span>
+            <span style="font-size:9px;color:var(--tx3)">城防${t.def}</span>
+          </div>`).join('')}
+        </div>`;}).join('')}`;
+    this.om('ov-main');
+  },
+  _showDiplo(){this._showDiploFull()},
+  _showDiploFull(){
+    document.getElementById('main-t').textContent='🤝 外交談判';
+    const factions=[
+      {id:'kmt',name:'中國國民黨',icon:'🔵',col:'var(--kmt2)'},
+      {id:'dpp',name:'民主進步黨',icon:'🟢',col:'var(--dpp2)'},
+      {id:'tpp',name:'台灣民眾黨',icon:'⚪',col:'var(--tpp2)'},
+    ].filter(f=>f.id!==this.p.partyType);
+    const rl={ally:'✅ 盟友',neutral:'⚫ 中立',war:'⚔ 交戰'};
+    document.getElementById('main-b').innerHTML=factions.map(f=>{
+      const rel=this.p.diplo[f.id];const terrs=Object.values(this.td).filter(t=>t.owner===f.id).length;
+      return`<div style="padding:12px;background:var(--bg0);border:1px solid var(--brd);margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:20px">${f.icon}</span>
+          <div>
+            <div style="font-size:12px;font-weight:700">${f.name}</div>
+            <div style="font-size:9px;color:var(--tx3);margin-top:2px">關係：<span style="color:${f.col}">${rl[rel]||'中立'}</span> · 控制${terrs}縣市 · ${this.p.hostileTurns[f.id]>0?`<span style="color:var(--red2)">⚠️ 敵意${this.p.hostileTurns[f.id]}回合</span>`:'穩定'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="mbtn" style="flex:1;font-size:9px" onclick="G._setRel('${f.id}','ally')">🤝 結盟<br><span style="color:var(--tx3)">-400金</span></button>
+          <button class="mbtn" style="flex:1;font-size:9px" onclick="G._setRel('${f.id}','neutral')">😐 中立<br><span style="color:var(--tx3)">-100金</span></button>
+          <button class="mbtn mbtn-d" style="flex:1;font-size:9px" onclick="G._setRel('${f.id}','war')">⚔ 宣戰<br><span style="color:var(--tx3)">免費</span></button>
+        </div>
+      </div>`;}).join('');
+    this.om('ov-main');
+  },
+  _setRel(fac,type){
+    const costs={ally:400,neutral:100,war:0};const cost=costs[type];
+    if(this.p.gold<cost){this.notify('獻金不足！');return;}
+    this.spend(cost);this.p.diplo[fac]=type;
+    if(type!=='war')this.p.hostileTurns[fac]=0;
+    this.updateHUD();this.cm('ov-main');
+    const fn={kmt:'國民黨',dpp:'民進黨',tpp:'民眾黨'};
+    this.log(`外交：對${fn[fac]}${type==='ally'?'結盟':type==='war'?'宣戰':'回復中立'}！`,'log-good');
+    if(type==='war'){this.p.approval=Math.max(0,this.p.approval-6);this.p.fame+=5;}
+    if(type==='ally'){this.p.approval=Math.min(100,this.p.approval+4);this.p.fame+=10;}
+  },
+  _showRank(){
+    const cnt={};Object.values(this.td).forEach(t=>{cnt[t.owner]=(cnt[t.owner]||0)+1;});
+    const tot=Object.keys(this.td).length;
+    const ents=[
+      {lbl:`👑 ${this.p.name}（你）`,owner:'player',col:'var(--plr2)'},
+      {lbl:'🔵 中國國民黨',owner:'kmt',col:'var(--kmt2)'},
+      {lbl:'🟢 民主進步黨',owner:'dpp',col:'var(--dpp2)'},
+      {lbl:'⚪ 台灣民眾黨',owner:'tpp',col:'var(--tpp2)'},
+      {lbl:'⚫ 中立地區',  owner:'none',col:'#444'},
+    ].map(e=>({...e,n:cnt[e.owner]||0})).sort((a,b)=>b.n-a.n);
+    document.getElementById('main-t').textContent='📊 勢力排行';
+    document.getElementById('main-b').innerHTML=`
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">第${this.turn}回合 · 共${tot}縣市 · 佔領15個統一臺灣</div>
+      <div style="font-size:10px;color:var(--gold3);margin-bottom:12px">你的聲望：⭐ ${this.p.fame}</div>
+      ${ents.map((e,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg0);border:1px solid var(--brd3);margin-bottom:6px">
+        <div style="font-size:22px;font-weight:900;color:${i===0?'var(--gold)':'var(--tx3)'};min-width:28px">${i+1}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700">${e.lbl}</div>
+          <div style="height:5px;background:var(--bg3);margin-top:5px;overflow:hidden"><div style="height:100%;width:${(e.n/tot)*100}%;background:${e.col};transition:width .4s"></div></div>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:${e.col}">${e.n}</div>
+      </div>`).join('')}`;
+    this.om('ov-main');
+  },
+
+  // ── EVENTS ──
+  triggerEvent(){
+    const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+    this._curEv=ev;
+    document.getElementById('ev-icon').textContent=ev.icon;
+    document.getElementById('ev-title').textContent=ev.title;
+    document.getElementById('ev-text').textContent=ev.text;
+    document.getElementById('ev-choices').innerHTML=ev.choices.map((c,i)=>`
+      <button class="ev-choice" onclick="G._resolveEv(${i})">
+        <span>${c.t}</span><span class="ev-fx">${c.fx}</span>
+      </button>`).join('');
+    this.om('ov-event');
+  },
+  _resolveEv(i){
+    if(!this._curEv)return;
+    const result=this._curEv.choices[i].fn(this);
+    if(result===false)return;
+    this.updateHUD();this.cm('ov-event');
+  },
+  tryGainTerr(){
+    const neutral=Object.keys(this.td).filter(id=>this.td[id].owner==='none');
+    if(neutral.length){
+      const tid=neutral[Math.floor(Math.random()*neutral.length)];
+      this.td[tid].owner='player';this.p.territories.push(tid);
+      this._buildMap(document.getElementById('gsvg'),this.selTid,t=>this.selTerr(t));
+      this.log(`選舉成功！佔領${this.td[tid].name}！`,'log-event');this.notify(`🎉 獲得${this.td[tid].name}！`);
+    }else this.notify('沒有中立縣市可爭取。');
+  },
+
+  // ── END TURN ──
+  endTurn(){
+    this.turn++;
+    let gi=0,fi=0,msg=[];
+    this.p.territories.forEach(tid=>{
+      const t=this.td[tid];
+      const hasChanghua=this.p.territories.includes('changhua');
+      const agriBonus=(tid==='yunlin'||tid==='pingtung'||tid==='changhua')?1.2:1;
+      const commBonus=tid==='taipei'?2:tid==='kaohsiung'?1.3:1;
+      gi+=Math.round(t.comm*1.9*commBonus+t.agri*.35);
+      fi+=Math.round(t.agri*1.6*agriBonus+t.comm*.22);
+      if(tid==='miaoli')gi+=60;
+      if(tid==='yilan')fi+=100;
+      if(tid==='chiayiX')gi+=80;
+      t.pop=Math.max(10,t.pop-.8);t.sec=Math.max(10,t.sec-.4);
+      t.troops=Math.round(t.troops*1.025+25);
+    });
+    // Policy upkeep
+    let policyUpkeep=0;
+    this.p.activePolicies.forEach(pid=>{
+      const pol=POLICIES.find(p=>p.id===pid);
+      if(pol){policyUpkeep+=pol.upkeep;pol.fx(this);}
+    });
+    gi=Math.max(0,gi-policyUpkeep);
+    this.p.gold+=gi;this.p.food+=fi;
+    this.p.approval=Math.max(0,Math.min(100,this.p.approval+this.p.tb.apt));
+    // Tech effects
+    if(this.p.tb.ca){
+      const tgts=Object.keys(this.td).filter(id=>['kmt','dpp','tpp'].includes(this.td[id].owner));
+      if(tgts.length){const tid=tgts[Math.floor(Math.random()*tgts.length)];this.td[tid].comm=Math.max(10,this.td[tid].comm-15);this.log(`💻 網路攻擊：${this.td[tid].name}商業-15`,'log-good');}
+    }
+    if(this.p.tb.eld>0){this.npcs.filter(n=>!n.owned).forEach(n=>{n.loyalty=Math.max(0,n.loyalty-this.p.tb.eld);});}
+    if(this.p.tb.at){Object.keys(this.td).filter(id=>!this.p.territories.includes(id)&&this.td[id].owner!=='none').forEach(id=>{this.td[id].pop=Math.max(5,this.td[id].pop-2);});}
+    // Fame decay
+    this.p.fame=Math.max(0,this.p.fame+Math.round(this.p.territories.length/2));
+
+    this._aiTurn();
+    this.updateHUD();
+    this._buildMap(document.getElementById('gsvg'),this.selTid,t=>this.selTerr(t));
+    if(this.selTid)this._renderPanel(this.selTid);
+
+    document.getElementById('to-num').textContent=this.turn;
+    document.getElementById('to-sub').textContent=`+${gi}獻金  +${fi}糧  第${this.turn}回合開始`;
+    const too=document.getElementById('turn-overlay');too.classList.add('show');setTimeout(()=>too.classList.remove('show'),2500);
+    this.log(`─── 第${this.turn}回合 ─── +${gi}獻金 +${fi}糧${policyUpkeep?` (政策費${policyUpkeep})`:''}`, 'log-turn');
+    if(Math.random()<.38)setTimeout(()=>this.triggerEvent(),1400);
+    this._checkGameOver();
+  },
+
+  // ── AI TURN ──
+  _aiTurn(){
+    const facs=['kmt','dpp','tpp'];
+    const fn={kmt:'國民黨',dpp:'民進黨',tpp:'民眾黨'};
+    // 1. Expand into neutral
+    facs.forEach(fac=>{
+      if(Math.random()<.4){
+        const neutral=Object.keys(this.td).filter(id=>this.td[id].owner==='none');
+        if(neutral.length){const tid=neutral[Math.floor(Math.random()*neutral.length)];
+          this.td[tid].owner=fac;this.log(`${fn[fac]}佔領了${this.td[tid].name}！`,'log-warn');}
+      }
+    });
+    // 2. Inter-faction warfare
+    facs.forEach(atk=>{
+      if(Math.random()<.2){
+        const defs=facs.filter(f=>f!==atk);
+        defs.forEach(def=>{
+          const dTerrs=Object.keys(this.td).filter(id=>this.td[id].owner===def);
+          if(dTerrs.length&&Math.random()<.35){
+            const tid=dTerrs[Math.floor(Math.random()*dTerrs.length)];
+            const atkPow=Object.values(this.td).filter(t=>t.owner===atk).reduce((a,t)=>a+t.troops,0);
+            if(atkPow*.18>this.td[tid].troops+this.td[tid].def*5){
+              this.td[tid].owner=atk;this.log(`${fn[atk]}奪取${this.td[tid].name}！`,'log-warn');}
+          }
+        });
+      }
+    });
+    // 3. Escalating tension
+    facs.forEach(fac=>{
+      const rel=this.p.diplo[fac];if(rel==='ally')return;
+      const pn=this.p.territories.length;
+      if(rel==='neutral'){
+        if(pn>=3&&Math.random()<(.04+(pn-3)*.03))this.p.hostileTurns[fac]=(this.p.hostileTurns[fac]||0)+1;
+        if(this.p.hostileTurns[fac]>=4&&Math.random()<.5){
+          this.p.diplo[fac]='war';this.log(`⚠️ ${fn[fac]}對你宣戰！`,'log-war');this.notify(`⚠️ ${fn[fac]}宣戰！`);this.p.hostileTurns[fac]=0;
         }
+      }
+    });
+    // 4. Attack player
+    facs.forEach(fac=>{
+      if(this.p.diplo[fac]!=='war')return;
+      if(!this.p.territories.length)return;
+      if(Math.random()<.48){
+        const ptid=this.p.territories[Math.floor(Math.random()*this.p.territories.length)];
+        const terr=this.td[ptid];
+        const facTerrs=Object.keys(this.td).filter(id=>this.td[id].owner===fac);
+        if(!facTerrs.length)return;
+        const aiAtk=Math.round(facTerrs.reduce((a,id)=>a+this.td[id].troops,0)*.2+Math.random()*300);
+        const pDef=terr.troops+terr.def*9+this.p.stats.command*5;
+        if(aiAtk>pDef){
+          terr.owner=fac;this.p.territories=this.p.territories.filter(t=>t!==ptid);
+          this.p.troops=Math.max(100,this.p.troops-Math.round(terr.troops*.5));terr.troops=Math.round(aiAtk*.35);
+          this.log(`⚠️ ${fn[fac]}攻陷${terr.name}！`,'log-war');this.notify(`⚠️ ${terr.name}失守！`);
+          this.updateHUD();this._buildMap(document.getElementById('gsvg'),this.selTid,t=>this.selTerr(t));
+        }else{terr.troops=Math.max(50,terr.troops-Math.round(aiAtk*.35));this.log(`${fn[fac]}進攻${terr.name}被擊退！`,'log-good');}
+      }
+    });
+  },
 
-        function loadTeam(teamId) {
-            // 更新按鈕樣式
-            document.querySelectorAll('.team-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-800', 'border-blue-400', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
-                btn.classList.add('bg-slate-800', 'border-gray-500');
-                if(btn.getAttribute('onclick').includes(teamId)) {
-                    btn.classList.remove('bg-slate-800', 'border-gray-500');
-                    btn.classList.add('bg-blue-800', 'border-blue-400', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
-                }
-            });
+  // ── WIN/LOSE ──
+  _checkWin(){
+    if(this.p.territories.length>=15){
+      setTimeout(()=>{this._showSkill('👑','統一臺灣！',`第${this.turn}回合 · 恭喜！你成功統一了台灣！`);
+        this.log('🎊 ===== 你統一了台灣！遊戲勝利！===== 🎊','log-event');},600);
+    }
+  },
+  _checkGameOver(){
+    if(this.p.territories.length===0){
+      document.getElementById('go-sub').textContent=`第${this.turn}回合 · 所有領地失守，政治生涯終結`;
+      document.getElementById('gameover').classList.add('show');
+    }
+  },
 
-            const grid = document.getElementById('player-grid');
-            grid.innerHTML = '';
-            
-            const teamPlayers = allPlayersData.filter(p => p.team === teamId);
-            
-            teamPlayers.forEach(player => {
-                const card = document.createElement('div');
-                card.className = 'wbc-card p-5 cursor-pointer flex flex-col h-full';
-                card.onclick = () => showModal(player);
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="font-roboto font-black text-3xl text-gray-500/50">#${player.number}</span>
-                        <span class="text-xs font-bold px-2 py-1 bg-slate-800 border border-slate-600 rounded text-gray-300">${player.position}</span>
-                    </div>
-                    <h3 class="text-2xl font-black mb-1 text-white">${player.name}</h3>
-                    <p class="text-xs text-blue-400 font-bold mb-4 line-clamp-1">${player.organization}</p>
-                    <div class="mt-auto border-t border-slate-700/50 pt-3 flex justify-between items-center text-sm font-bold text-gray-400">
-                        <span>${player.role}</span>
-                        <span class="text-red-500 flex items-center gap-1">DETAILS <span class="text-lg">»</span></span>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+  // ── HUD ──
+  updateHUD(){
+    document.getElementById('h-name').textContent=this.p.name;
+    const n=this.p.territories.length;
+    const titles=['初出茅廬','地方政客','地方實力派','新興諸侯','一方諸侯','強藩重鎮','地方霸主','區域強權','黨派領袖','一統在望','臺灣統治者'];
+    document.getElementById('h-title').textContent=titles[Math.min(n,10)];
+    document.getElementById('h-party').textContent=this.p.party;
+    document.getElementById('h-gold').textContent=this.p.gold.toLocaleString();
+    document.getElementById('h-food').textContent=this.p.food.toLocaleString();
+    document.getElementById('h-troops').textContent=this.p.troops.toLocaleString();
+    document.getElementById('h-approve').textContent=this.p.approval+'%';
+    document.getElementById('h-terr').textContent=n;
+    document.getElementById('h-fame').textContent=this.p.fame;
+    document.getElementById('h-turn').textContent=this.turn;
+  },
 
-        function showModal(player) {
-            document.getElementById('modal-bg-number').textContent = player.number;
-            document.getElementById('modal-number-display').textContent = player.number;
-            document.getElementById('modal-name').textContent = player.name;
-            document.getElementById('modal-org').textContent = player.organization;
-            document.getElementById('modal-role').textContent = player.role;
-            document.getElementById('modal-position').textContent = player.position;
-            document.getElementById('modal-hw').textContent = player.physical;
-            document.getElementById('modal-birth').textContent = player.birth;
-            document.getElementById('modal-img-hint').innerHTML = `${player.name}.png`;
-            document.getElementById('modal-scouting').innerHTML = player.scoutingReport;
+  // ── SKILL OVERLAY ──
+  _showSkill(icon,name,desc){
+    document.getElementById('sk-icon').textContent=icon;
+    document.getElementById('sk-name').textContent=name;
+    document.getElementById('sk-desc').textContent=desc;
+    const o=document.getElementById('skill-overlay');o.classList.add('show');
+    setTimeout(()=>o.classList.remove('show'),2300);
+  },
 
-            // 榮譽榜
-            const accoladesDiv = document.getElementById('modal-accolades');
-            accoladesDiv.innerHTML = player.accolades.map(acc => 
-                `<div class="bg-slate-800/50 p-3 rounded border border-slate-700/50 flex items-start gap-2">
-                    <span class="gold-accent mt-0.5">★</span>
-                    <span class="text-sm font-bold text-gray-200">${acc}</span>
-                </div>`
-            ).join('');
+  // ── SAVE/LOAD ──
+  save(){
+    try{localStorage.setItem('twpw5',JSON.stringify({turn:this.turn,p:this.p,td:this.td,
+      npc:this.npcs.map(({id,owned,loyalty,cmd,force,intel,pol,charm})=>({id,owned,loyalty,cmd,force,intel,pol,charm})),
+      mc:this._missionCooldown}));this.notify('✅ 存檔成功！');}
+    catch(e){this.notify('存檔失敗：'+e.message);}
+  },
+  load(){
+    try{
+      const d=JSON.parse(localStorage.getItem('twpw5'));if(!d){this.notify('找不到存檔！');return;}
+      this.turn=d.turn;this.p=d.p;this.td=d.td;this._missionCooldown=d.mc||{};
+      this.npcs=JSON.parse(JSON.stringify(NPCS));
+      if(d.npc)d.npc.forEach(s=>{const n=this.npcs.find(n=>n.id===s.id);if(n){Object.assign(n,s);}});
+      this.show('gs');
+      this._buildMap(document.getElementById('gsvg'),null,t=>this.selTerr(t));
+      this.updateHUD();this._renderPanel(null);
+      this.log('讀取存檔成功！','log-good');this.notify('✅ 讀取成功！');
+    }catch(e){this.notify('讀取失敗，請開新遊戲。');}
+  },
+};
 
-            // 數據表處理 (區分投手與打者)
-            const statsHeader = document.getElementById('stats-header');
-            const statsBody = document.getElementById('stats-body');
-            
-            if (player.statsType === 'pitcher') {
-                statsHeader.innerHTML = '<th class="py-3 px-4">W-L</th><th class="py-3 px-4">ERA</th><th class="py-3 px-4">IP</th><th class="py-3 px-4">SO</th><th class="py-3 px-4">WHIP</th>';
-                statsBody.innerHTML = `<tr>
-                    <td class="py-4 px-4">${player.stats.wl}</td>
-                    <td class="py-4 px-4 text-blue-400">${player.stats.era}</td>
-                    <td class="py-4 px-4">${player.stats.ip}</td>
-                    <td class="py-4 px-4">${player.stats.so}</td>
-                    <td class="py-4 px-4 text-red-400">${player.stats.whip}</td>
-                </tr>`;
-            } else {
-                statsHeader.innerHTML = '<th class="py-3 px-4">AVG</th><th class="py-3 px-4">HR</th><th class="py-3 px-4">RBI</th><th class="py-3 px-4">OBP</th><th class="py-3 px-4">OPS</th>';
-                statsBody.innerHTML = `<tr>
-                    <td class="py-4 px-4 text-blue-400">${player.stats.avg}</td>
-                    <td class="py-4 px-4">${player.stats.hr}</td>
-                    <td class="py-4 px-4">${player.stats.rbi}</td>
-                    <td class="py-4 px-4">${player.stats.obp}</td>
-                    <td class="py-4 px-4 text-red-400">${player.stats.ops}</td>
-                </tr>`;
-            }
-
-            document.getElementById('player-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('player-modal').classList.add('hidden');
-        }
-
-        // 啟動
-        window.onload = fetchPlayersData;
-    </script>
+// ── TITLE PARTICLES ──
+window.onload=()=>{
+  const c=document.getElementById('tc'),ctx=c.getContext('2d');
+  const resize=()=>{c.width=innerWidth;c.height=innerHeight};resize();addEventListener('resize',resize);
+  const pts=Array.from({length:100},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    r:.4+Math.random()*1.8,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,
+    col:Math.random()<.35?`rgba(232,184,48,${.3+Math.random()*.5})`:`rgba(255,255,255,${.07+Math.random()*.2})`
+  }));
+  (function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.col;ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>c.width)p.vx*=-1;if(p.y<0||p.y>c.height)p.vy*=-1;});
+    requestAnimationFrame(loop);
+  })();
+};
+</script>
 </body>
 </html>
