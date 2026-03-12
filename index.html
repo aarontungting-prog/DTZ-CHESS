@@ -5,10 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>文字江湖：獨孤求敗 2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&family=Ma+Shan+Zheng&display=swap');
 
 :root {
+
 –bg:#0a0804;–panel:#0f0c08;–panel2:#120e08;
 –border:#3d2f1a;–border2:#5a4525;
 –gold:#c9a84c;–gold-bright:#f0c060;–gold-dim:#7a6030;
@@ -19,19 +22,19 @@
 –sword:#e8c56d;–palm:#e88844;–inner:#88ccff;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(–bg);color:var(–text);font-family:‘Noto Serif TC’,serif;min-height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+body{background:var(–bg);color:var(–text);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;min-height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 body::before{content:’’;position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(201,168,76,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at -10% 50%,rgba(192,57,43,.04) 0%,transparent 50%),radial-gradient(ellipse 60% 80% at 110% 50%,rgba(93,173,226,.04) 0%,transparent 50%);pointer-events:none;z-index:0;}
 
 /* ── TITLE ── */
 #title-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:100;}
 #title-screen::before{content:’’;position:absolute;inset:0;background:radial-gradient(ellipse 120% 60% at 50% 40%,rgba(201,168,76,.15) 0%,transparent 60%),url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘4’ height=‘4’%3E%3Crect width=‘1’ height=‘1’ fill=‘rgba(201,168,76,.12)’/%3E%3C/svg%3E”);}
-.title-main{font-family:‘Ma Shan Zheng’,serif;font-size:clamp(2.2rem,8vw,5.5rem);color:var(–gold);text-shadow:0 0 60px rgba(201,168,76,.7),0 0 120px rgba(201,168,76,.4);letter-spacing:.35em;position:relative;animation:titleGlow 3s ease-in-out infinite;}
+.title-main{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:clamp(2.2rem,8vw,5.5rem);color:var(–gold);text-shadow:0 0 60px rgba(201,168,76,.7),0 0 120px rgba(201,168,76,.4);letter-spacing:.35em;position:relative;animation:titleGlow 3s ease-in-out infinite;}
 .title-sub{font-size:clamp(.9rem,2.5vw,1.4rem);color:var(–text-dim);letter-spacing:.7em;margin-top:.8rem;position:relative;}
 .title-quote{position:relative;margin-top:2.5rem;color:var(–text-dim);font-size:.85rem;letter-spacing:.18em;line-height:2.2;text-align:center;opacity:0;animation:fadeIn 2s ease forwards 1.5s;}
 .title-divider{width:320px;height:1px;background:linear-gradient(90deg,transparent,var(–gold),transparent);margin:1.8rem auto;position:relative;}
 .title-divider::before,.title-divider::after{content:‘◆’;position:absolute;top:50%;transform:translateY(-50%);color:var(–gold);font-size:.55rem;}
 .title-divider::before{left:28%;}.title-divider::after{right:28%;}
-.title-btn{position:relative;padding:.9rem 2.8rem;background:transparent;border:1px solid var(–gold);color:var(–gold);font-family:‘Noto Serif TC’,serif;font-size:1rem;letter-spacing:.4em;cursor:pointer;transition:all .3s;opacity:0;animation:fadeIn 1s ease forwards 2.5s;}
+.title-btn{position:relative;padding:.9rem 2.8rem;background:transparent;border:1px solid var(–gold);color:var(–gold);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:1rem;letter-spacing:.4em;cursor:pointer;transition:all .3s;opacity:0;animation:fadeIn 1s ease forwards 2.5s;}
 .title-btn:hover{background:rgba(201,168,76,.1);box-shadow:0 0 30px rgba(201,168,76,.35);text-shadow:0 0 10px rgba(201,168,76,.9);}
 .title-btn2{margin-top:.6rem;font-size:.82rem;opacity:0;animation:fadeIn 1s ease forwards 3.2s;}
 
@@ -39,17 +42,17 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 #create-screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.97);z-index:99;padding:1.5rem;}
 .create-panel{border:1px solid var(–border2);padding:2rem;max-width:540px;width:100%;background:var(–panel);position:relative;max-height:90vh;overflow-y:auto;}
 .create-panel::before{content:’’;position:absolute;top:-1px;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,var(–gold),transparent);}
-.panel-title{font-family:‘Ma Shan Zheng’,serif;font-size:1.5rem;color:var(–gold);letter-spacing:.3em;text-align:center;margin-bottom:1.5rem;}
+.panel-title{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.5rem;color:var(–gold);letter-spacing:.3em;text-align:center;margin-bottom:1.5rem;}
 .input-group{margin-bottom:1.2rem;}
 .input-group label{display:block;color:var(–text-dim);font-size:.8rem;letter-spacing:.2em;margin-bottom:.4rem;}
-.input-group input{width:100%;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–white);padding:.65rem 1rem;font-family:‘Noto Serif TC’,serif;font-size:.95rem;outline:none;transition:border-color .3s;}
+.input-group input{width:100%;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–white);padding:.65rem 1rem;font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.95rem;outline:none;transition:border-color .3s;}
 .input-group input:focus{border-color:var(–gold);}
 .sec-head{font-size:.68rem;letter-spacing:.3em;color:var(–text-dim);border-bottom:1px solid rgba(61,47,26,.5);padding-bottom:.25rem;margin-bottom:.7rem;}
 .origin-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem;}
-.origin-btn{padding:.75rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;}
+.origin-btn{padding:.75rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;}
 .origin-btn:hover,.origin-btn.selected{border-color:var(–gold);color:var(–gold);background:rgba(201,168,76,.08);}
 .origin-btn small{display:block;color:var(–text-dim);font-size:.67rem;margin-top:.2rem;}
-.start-btn{width:100%;margin-top:1rem;background:transparent;border:1px solid var(–gold);color:var(–gold);font-family:‘Noto Serif TC’,serif;font-size:1rem;padding:.9rem;cursor:pointer;letter-spacing:.3em;transition:all .3s;}
+.start-btn{width:100%;margin-top:1rem;background:transparent;border:1px solid var(–gold);color:var(–gold);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:1rem;padding:.9rem;cursor:pointer;letter-spacing:.3em;transition:all .3s;}
 .start-btn:hover{background:rgba(201,168,76,.1);box-shadow:0 0 20px rgba(201,168,76,.3);}
 
 /* ── MAIN GAME ── */
@@ -58,7 +61,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 
 /* TOPBAR */
 #topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 1.2rem;border-bottom:1px solid var(–border);background:var(–panel);}
-.topbar-title{font-family:‘Ma Shan Zheng’,serif;color:var(–gold);font-size:1rem;letter-spacing:.3em;}
+.topbar-title{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;color:var(–gold);font-size:1rem;letter-spacing:.3em;}
 .topbar-info{display:flex;gap:1.5rem;font-size:.72rem;color:var(–text-dim);}
 .topbar-info span b{color:var(–text);}
 .save-ind{font-size:.62rem;color:var(–text-dim);letter-spacing:.1em;cursor:pointer;}
@@ -69,7 +72,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 #left-panel::-webkit-scrollbar{width:3px;}
 #left-panel::-webkit-scrollbar-thumb{background:var(–border);}
 .section-head{font-size:.66rem;letter-spacing:.28em;color:var(–text-dim);border-bottom:1px solid rgba(61,47,26,.4);padding-bottom:.25rem;margin-bottom:.4rem;}
-.char-name{font-family:‘Ma Shan Zheng’,serif;font-size:1.25rem;color:var(–white);text-align:center;}
+.char-name{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.25rem;color:var(–white);text-align:center;}
 .char-title-disp{font-size:.72rem;color:var(–gold);text-align:center;letter-spacing:.2em;margin-bottom:.3rem;}
 
 /* Stat bars */
@@ -112,7 +115,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .dao-text{text-align:center;font-size:.7rem;color:var(–text-dim);letter-spacing:.1em;}
 
 /* Rep */
-.rep-badge{text-align:center;font-family:‘Ma Shan Zheng’,serif;font-size:1rem;padding:.4rem;border:1px solid var(–border);background:rgba(0,0,0,.3);}
+.rep-badge{text-align:center;font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1rem;padding:.4rem;border:1px solid var(–border);background:rgba(0,0,0,.3);}
 .hidden-hints{font-size:.68rem;color:var(–text-dim);font-style:italic;line-height:1.9;}
 
 /* MAIN AREA */
@@ -128,20 +131,20 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .log-entry.qi-text{color:var(–qi);}
 .log-entry.gold-text{color:var(–gold);}
 .log-entry.evil-text{color:var(–evil-bright);}
-.log-entry.levelup{color:var(–gold-bright);font-family:‘Ma Shan Zheng’,serif;font-size:1.1rem;text-align:center;letter-spacing:.2em;}
+.log-entry.levelup{color:var(–gold-bright);font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.1rem;text-align:center;letter-spacing:.2em;}
 .log-divider{text-align:center;color:var(–text-dim);font-size:.72rem;margin:.6rem 0;opacity:.5;}
 .hl-skill{color:var(–gold);font-weight:bold;}
 .hl-dmg{color:var(–red-bright);font-weight:bold;}
 .hl-heal{color:var(–green);}
 .hl-item{color:var(–cyan);}
 .hl-npc{color:var(–white);font-style:italic;}
-.hl-crit{color:#ff6b35;font-weight:bold;font-family:‘Ma Shan Zheng’,serif;font-size:1.05em;}
+.hl-crit{color:#ff6b35;font-weight:bold;font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.05em;}
 
 /* CHOICE AREA */
 #choice-area{grid-column:1/-1;border-top:1px solid var(–border);background:var(–panel);padding:.9rem 1.3rem;display:flex;flex-direction:column;gap:.5rem;}
 .choice-hint{font-size:.68rem;color:var(–text-dim);letter-spacing:.12em;}
 .choice-row{display:flex;gap:.5rem;flex-wrap:wrap;}
-.choice-btn{padding:.55rem 1.1rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.05em;position:relative;overflow:hidden;}
+.choice-btn{padding:.55rem 1.1rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.05em;position:relative;overflow:hidden;}
 .choice-btn::before{content:’’;position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.05),transparent);opacity:0;transition:opacity .2s;}
 .choice-btn:hover{border-color:var(–gold);color:var(–gold);}
 .choice-btn:hover::before{opacity:1;}
@@ -156,9 +159,9 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 #right-panel{border-left:1px solid var(–border);background:var(–panel);overflow-y:auto;padding:.9rem;display:flex;flex-direction:column;gap:.7rem;}
 #right-panel::-webkit-scrollbar{width:3px;}
 #right-panel::-webkit-scrollbar-thumb{background:var(–border);}
-.loc-name{font-family:‘Ma Shan Zheng’,serif;font-size:1.05rem;color:var(–gold);text-align:center;}
+.loc-name{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.05rem;color:var(–gold);text-align:center;}
 .loc-desc{font-size:.7rem;color:var(–text-dim);line-height:1.75;text-align:center;}
-.loc-btn{padding:.45rem;background:rgba(0,0,0,.4);border:1px solid rgba(61,47,26,.4);color:var(–text-dim);font-family:‘Noto Serif TC’,serif;font-size:.72rem;cursor:pointer;transition:all .2s;text-align:left;letter-spacing:.1em;width:100%;margin-bottom:.3rem;}
+.loc-btn{padding:.45rem;background:rgba(0,0,0,.4);border:1px solid rgba(61,47,26,.4);color:var(–text-dim);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.72rem;cursor:pointer;transition:all .2s;text-align:left;letter-spacing:.1em;width:100%;margin-bottom:.3rem;}
 .loc-btn:hover{border-color:var(–border);color:var(–text);}
 .ranking-entry{display:flex;justify-content:space-between;font-size:.68rem;padding:.18rem 0;border-bottom:1px solid rgba(61,47,26,.2);}
 .ranking-entry .rank-num{color:var(–text-dim);width:18px;}
@@ -170,10 +173,10 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 #battle-screen{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
 #battle-screen.active{display:flex;}
 .battle-arena{width:100%;max-width:720px;border:1px solid var(–red);background:#060302;padding:1.8rem;position:relative;}
-.battle-arena::before{content:‘戰’;position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:‘Ma Shan Zheng’,serif;font-size:1.8rem;color:var(–red);background:#060302;padding:0 .8rem;text-shadow:0 0 20px rgba(192,57,43,.9);}
+.battle-arena::before{content:‘戰’;position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.8rem;color:var(–red);background:#060302;padding:0 .8rem;text-shadow:0 0 20px rgba(192,57,43,.9);}
 .battle-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.3rem;}
 .b-combatant{flex:1;text-align:center;}
-.b-name{font-family:‘Ma Shan Zheng’,serif;font-size:1.15rem;color:var(–white);}
+.b-name{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.15rem;color:var(–white);}
 .b-title-sm{font-size:.67rem;color:var(–text-dim);margin:.1rem 0;}
 .b-hpbar{height:7px;background:rgba(0,0,0,.5);border:1px solid rgba(192,57,43,.3);margin:.4rem 0;overflow:hidden;}
 .b-hpfill{height:100%;transition:width .4s ease;}
@@ -182,14 +185,14 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .b-qibar{height:4px;background:rgba(0,0,0,.5);border:1px solid rgba(93,173,226,.2);margin-bottom:.3rem;overflow:hidden;}
 .b-qifill{height:100%;background:linear-gradient(90deg,#1a5276,#5dade2);transition:width .4s ease;}
 .b-stats-text{font-size:.67rem;color:var(–text-dim);}
-.b-vs{font-family:‘Ma Shan Zheng’,serif;font-size:1.8rem;color:var(–red);text-shadow:0 0 20px rgba(192,57,43,.7);padding:0 .8rem;flex-shrink:0;}
+.b-vs{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.8rem;color:var(–red);text-shadow:0 0 20px rgba(192,57,43,.7);padding:0 .8rem;flex-shrink:0;}
 .battle-log{min-height:110px;max-height:140px;overflow-y:auto;font-size:.83rem;line-height:1.9;color:var(–text);margin-bottom:1rem;border:1px solid rgba(61,47,26,.3);padding:.7rem .9rem;background:rgba(0,0,0,.45);}
 .battle-log::-webkit-scrollbar{width:2px;}
 .battle-log::-webkit-scrollbar-thumb{background:var(–border);}
 
 /* Skill grid in battle */
 .b-skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.6rem;}
-.b-skill-btn{padding:.65rem .8rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,serif;font-size:.78rem;cursor:pointer;transition:all .2s;text-align:left;}
+.b-skill-btn{padding:.65rem .8rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.78rem;cursor:pointer;transition:all .2s;text-align:left;}
 .b-skill-btn:hover:not(:disabled){border-color:var(–gold);color:var(–gold);}
 .b-skill-btn:disabled{opacity:.3;cursor:not-allowed;}
 .b-skill-btn .sk-name{display:block;font-size:.8rem;}
@@ -209,7 +212,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .type-tag.magic{border-color:var(–evil-bright);color:var(–evil-bright);}
 
 .b-action-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;}
-.b-action-btn{padding:.6rem 1.3rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;}
+.b-action-btn{padding:.6rem 1.3rem;background:rgba(0,0,0,.5);border:1px solid var(–border);color:var(–text);font-family:‘Noto Serif TC’,‘STSong’,‘SimSun’,serif;font-size:.8rem;cursor:pointer;transition:all .2s;}
 .b-action-btn:hover{border-color:var(–gold);color:var(–gold);}
 .b-action-btn.flee-btn{border-color:rgba(192,57,43,.3);color:var(–text-dim);}
 .b-action-btn.flee-btn:hover{border-color:var(–red);color:var(–red);}
@@ -217,7 +220,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 /* MODALS */
 .modal-base{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
 .modal-base.active{display:flex;}
-.modal-title{font-family:‘Ma Shan Zheng’,serif;font-size:1.4rem;color:var(–gold);letter-spacing:.3em;margin-bottom:1.3rem;}
+.modal-title{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.4rem;color:var(–gold);letter-spacing:.3em;margin-bottom:1.3rem;}
 .modal-close{position:absolute;top:.9rem;right:.9rem;background:transparent;border:1px solid var(–border);color:var(–text-dim);font-size:.75rem;padding:.25rem .7rem;cursor:pointer;letter-spacing:.15em;}
 .modal-close:hover{border-color:var(–red);color:var(–red);}
 .modal-hint{font-size:.7rem;color:var(–text-dim);margin-top:.9rem;letter-spacing:.15em;}
@@ -248,7 +251,7 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .skill-card:hover{border-color:var(–gold);background:rgba(201,168,76,.04);}
 .skill-card.equipped-card{border-color:var(–gold-dim);}
 .skill-card.equipped-card::after{content:‘已裝備’;position:absolute;top:.4rem;right:.4rem;font-size:.58rem;color:var(–gold-dim);letter-spacing:.1em;}
-.sk-card-name{font-family:‘Ma Shan Zheng’,serif;font-size:1.05rem;color:var(–gold);margin-bottom:.2rem;}
+.sk-card-name{font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.05rem;color:var(–gold);margin-bottom:.2rem;}
 .sk-card-type{font-size:.62rem;color:var(–text-dim);letter-spacing:.18em;margin-bottom:.4rem;}
 .sk-card-desc{font-size:.72rem;color:var(–text);line-height:1.6;}
 .sk-card-stats{margin-top:.5rem;font-size:.65rem;display:flex;gap:.8rem;flex-wrap:wrap;}
@@ -260,11 +263,11 @@ body::before{content:’’;position:fixed;inset:0;background:radial-gradient(el
 .sk-card.locked-card .sk-card-name{color:var(–text-dim);}
 
 /* COMBO SYSTEM */
-.combo-banner{position:fixed;top:20%;left:50%;transform:translateX(-50%);font-family:‘Ma Shan Zheng’,serif;font-size:2rem;color:var(–gold);text-shadow:0 0 20px rgba(201,168,76,.8);z-index:200;pointer-events:none;opacity:0;animation:comboBurst 1.8s ease forwards;}
+.combo-banner{position:fixed;top:20%;left:50%;transform:translateX(-50%);font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:2rem;color:var(–gold);text-shadow:0 0 20px rgba(201,168,76,.8);z-index:200;pointer-events:none;opacity:0;animation:comboBurst 1.8s ease forwards;}
 @keyframes comboBurst{0%{opacity:0;transform:translateX(-50%) scale(.5);}20%{opacity:1;transform:translateX(-50%) scale(1.2);}60%{opacity:1;transform:translateX(-50%) scale(1);}100%{opacity:0;transform:translateX(-50%) scale(.8) translateY(-30px);}}
 
 /* Float text */
-.float-txt{position:fixed;pointer-events:none;font-family:‘Ma Shan Zheng’,serif;font-size:1.4rem;font-weight:bold;z-index:200;animation:floatUp 1.4s ease forwards;}
+.float-txt{position:fixed;pointer-events:none;font-family:‘Ma Shan Zheng’,‘STKaiti’,‘KaiTi’,serif;font-size:1.4rem;font-weight:bold;z-index:200;animation:floatUp 1.4s ease forwards;}
 
 /* Animations */
 @keyframes titleGlow{0%,100%{text-shadow:0 0 60px rgba(201,168,76,.6),0 0 120px rgba(201,168,76,.3);}50%{text-shadow:0 0 80px rgba(201,168,76,.85),0 0 150px rgba(201,168,76,.5);}}
@@ -1652,7 +1655,7 @@ function enemyTurn(){
 
 function battleWin(){
   const e=BT.enemy; const r=e.reward||{};
-  bLog(`<span style="color:var(--gold-bright);font-family:'Ma Shan Zheng',serif;font-size:1.1rem;">你擊敗了【${e.name}】！</span>`);
+  bLog(`<span style="color:var(--gold-bright);font-family:'Ma Shan Zheng','STKaiti','KaiTi',serif;font-size:1.1rem;">你擊敗了【${e.name}】！</span>`);
   if(r.gold){G.gold+=r.gold;bLog(`獲得金兩 ${r.gold} 兩`);}
   if(r.exp){G.exp+=r.exp;bLog(`獲得經驗 ${r.exp} 點`);}
   G.stats.rep+=Math.floor((e.lv||1)*6);
@@ -1667,7 +1670,7 @@ function battleWin(){
 }
 
 function battleLose(){
-  bLog(`<span style="color:var(--red-bright);font-family:'Ma Shan Zheng',serif;">你力竭落敗……</span>`);
+  bLog(`<span style="color:var(--red-bright);font-family:'Ma Shan Zheng','STKaiti','KaiTi',serif;">你力竭落敗……</span>`);
   G.hp=Math.max(1,Math.floor(G.maxHp*0.08));
   G.gold=Math.max(0,G.gold-Math.floor(G.gold*0.15));
   bLog("你損失了部分金兩，狼狽逃跑……");
