@@ -3,938 +3,1549 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌸 雙人賓果 BINGO - 和風版 🌸</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+<title>關西八日 · 行程手帳</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  /* 日系傳統色票 */
-  --sakura: #D05A6E;      /* 今樣色 (櫻紅) */
-  --sakura-light: #F4A7B9;/* 櫻色 */
-  --matcha: #86A697;      /* 青磁色 (抹茶綠) */
-  --matcha-dark: #5C7A6B; 
-  --wood: #C7B39A;        /* 胡桃色 */
-  --wood-dark: #A58F74;
-  --bg: #FDFBF7;          /* 和紙白 */
-  --panel: rgba(255, 255, 255, 0.95);
-  --border: rgba(208, 90, 110, 0.25);
-  --text: #2C3E50;        /* 墨色 */
-  --text-light: #7F8C8D;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+  :root {
+    --ink:        #06090f;
+    --deep:       #0b0f1a;
+    --panel:      #101624;
+    --card:       #141c2e;
+    --card-hover: #192235;
+    --border:     #253050;
+    --border-hi:  #3a4f7a;
+    --gold:       #d4a843;
+    --gold-light: #f0cc72;
+    --gold-dim:   rgba(212,168,67,0.18);
+    --gold-glow:  rgba(212,168,67,0.35);
+    --sakura:     #f0a0a0;
+    --cyan:       #5bc8d4;
+    --text:       #e8dfc8;
+    --text-sub:   #b0a898;
+    --muted:      #6a7a94;
+    --white:      #f5f0e8;
+    --danger:     #e05050;
+    --success:    #4caf82;
+  }
 
-/* ── SAKURA FALLING BACKGROUND (落櫻特效) ── */
-#sakura-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.petal{
-  position:absolute;background:linear-gradient(135deg, var(--sakura-light), #fff);
-  border-radius: 15px 0 15px 0; /* 花瓣形狀 */
-  box-shadow: 0 2px 4px rgba(208,90,110,0.2);
-  animation: fall linear infinite;
-}
-@keyframes fall{
-  0% { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(110vh) translateX(20vw) rotate(720deg) scale(0.5); opacity: 0; }
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── GRID PATTERN (傳統和風底紋替代) ── */
-.gridbg{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image: 
-    radial-gradient(var(--wood) 1px, transparent 1px),
-    radial-gradient(var(--wood) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
-  opacity: 0.15;
-}
+  html { scroll-behavior: smooth; }
 
-/* ── SCREENS ── */
-.screen{position:relative;z-index:10;min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px 16px;}
-.screen.active{display:flex;flex-direction:column;}
+  body {
+    background: var(--ink);
+    color: var(--text);
+    /* 加入完整系統字體 Fallback，確保無雲端字體時的秒開體驗與美觀度 */
+    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
 
-/* ── LOGO ── */
-.logo-wrap{text-align:center;margin-bottom:36px;}
-.logo-title{
-  font-family:'Noto Serif TC',serif;font-size:clamp(40px,9vw,72px);font-weight:900;
-  color: var(--sakura);
-  letter-spacing:12px;
-  text-shadow: 2px 4px 12px rgba(208, 90, 110, 0.3);
-}
-.logo-sub{font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--matcha-dark);letter-spacing:6px;margin-top:8px;}
+  /* 襯線體 Fallback */
+  .sync-logo, .hero-kanji, .hero-title, .hero-date-val, .flight-time-val, .days-header h2, .day-date, .day-kanji-label, .hotel-name, .modal-title, .footer-kanji, .loading-kanji {
+    font-family: 'Noto Serif TC', "Songti TC", "LiHei Pro", serif;
+  }
 
-/* ── CARD ── */
-.card{
-  background:var(--panel);border:1px solid var(--border);border-radius:16px;
-  padding:34px 38px;backdrop-filter:blur(10px);
-  box-shadow:0 12px 40px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(255,255,255,0.5);
-  position:relative;overflow:hidden;max-width:440px;width:100%;
-  animation:cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-@keyframes cardIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
-.card-title{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;color:var(--text);text-align:center;margin-bottom:24px;letter-spacing:3px;}
+  /* 英文字體 Fallback */
+  .hero-eyebrow, .flight-airports, .day-num, .item-time {
+    font-family: 'Playfair Display', "Times New Roman", Times, serif;
+  }
 
-/* ── BUTTONS ── */
-.btn{
-  width:100%;padding:15px 22px;border:none;border-radius:8px;
-  font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;
-  cursor:pointer;transition:all 0.2s ease;
-  position:relative;margin-bottom:12px;
-}
-.btn:active{transform:scale(0.97);}
-.btn-sakura{background:var(--sakura);color:#fff;box-shadow:0 4px 12px rgba(208, 90, 110, 0.3);}
-.btn-sakura:hover{background:#C04A5E;transform:translateY(-2px);box-shadow:0 6px 16px rgba(208, 90, 110, 0.4);}
-.btn-matcha{background:var(--matcha);color:#fff;box-shadow:0 4px 12px rgba(134, 166, 151, 0.3);}
-.btn-matcha:hover{background:var(--matcha-dark);transform:translateY(-2px);box-shadow:0 6px 16px rgba(134, 166, 151, 0.4);}
-.btn-wood{background:var(--wood);color:#fff;box-shadow:0 4px 12px rgba(199, 179, 154, 0.4);}
-.btn-wood:hover{background:var(--wood-dark);transform:translateY(-2px);}
-.btn-outline{background:transparent;color:var(--text);border:1px solid var(--wood);}
-.btn-outline:hover{background:rgba(199, 179, 154, 0.1);transform:translateY(-2px);}
-.mb0{margin-bottom:0;}
+  /* ═══════════════════════════════════════
+     SYNC STATUS BAR
+  ═══════════════════════════════════════ */
+  #sync-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 999;
+    font-size: 12px;
+  }
 
-/* ── DIVIDER ── */
-.div{display:flex;align-items:center;gap:11px;margin:18px 0;color:var(--text-light);font-size:12px;letter-spacing:2px;}
-.div::before,.div::after{content:'';flex:1;height:1px;background:var(--border);}
+  .sync-logo {
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+  }
 
-/* ── INPUT ── */
-.inp-wrap{margin-bottom:16px;}
-.inp{width:100%;padding:13px 17px;background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:15px;font-family:'Noto Sans TC',sans-serif;transition:all 0.2s;outline:none;}
-.inp:focus{border-color:var(--sakura);box-shadow:0 0 0 3px rgba(208, 90, 110, 0.15);background:#fff;}
+  #sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+  }
 
-/* ── ROOM CODE ── */
-.rc-box{background:rgba(208,90,110,0.05);border:1px dashed var(--sakura);border-radius:8px;padding:22px;text-align:center;margin-bottom:18px;}
-.rc-lbl{font-size:12px;color:var(--text-light);letter-spacing:3px;margin-bottom:7px;}
-.rc-val{font-family:'Noto Serif TC',serif;font-size:42px;font-weight:900;color:var(--sakura);letter-spacing:14px;}
-.rc-st{font-size:12px;color:var(--matcha-dark);margin-top:9px;letter-spacing:1px;animation:pulse 1.5s infinite;}
-@keyframes pulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
+  #sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  #sync-dot.connected  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  #sync-dot.syncing    { background: var(--gold); animation: pulse 1s infinite; }
+  #sync-dot.error      { background: var(--danger); }
 
-/* ── BACK ── */
-.back-btn{position:fixed;top:18px;left:18px;z-index:50;background:var(--panel);border:1px solid rgba(0,0,0,0.1);color:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all 0.2s;display:none;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-.back-btn:hover{background:var(--bg);border-color:var(--sakura);color:var(--sakura);}
-.back-btn.vis{display:block;}
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
 
-/* ── NOTIFY ── */
-.notif{position:fixed;top:18px;right:18px;z-index:200;background:var(--panel);border-left:4px solid var(--border);border-radius:4px;padding:14px 20px;font-size:14px;font-weight:600;max-width:300px;transform:translateX(150%);transition:transform 0.4s cubic-bezier(0.2,0.8,0.2,1);box-shadow:0 8px 24px rgba(0,0,0,0.1);}
-.notif.show{transform:translateX(0);}
-.notif.s{border-color:var(--matcha);color:var(--matcha-dark);}
-.notif.e{border-color:var(--sakura);color:var(--sakura);}
-.notif.i{border-color:var(--wood-dark);color:var(--text);}
+  /* ═══════════════════════════════════════
+     HERO
+  ═══════════════════════════════════════ */
+  .hero {
+    position: relative;
+    height: 100vh;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 55% 45%, #152040 0%, #06090f 68%);
+  }
 
-/* ── WIN OVERLAY ── */
-.win-ov{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(253,251,247,0.85);backdrop-filter:blur(8px);}
-.win-ov.on{display:flex;}
-.win-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:48px 56px;text-align:center;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:winIn 0.5s cubic-bezier(0.2,0.8,0.2,1);}
-@keyframes winIn{from{transform:scale(0.8) translateY(30px);opacity:0;}to{transform:none;opacity:1;}}
-.win-emoji{font-size:64px;margin-bottom:16px;display:block;}
-.win-title{font-family:'Noto Serif TC',serif;font-size:32px;font-weight:900;color:var(--sakura);margin-bottom:8px;letter-spacing:4px;}
-.win-sub{font-size:15px;color:var(--text-light);margin-bottom:32px;}
+  .hero-kanji {
+    position: absolute;
+    font-size: clamp(160px, 32vw, 380px);
+    font-weight: 600;
+    color: rgba(212,168,67,0.06);
+    user-select: none;
+    pointer-events: none;
+    letter-spacing: -0.05em;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
 
-/* ── DIFFICULTY ── */
-.diff-btns{display:flex;gap:8px;margin-bottom:16px;}
-.diff-btn{flex:1;padding:10px;border-radius:6px;border:1px solid rgba(0,0,0,0.1);background:#fff;color:var(--text-light);cursor:pointer;font-size:13px;font-weight:700;transition:all 0.2s;}
-.diff-btn.on{border-color:var(--sakura);color:var(--sakura);background:rgba(208,90,110,0.05);}
+  .v-line {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent 0%, var(--border-hi) 40%, var(--border-hi) 60%, transparent 100%);
+    opacity: 0.5;
+  }
+  .v-line.l { left: 12%; }
+  .v-line.r { right: 12%; }
 
-/* ── GAME ── */
-.game-wrap{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;justify-content:center;width:100%;max-width:1100px;}
-.pp{display:flex;flex-direction:column;align-items:center;gap:16px;flex:1;min-width:280px;max-width:420px;}
-.ph{display:flex;align-items:center;gap:12px;width:100%;background:var(--panel);border:1px solid rgba(0,0,0,0.05);border-radius:12px;padding:14px 20px;box-shadow:0 4px 12px rgba(0,0,0,0.03);}
-.av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(199, 179, 154, 0.2);color:var(--wood-dark);}
-.av.av-ai{background:rgba(208, 90, 110, 0.15);color:var(--sakura);}
-.av.av-p2{background:rgba(134, 166, 151, 0.2);color:var(--matcha-dark);}
-.pn-txt{font-weight:700;font-size:15px;letter-spacing:1px;color:var(--text);}
-.pb-n{margin-left:auto;font-family:'Noto Serif TC',serif;font-size:24px;font-weight:900;color:var(--sakura);}
-.pb-l{font-size:10px;color:var(--text-light);letter-spacing:2px;text-align:right;}
-.ad{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#e0e0e0;transition:all 0.3s;}
-.ad.on{background:var(--matcha);box-shadow:0 0 8px rgba(134,166,151,0.6);animation:pulse 1s infinite;}
+  .lantern-wrap {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .lantern-wrap.l { left: 12%; transform: translateX(-50%); }
+  .lantern-wrap.r { right: 12%; transform: translateX(50%); }
 
-/* ── BOARD ── */
-.bw{width:100%;}
-.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.04);}
-.cell{
-  aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-family:'Noto Serif TC',serif;font-weight:900;font-size:clamp(16px,2.5vw,24px);
-  cursor:pointer;position:relative;overflow:hidden;user-select:none;
-  transition:all 0.2s;
-  background:#fafafa;
-  border:1px solid #eee;
-  color:var(--text);
-}
-.cell:hover:not(.dis):not(.mk){transform:translateY(-2px);border-color:var(--sakura-light);background:#fff;box-shadow:0 4px 12px rgba(208,90,110,0.1);}
-/* 印章特效 (圈圈) */
-.cell.mk{background:#fff;cursor:default;}
-.cell.mk::after{
-  content:'';position:absolute;width:75%;height:75%;
-  border:3px solid var(--sakura);border-radius:50%;
-  opacity:0.8;
-  animation:stampIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.cell.mk.om::after{border-color:var(--wood-dark);} /* 對手印章顏色不同 */
-@keyframes stampIn{0%{transform:scale(2);opacity:0;}100%{transform:scale(1);opacity:0.8;}}
+  .lantern-string {
+    width: 1px;
+    height: 38vh;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    opacity: 0.5;
+  }
 
-/* 連線高光 */
-.cell.bl{background:rgba(208, 90, 110, 0.1)!important;border-color:var(--sakura)!important;}
-.cell.dis{cursor:default;}
+  .lantern-body {
+    width: 22px; height: 44px;
+    background: radial-gradient(ellipse at 40% 35%, #ffe090 0%, #d4a843 60%, #a07820 100%);
+    border-radius: 50% 50% 42% 42% / 58% 58% 42% 42%;
+    box-shadow: 0 0 18px 6px rgba(212,168,67,0.5), 0 0 50px 18px rgba(212,168,67,0.2);
+    animation: lanternGlow 3s ease-in-out infinite alternate;
+    position: relative;
+  }
+  .lantern-body::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 4px; right: 4px; height: 6px;
+    background: rgba(255,230,120,0.35);
+    border-radius: 50%;
+  }
+  .lantern-body::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 1px; height: 12px;
+    background: var(--gold);
+  }
+  .lantern-tassel {
+    width: 2px; height: 16px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    margin-top: 0;
+  }
 
-/* 隱藏盤面的櫻花圖標大小調整 */
-.cell .hidden-icon { font-size: 1.2em; opacity: 0.6; }
+  @keyframes lanternGlow {
+    from { box-shadow: 0 0 18px 6px rgba(212,168,67,0.5), 0 0 50px 18px rgba(212,168,67,0.2); }
+    to   { box-shadow: 0 0 28px 10px rgba(212,168,67,0.7), 0 0 80px 28px rgba(212,168,67,0.3); }
+  }
 
-/* ── VS ── */
-.vs-div{display:flex;flex-direction:column;align-items:center;gap:11px;padding-top:60px;flex-shrink:0;}
-.vs-txt{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:900;color:var(--wood-dark);letter-spacing:2px;}
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 24px;
+  }
 
-/* ── STATUS BAR ── */
-.sb{width:100%;max-width:1100px;background:var(--panel);border:1px solid rgba(0,0,0,0.05);border-radius:12px;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.03);}
-.st{font-weight:700;font-size:14px;color:var(--sakura);letter-spacing:1px;}
-.tr{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-light);font-weight:600;}
-.td{width:10px;height:10px;border-radius:50%;background:var(--wood);animation:pulse 1s infinite;}
+  .hero-eyebrow {
+    font-style: italic;
+    font-size: 15px;
+    letter-spacing: 0.35em;
+    color: var(--gold-light);
+    margin-bottom: 18px;
+  }
 
-/* ── CALL PANEL ── */
-.cp{background:var(--panel);border:1px solid rgba(0,0,0,0.05);border-radius:12px;padding:24px;width:100%;max-width:1100px;margin-top:20px;box-shadow:0 8px 24px rgba(0,0,0,0.05);}
-.cpt{font-size:13px;color:var(--text-light);letter-spacing:2px;text-align:center;margin-bottom:16px;font-weight:700;}
-.cpg{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;}
-.cn{aspect-ratio:1;border-radius:8px;border:1px solid #eee;background:#fafafa;color:var(--text);font-family:'Noto Serif TC',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
-.cn:hover:not(.used){background:#fff;border-color:var(--sakura);color:var(--sakura);transform:translateY(-2px);box-shadow:0 4px 8px rgba(208,90,110,0.15);}
-.cn.used{opacity:0.3;cursor:not-allowed;background:#eee;border-color:#ddd;}
+  .hero-title {
+    font-size: clamp(52px, 11vw, 108px);
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+    text-shadow: 0 0 60px rgba(212,168,67,0.15);
+  }
 
-/* ── SETUP ── */
-.setup-board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:16px 0;background:#fff;padding:10px;border-radius:12px;border:1px solid #eee;}
-.sc{aspect-ratio:1;border-radius:8px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:18px;font-weight:900;color:#aaa;cursor:pointer;transition:all 0.2s;position:relative;background:#fafafa;}
-.sc.filled{border:1px solid var(--matcha);color:var(--matcha-dark);background:rgba(134, 166, 151, 0.05);}
-.sc.filled:hover::after{content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(208, 90, 110, 0.9);border-radius:6px;color:#fff;font-size:14px;font-family:sans-serif;}
-.sc .ci{position:absolute;top:4px;left:6px;font-size:10px;opacity:0.4;font-family:sans-serif;}
-.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;}
-.pn{aspect-ratio:1;border-radius:8px;border:1px solid #eee;background:#fafafa;color:var(--text);font-family:'Noto Serif TC',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
-.pn:hover:not(.used){background:#fff;border-color:var(--matcha);color:var(--matcha-dark);transform:translateY(-2px);box-shadow:0 4px 8px rgba(134,166,151,0.15);}
-.pn.used{opacity:0.3;cursor:not-allowed;}
-.pn.mine{color:#fff;border-color:var(--matcha-dark);background:var(--matcha);}
+  .hero-sub {
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 44px;
+  }
 
-/* ── MISC ── */
-.ldots span{display:inline-block;background:var(--sakura);width:8px;height:8px;border-radius:50%;margin:0 4px;animation:db 1.4s infinite;}
-.ldots span:nth-child(2){animation-delay:.2s;}.ldots span:nth-child(3){animation-delay:.4s;}
-@keyframes db{0%,80%,100%{transform:scale(0);}40%{transform:scale(1);}}
-.tsm{font-size:12px;color:var(--text-light);}
-.tc{text-align:center;}
-.mt8{margin-top:8px;}
-.mt16{margin-top:16px;}
+  .hero-dates {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-date-block { text-align: center; }
+  .hero-date-label { font-size: 10px; letter-spacing: 0.22em; color: var(--muted); margin-bottom: 5px; }
+  .hero-date-val { font-size: 20px; color: var(--gold-light); font-weight: 400; }
+
+  .hero-divider { width: 36px; height: 1px; background: var(--border-hi); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    animation: scrollBounce 2.2s ease-in-out infinite;
+  }
+  .scroll-hint::after {
+    content: '';
+    width: 1px; height: 44px;
+    background: linear-gradient(to bottom, var(--gold-light), transparent);
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(7px); }
+  }
+
+  /* ═══════════════════════════════════════
+     FLIGHTS
+  ═══════════════════════════════════════ */
+  .flights {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 24px;
+  }
+
+  .flights-inner {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    margin-bottom: 22px;
+    text-transform: uppercase;
+  }
+
+  .flights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .flights-grid { grid-template-columns: 1fr; }
+  }
+
+  .flight-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .flight-card:hover {
+    border-color: var(--gold);
+    background: var(--card-hover);
+    box-shadow: 0 0 20px rgba(212,168,67,0.1);
+  }
+
+  .flight-dir-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .flight-airports {
+    font-size: 26px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .flight-arr { color: var(--gold-light); margin: 0 8px; }
+
+  .flight-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .flight-id {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  .flight-time-val {
+    font-size: 15px;
+    color: var(--gold-light);
+  }
+
+  .fc-edit-icon {
+    position: absolute;
+    top: 14px; right: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .flight-card:hover .fc-edit-icon { color: var(--gold); }
+
+  /* ═══════════════════════════════════════
+     DAYS SECTION
+  ═══════════════════════════════════════ */
+  .days-section {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 72px 24px 80px;
+  }
+
+  .days-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .days-header h2 {
+    font-size: 30px;
+    font-weight: 300;
+    color: var(--white);
+    letter-spacing: 0.22em;
+    margin-bottom: 14px;
+  }
+
+  .rule-line {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+  }
+  .rule-line::before, .rule-line::after {
+    content: '';
+    width: 64px; height: 1px;
+    background: linear-gradient(to right, transparent, var(--border-hi));
+  }
+  .rule-line::after { background: linear-gradient(to left, transparent, var(--border-hi)); }
+  .rule-line span { font-size: 10px; letter-spacing: 0.3em; color: var(--gold); }
+
+  /* ── DAY CARD ── */
+  .day-card {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 0 32px;
+    margin-bottom: 52px;
+  }
+
+  .day-left {
+    text-align: right;
+    padding-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .day-num {
+    display: block;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    margin-bottom: 5px;
+  }
+
+  .day-date {
+    font-size: 26px;
+    color: var(--white);
+    line-height: 1;
+    font-weight: 300;
+  }
+
+  .day-weekday {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .day-city-badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--gold);
+    background: var(--gold-dim);
+    font-size: 11px;
+    color: var(--gold-light);
+    letter-spacing: 0.18em;
+    border-radius: 3px;
+  }
+
+  /* Timeline */
+  .day-right {
+    border-left: 1px solid var(--border-hi);
+    padding-left: 32px;
+    position: relative;
+  }
+
+  .day-right::before {
+    content: '';
+    position: absolute;
+    left: -5px; top: 10px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 10px 2px var(--gold-glow);
+  }
+
+  /* Transport tag */
+  .transport-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--sakura);
+    background: rgba(240,160,160,0.1);
+    border: 1px solid rgba(240,160,160,0.28);
+    border-radius: 3px;
+    padding: 4px 12px;
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Day content card */
+  .day-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .day-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-kanji-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--border-hi);
+    letter-spacing: 0.12em;
+  }
+
+  /* ── ITINERARY LIST ── */
+  .itinerary-list { padding: 6px 0; }
+
+  .itinerary-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 11px 18px;
+    border-bottom: 1px solid rgba(37,48,80,0.6);
+    transition: background 0.15s;
+  }
+  .itinerary-item:last-child { border-bottom: none; }
+  .itinerary-item:hover { background: rgba(212,168,67,0.04); }
+
+  .item-time {
+    font-size: 14px;
+    color: var(--gold-light);
+    min-width: 52px;
+    flex-shrink: 0;
+    padding-top: 1px;
+    font-weight: 400;
+  }
+
+  .item-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-hi);
+    background: var(--panel);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .item-text {
+    flex: 1;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .item-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  /* ── HOTEL BLOCK ── */
+  .hotel-block {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, var(--panel) 0%, rgba(212,168,67,0.07) 100%);
+    border: 1px solid rgba(212,168,67,0.28);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+  .hotel-block:hover { border-color: rgba(212,168,67,0.5); }
+
+  .hotel-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+  .hotel-info { flex: 1; min-width: 0; }
+  .hotel-label {
+    font-size: 10px; letter-spacing: 0.22em;
+    color: var(--gold); margin-bottom: 5px;
+  }
+  .hotel-name {
+    font-size: 14px; color: var(--white);
+    margin-bottom: 5px; line-height: 1.45;
+    font-weight: 400;
+  }
+  .hotel-addr {
+    font-size: 12px; color: var(--text-sub); line-height: 1.5;
+  }
+
+  /* ── EDIT BUTTONS ── */
+  .edit-btn {
+    background: none;
+    border: 1px solid var(--border-hi);
+    color: var(--text-sub);
+    font-size: 12px;
+    padding: 5px 13px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.18s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .edit-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: var(--gold-dim);
+  }
+
+  /* ═══════════════════════════════════════
+     MODAL
+  ═══════════════════════════════════════ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,9,15,0.88);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 0 60px rgba(212,168,67,0.18), 0 20px 60px rgba(0,0,0,0.6);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--deep);
+    border-radius: 10px 10px 0 0;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    color: var(--gold-light);
+    letter-spacing: 0.1em;
+  }
+
+  .modal-close {
+    background: none; border: none;
+    color: var(--muted); font-size: 20px;
+    cursor: pointer; line-height: 1;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--white); }
+
+  .modal-body { padding: 24px; }
+
+  .field-group { margin-bottom: 20px; }
+
+  .field-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .field-input, .field-textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 400;
+    padding: 10px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+  }
+  .field-input:focus, .field-textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212,168,67,0.1);
+  }
+  .field-textarea { min-height: 150px; line-height: 1.7; }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background: var(--deep);
+    border-radius: 0 0 10px 10px;
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border-hi);
+    color: var(--text-sub);
+    font-size: 13px;
+    padding: 9px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-cancel:hover { border-color: var(--text-sub); color: var(--text); }
+
+  .btn-save {
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    color: #06090f;
+    font-weight: 500;
+    font-size: 13px;
+    padding: 9px 26px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.05em;
+  }
+  .btn-save:hover { background: var(--gold-light); border-color: var(--gold-light); }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-size: 13px;
+    padding: 10px 22px;
+    border-radius: 6px;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 56px 24px 48px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+  }
+
+  .footer-kanji {
+    font-size: 40px;
+    color: rgba(212,168,67,0.18);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  /* Loading overlay */
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    transition: opacity 0.5s ease;
+  }
+  #loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+  .loading-kanji {
+    font-size: 56px;
+    color: var(--gold);
+    animation: loadPulse 1.5s ease-in-out infinite;
+  }
+  .loading-text {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+  }
+  .loading-bar {
+    width: 120px; height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .loading-progress {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: loadBar 1.5s ease-in-out infinite;
+  }
+  @keyframes loadPulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; }
+  }
+  @keyframes loadBar {
+    0%   { width: 0%; }
+    50%  { width: 80%; }
+    100% { width: 100%; }
+  }
+
+  /* Responsive */
+  @media (max-width: 580px) {
+    .day-card { grid-template-columns: 70px 1fr; gap: 0 18px; }
+    .day-date { font-size: 20px; }
+    .day-right { padding-left: 20px; }
+    .item-text { font-size: 14px; }
+    .hotel-name { font-size: 13px; }
+    .flights-grid { grid-template-columns: 1fr; }
+    .modal-body { padding: 18px; }
+  }
 </style>
 
 </head>
 <body>
 
-<div id="sakura-bg"></div>
-<div class="gridbg"></div>
+<div id="loading-screen">
+  <div class="loading-kanji">旅</div>
+  <div class="loading-text">載入行程中...</div>
+  <div class="loading-bar"><div class="loading-progress"></div></div>
+</div>
 
-<button class="back-btn" id="backBtn" onclick="goHome()">← 退出遊戲</button>
-
-<div class="notif" id="notif"></div>
-
-<div class="win-ov" id="winOv">
-  <div class="win-card">
-    <span class="win-emoji" id="winE">🎊</span>
-    <div class="win-title" id="winT">勝負已分</div>
-    <div class="win-sub" id="winS">恭喜獲勝！</div>
-    
-    <button class="btn btn-wood" onclick="viewBoard()">👁️ 查看對手盤面</button>
-    
-    <div class="div">或</div>
-    <button class="btn btn-sakura" onclick="goHome()">返回主畫面</button>
-    <button class="btn btn-outline mb0" onclick="rematch()" id="rematchBtn">再玩一局</button>
+<div id="sync-bar">
+  <span class="sync-logo">關西八日 · 行程手帳</span>
+  <div id="sync-status">
+    <div id="sync-dot"></div>
+    <span id="sync-text">連線中...</span>
   </div>
 </div>
 
-<div class="screen active" id="sHome">
-  <div class="logo-wrap">
-    <div class="logo-title">和風賓果</div>
-    <div class="logo-sub">🌸 雙人數字對戰 🌸</div>
-  </div>
-  <div class="card">
-    <div class="card-title">選擇遊戲模式</div>
-    <button class="btn btn-wood" onclick="showS('sAI')">🦊 &nbsp; 單人對戰 AI</button>
-    <div class="div">連線多人對戰</div>
-    <button class="btn btn-sakura" onclick="showS('sCreate')">⛩️ &nbsp; 創建房間</button>
-    <button class="btn btn-matcha mb0" onclick="showS('sJoin')">🏮 &nbsp; 加入房間</button>
-    <div class="tc mt16"><span class="tsm">5×5 盤面 · 先達成 5 條連線獲勝</span><br><span class="tsm" style="opacity:0.6;font-size:10px;">(按 Q 鍵可快速隨機填寫)</span></div>
-  </div>
-</div>
+<section class="hero">
+  <div class="hero-kanji">關西</div>
+  <div class="v-line l"></div>
+  <div class="v-line r"></div>
 
-<div class="screen" id="sAI">
-  <div class="logo-wrap" style="margin-bottom:20px">
-    <div class="logo-title" style="font-size:clamp(28px,6vw,48px)">單人對戰</div>
+  <div class="lantern-wrap l">
+    <div class="lantern-string"></div>
+    <div class="lantern-body"></div>
+    <div class="lantern-tassel"></div>
   </div>
-  <div class="card">
-    <div class="card-title">難度選擇</div>
-    <div class="diff-btns">
-      <button class="diff-btn" onclick="setDiff('easy',this)">初級</button>
-      <button class="diff-btn on" onclick="setDiff('normal',this)">中級</button>
-      <button class="diff-btn" onclick="setDiff('hard',this)">上級</button>
-    </div>
-    <div class="card-title" style="margin-top:20px">玩家名稱</div>
-    <div class="inp-wrap">
-      <input class="inp" id="aiName" placeholder="輸入名稱" value="旅人" maxlength="10">
-    </div>
-    <button class="btn btn-wood mb0" onclick="startAISetup()">開始佈局 →</button>
+  <div class="lantern-wrap r">
+    <div class="lantern-string"></div>
+    <div class="lantern-body"></div>
+    <div class="lantern-tassel"></div>
   </div>
-</div>
 
-<div class="screen" id="sCreate">
-  <div class="logo-wrap" style="margin-bottom:20px">
-    <div class="logo-title" style="font-size:clamp(28px,6vw,48px)">創建房間</div>
-  </div>
-  <div class="card">
-    <div class="card-title">玩家名稱</div>
-    <div class="inp-wrap">
-      <input class="inp" id="createName" placeholder="輸入名稱" value="玩家一" maxlength="10">
-    </div>
-    <button class="btn btn-sakura" onclick="createRoom()">⛩️ 建立房間</button>
-    <div id="roomInfo" style="display:none">
-      <div class="rc-box">
-        <div class="rc-lbl">房間代碼</div>
-        <div class="rc-val" id="rcDisplay">----</div>
-        <div class="rc-st" id="rcStatus">⏳ 等待對手加入...</div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">My Journey · 私の旅</p>
+    <h1 class="hero-title">關西八日</h1>
+    <p class="hero-sub">KANSAI · 8 DAYS · JULY 2025</p>
+    <div class="hero-dates">
+      <div class="hero-date-block">
+        <div class="hero-date-label">出發</div>
+        <div class="hero-date-val">7 / 2</div>
       </div>
-      <button class="btn btn-outline mb0" onclick="copyCode()">📋 複製代碼</button>
-    </div>
-  </div>
-</div>
-
-<div class="screen" id="sJoin">
-  <div class="logo-wrap" style="margin-bottom:20px">
-    <div class="logo-title" style="font-size:clamp(28px,6vw,48px)">加入房間</div>
-  </div>
-  <div class="card">
-    <div class="card-title">玩家名稱</div>
-    <div class="inp-wrap">
-      <input class="inp" id="joinName" placeholder="輸入名稱" value="玩家二" maxlength="10">
-    </div>
-    <div class="card-title" style="margin-top:10px">房間代碼</div>
-    <div class="inp-wrap">
-      <input class="inp" id="joinCode" placeholder="輸入4位英文數字" maxlength="4"
-        style="text-align:center;font-family:'Noto Serif TC',serif;font-weight:900;font-size:24px;letter-spacing:8px;"
-        oninput="this.value=this.value.toUpperCase()">
-    </div>
-    <button class="btn btn-matcha mb0" onclick="joinRoom()">🏮 確認加入</button>
-  </div>
-</div>
-
-<div class="screen" id="sSetup">
-  <div style="width:100%;max-width:500px">
-    <div class="logo-wrap" style="margin-bottom:14px">
-      <div class="logo-title" style="font-size:clamp(22px,5vw,36px)">佈局準備</div>
-      <div class="logo-sub" style="font-size:12px">從 1–25 選擇數字填滿盤面</div>
-      <div id="setupTimerDisplay" style="margin-top:12px; font-family:'Noto Serif TC', serif; font-size: 24px; font-weight: 900; color: var(--sakura);">⏳ 03:00</div>
-    </div>
-    <div class="card" style="max-width:100%">
-      <div class="setup-board" id="setupBoard"></div>
-      <div class="tsm tc mt8" id="setupProg">已佈置 0 / 25</div>
-      <div class="mt16">
-        <button class="btn btn-wood mb0" id="confirmBtn" onclick="confirmSetup()" disabled style="opacity:0.4">完成佈局 →</button>
+      <div class="hero-divider"></div>
+      <div class="hero-date-block">
+        <div class="hero-date-label">城市</div>
+        <div class="hero-date-val">京 · 奈 · 神 · 阪</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-date-block">
+        <div class="hero-date-label">返回</div>
+        <div class="hero-date-val">7 / 9</div>
       </div>
     </div>
-    <div class="card" style="max-width:100%;margin-top:16px">
-      <div class="cpt">點選下方數字填入盤面</div>
-      <div class="pg" id="pickGrid"></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<section class="flights">
+  <div class="flights-inner">
+    <div class="section-label">✈ 航班資訊</div>
+    <div class="flights-grid">
+      <div class="flight-card" onclick="openFlightEdit('outbound')">
+        <span class="fc-edit-icon">✎</span>
+        <div class="flight-dir-label"><span>去程 DEPARTURE</span></div>
+        <div class="flight-airports">
+          <span id="f-dep-from">TPE T1</span>
+          <span class="flight-arr">→</span>
+          <span id="f-dep-to">KIX T1</span>
+        </div>
+        <div class="flight-meta">
+          <div class="flight-id"><span id="f-dep-flight">星宇 JX822</span> · <span id="f-dep-date">7 / 2</span></div>
+          <div class="flight-time-val" id="f-dep-time">10:15 — 14:00</div>
+        </div>
+      </div>
+
+      <div class="flight-card" onclick="openFlightEdit('return')">
+        <span class="fc-edit-icon">✎</span>
+        <div class="flight-dir-label"><span>回程 RETURN</span></div>
+        <div class="flight-airports">
+          <span id="f-ret-from">KIX T1</span>
+          <span class="flight-arr">→</span>
+          <span id="f-ret-to">TPE T1</span>
+        </div>
+        <div class="flight-meta">
+          <div class="flight-id"><span id="f-ret-flight">星宇 JX821</span> · <span id="f-ret-date">7 / 9</span></div>
+          <div class="flight-time-val" id="f-ret-time">13:25 — 15:20</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="days-section">
+  <div class="days-header">
+    <h2>每日行程</h2>
+    <div class="rule-line"><span>DAILY ITINERARY</span></div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 01</span>
+      <div class="day-date">7/2</div>
+      <div class="day-weekday">WED</div>
+      <span class="day-city-badge">京都</span>
+    </div>
+    <div class="day-right">
+      <div class="transport-tag">🚄 Haruka 特急</div>
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">京 · DAY 1</span>
+          <button class="edit-btn" onclick="openDayEdit(1)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-1-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-1-name"></div>
+          <div class="hotel-addr" id="hotel-1-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(1)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 02</span>
+      <div class="day-date">7/3</div>
+      <div class="day-weekday">THU</div>
+      <span class="day-city-badge">京都</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">京 · DAY 2</span>
+          <button class="edit-btn" onclick="openDayEdit(2)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-2-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-2-name"></div>
+          <div class="hotel-addr" id="hotel-2-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(2)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 03</span>
+      <div class="day-date">7/4</div>
+      <div class="day-weekday">FRI</div>
+      <span class="day-city-badge">京都</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">京 · DAY 3</span>
+          <button class="edit-btn" onclick="openDayEdit(3)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-3-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-3-name"></div>
+          <div class="hotel-addr" id="hotel-3-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(3)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 04</span>
+      <div class="day-date">7/5</div>
+      <div class="day-weekday">SAT</div>
+      <span class="day-city-badge">奈良</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">奈 · DAY 4</span>
+          <button class="edit-btn" onclick="openDayEdit(4)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-4-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-4-name"></div>
+          <div class="hotel-addr" id="hotel-4-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(4)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 05</span>
+      <div class="day-date">7/6</div>
+      <div class="day-weekday">SUN</div>
+      <span class="day-city-badge">神戶</span>
+    </div>
+    <div class="day-right">
+      <div class="transport-tag">🚄 新幹線（建議）</div>
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">神 · DAY 5</span>
+          <button class="edit-btn" onclick="openDayEdit(5)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-5-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-5-name"></div>
+          <div class="hotel-addr" id="hotel-5-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(5)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 06</span>
+      <div class="day-date">7/7</div>
+      <div class="day-weekday">MON</div>
+      <span class="day-city-badge">大阪</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">阪 · DAY 6</span>
+          <button class="edit-btn" onclick="openDayEdit(6)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-6-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-6-name"></div>
+          <div class="hotel-addr" id="hotel-6-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(6)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 07</span>
+      <div class="day-date">7/8</div>
+      <div class="day-weekday">TUE</div>
+      <span class="day-city-badge">大阪</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">阪 · DAY 7</span>
+          <button class="edit-btn" onclick="openDayEdit(7)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-7-list"></div>
+      </div>
+      <div class="hotel-block">
+        <div class="hotel-icon">🏨</div>
+        <div class="hotel-info">
+          <div class="hotel-label">當晚住宿</div>
+          <div class="hotel-name" id="hotel-7-name"></div>
+          <div class="hotel-addr" id="hotel-7-addr"></div>
+        </div>
+        <button class="edit-btn" onclick="openHotelEdit(7)" style="align-self:flex-start;margin-top:2px;">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-left">
+      <span class="day-num">Day 08</span>
+      <div class="day-date">7/9</div>
+      <div class="day-weekday">WED</div>
+      <span class="day-city-badge">回國</span>
+    </div>
+    <div class="day-right">
+      <div class="day-content">
+        <div class="day-content-header">
+          <span class="day-kanji-label">✈ · DAY 8</span>
+          <button class="edit-btn" onclick="openDayEdit(8)">✎ 編輯行程</button>
+        </div>
+        <div class="itinerary-list" id="day-8-list"></div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<footer class="footer">
+  <span class="footer-kanji">旅</span>
+  <p>關西八日 · 2025 July · 好好玩！</p>
+</footer>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">編輯</span>
+      <button class="modal-close" onclick="closeModal()" aria-label="關閉">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" id="btn-save" onclick="saveModal()">儲存</button>
     </div>
   </div>
 </div>
 
-<div class="screen" id="sGame" style="padding:16px;gap:12px">
-  <div class="sb">
-    <div class="st" id="statusTxt">遊戲進行中</div>
-    <div class="tr">
-      <div class="td"></div>
-      <span id="turnTxt">等待...</span>
-    </div>
-  </div>
-  
-  <div class="game-wrap">
-    <div class="pp">
-      <div class="ph">
-        <div class="av" id="av1">👤</div>
-        <div>
-          <div class="pn-txt" id="n1">玩家一</div>
-          <div class="tsm">己方陣地</div>
-        </div>
-        <div style="margin-left:auto;text-align:right">
-          <div class="pb-n" id="bc1">0</div>
-          <div class="pb-l">BINGO</div>
-        </div>
-        <div class="ad" id="ad1"></div>
-      </div>
-      <div class="bw"><div class="board" id="b1"></div></div>
-    </div>
-    
-    <div class="vs-div"><div class="vs-txt">對決</div></div>
-    
-    <div class="pp">
-      <div class="ph">
-        <div class="av av-p2" id="av2">👤</div>
-        <div>
-          <div class="pn-txt" id="n2">對手</div>
-          <div class="tsm" id="p2role">敵方陣地</div>
-        </div>
-        <div style="margin-left:auto;text-align:right">
-          <div class="pb-n" id="bc2">0</div>
-          <div class="pb-l">BINGO</div>
-        </div>
-        <div class="ad" id="ad2"></div>
-      </div>
-      <div class="bw"><div class="board" id="b2"></div></div>
-    </div>
-  </div>
-  
-  <div class="cp" id="callPanel" style="display:none">
-    <div class="cpt">請選擇要宣告的數字 (也可直接點擊上方盤面)</div>
-    <div class="cpg" id="callGrid"></div>
-  </div>
-</div>
+<div id="toast"></div>
 
-<script>
-// ═══════════ SAKURA PETALS BACKGROUND ═══════════
-(function(){
-  var c=document.getElementById('sakura-bg');
-  for(var i=0;i<30;i++){
-    var s=document.createElement('div');s.className='petal';
-    var sz = 8 + Math.random()*8; // 花瓣大小
-    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'vw;top:-20vh;animation-duration:'+(6+Math.random()*6)+'s;animation-delay:'+(Math.random()*10)+'s;';
-    c.appendChild(s);
-  }
-})();
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
 
-// ═══════════ FIREBASE INIT ═══════════
-var fbOk = false, db = null;
-try {
-  firebase.initializeApp({
+  // ──────────────────────────────────────
+  // Firebase Init
+  // ──────────────────────────────────────
+  const firebaseConfig = {
     apiKey: "AIzaSyCnONA7vSsBwOcui-bVBmmZfD_TOVZmck0",
     authDomain: "airplane-game-68f8f.firebaseapp.com",
-    databaseURL: "https://airplane-game-68f8f-default-rtdb.firebaseio.com",
+    databaseURL: "https://airplane-game-68f8f-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "airplane-game-68f8f",
     storageBucket: "airplane-game-68f8f.firebasestorage.app",
     messagingSenderId: "215248477446",
-    appId: "1:215248477446:web:f1d9dbb69b759118125287"
-  });
-  db = firebase.database();
-  fbOk = true;
-  console.log('Firebase connected');
-} catch(e) {
-  console.warn('Firebase failed:', e.message);
-}
+    appId: "1:215248477446:web:f1d9dbb69b759118125287",
+    measurementId: "G-GKWZMFT66H"
+  };
 
-// ═══════════ STATE ═══════════
-var G = newState();
-function newState(){
-  return {mode:null,role:null,roomId:null,roomCode:null,myName:'',aiDiff:'normal',
-    myBoard:[],oppBoard:[],called:[],myMk:[],oppMk:[],myBingo:0,oppBingo:0,
-    turn:'p1',setup:[],over:false,roomListener:null};
-}
+  const fbApp = initializeApp(firebaseConfig);
+  const db    = getDatabase(fbApp);
+  const TRIP_PATH = "kansai2025";
 
-// 12 bingo lines
-var LINES = [];
-(function(){
-  for(var r=0;r<5;r++){var l=[];for(var c=0;c<5;c++)l.push(r*5+c);LINES.push(l);}
-  for(var c=0;c<5;c++){var l=[];for(var r=0;r<5;r++)l.push(r*5+c);LINES.push(l);}
-  LINES.push([0,6,12,18,24]);LINES.push([4,8,12,16,20]);
-})();
+  // ──────────────────────────────────────
+  // Default data (預設資料)
+  // ──────────────────────────────────────
+  const DEFAULT_DAYS = {
+    1: "16:30 出機場\n19:00 抵達京都\n20:00 逛祇園",
+    2: "08:00 伏見稻荷\n10:00 清水寺\n12:00 三年坂・二年坂\n14:00 八坂神社\n18:00 祇園散步",
+    3: "09:00 嵐山（竹林・渡月橋）\n14:00 金閣寺\n[視情況] 本能寺\n16:30 寺町通・新京極通",
+    4: "09:00 東大寺\n14:00 春日大社\n17:30 東向商店街（伴手禮）",
+    5: "09:00 宇治（行李寄放）\n12:00 前往神戶\n14:30 北野異人館\n16:30 神戶港樂園",
+    6: "09:00 姬路城（行李姬路站寄放）\n14:00 前往梅田\n16:00 梅田逛百貨",
+    7: "10:00 通天閣\n12:00 黑門市場（新疆料理）\n14:00 天王寺\n18:00 阿倍野（夕陽・視時間調整）",
+    8: "13:25 KIX T1 關西機場出發\n15:20 TPE T1 桃園機場抵達"
+  };
 
-// ═══════════ SCREEN ═══════════
-function showS(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById(id).classList.add('active');
-  document.getElementById('backBtn').classList.toggle('vis',id!=='sHome');
-}
+  const DEFAULT_HOTELS = {
+    1: { name: "京阪京都車站南飯店 ホテル京阪 京都駅南", addr: "55 Higashikujo Muromachi, Minami Ward, Kyoto, 601-8001 日本" },
+    2: { name: "京阪京都車站南飯店 ホテル京阪 京都駅南", addr: "55 Higashikujo Muromachi, Minami Ward, Kyoto, 601-8001 日本" },
+    3: { name: "京阪京都車站南飯店 ホテル京阪 京都駅南", addr: "55 Higashikujo Muromachi, Minami Ward, Kyoto, 601-8001 日本" },
+    4: { name: "Henn na Hotel Premier 奈良海茵娜飯店 変なホテルプレミア 奈良", addr: "46番1 Takamacho, Nara, 630-8241 日本" },
+    5: { name: "神戶站前百夫長大飯店", addr: "2-3-7 Aioicho, Chuo-ku, Kobe-shi, Hyogo, 650-0025 日本" },
+    6: { name: "Premier Hotel -CABIN PRESIDENT- Osaka プレミアホテル-CABIN PRESIDENT-大阪", addr: "1 Chome-3-19 Minamimorimachi, Kita Ward, Osaka, 530-0054 日本" },
+    7: { name: "Premier Hotel -CABIN PRESIDENT- Osaka プレミアホテル-CABIN PRESIDENT-大阪", addr: "1 Chome-3-19 Minamimorimachi, Kita Ward, Osaka, 530-0054 日本" }
+  };
 
-function goHome(){
-  if(G.roomListener && G.roomId){
-    try{ db.ref('bingo/'+G.roomId).off('value',G.roomListener); }catch(e){}
+  const DEFAULT_FLIGHTS = {
+    outbound: { from: "TPE T1", to: "KIX T1", flight: "星宇 JX822", date: "7 / 2", time: "10:15 — 14:00" },
+    return:   { from: "KIX T1", to: "TPE T1", flight: "星宇 JX821", date: "7 / 9", time: "13:25 — 15:20" }
+  };
+
+  // ──────────────────────────────────────
+  // Local state mirrors
+  // ──────────────────────────────────────
+  let dayData     = JSON.parse(JSON.stringify(DEFAULT_DAYS));
+  let hotelData   = JSON.parse(JSON.stringify(DEFAULT_HOTELS));
+  let flightData  = JSON.parse(JSON.stringify(DEFAULT_FLIGHTS));
+
+  let currentEditType = null;
+  let currentEditId   = null;
+
+  // ──────────────────────────────────────
+  // UI helpers
+  // ──────────────────────────────────────
+  function setSyncStatus(state, text) {
+    const dot  = document.getElementById('sync-dot');
+    const span = document.getElementById('sync-text');
+    dot.className = state;  // 'connected' | 'syncing' | 'error' | ''
+    span.textContent = text;
   }
-  clearInterval(setupTimerInterval);
-  G=newState();
-  document.getElementById('winOv').classList.remove('on');
-  document.getElementById('roomInfo').style.display='none';
-  showS('sHome');
-}
 
-// ═══════════ NOTIFY ═══════════
-function note(msg,type,dur){
-  type=type||'i';dur=dur||3000;
-  var el=document.getElementById('notif');
-  el.textContent=msg;el.className='notif '+type+' show';
-  clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},dur);
-}
-
-// ═══════════ DIFFICULTY ═══════════
-function setDiff(d,btn){
-  G.aiDiff=d;
-  document.querySelectorAll('.diff-btn').forEach(function(b){b.classList.remove('on');});
-  btn.classList.add('on');
-}
-
-// ═══════════ SETUP & TIMER ═══════════
-var setupTimerInterval = null;
-var setupTimeLeft = 180; // 3 分鐘
-
-function initSetup(){
-  G.setup=[];
-  var board=document.getElementById('setupBoard');
-  board.innerHTML='';
-  for(var i=0;i<25;i++){
-    var c=document.createElement('div');c.className='sc';c.id='sc'+i;
-    c.innerHTML='<span class="ci">'+(i+1)+'</span>';
-    (function(idx){c.onclick=function(){removeSetup(idx);};})(i);
-    board.appendChild(c);
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = isError ? 'error show' : 'show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = isError ? 'error' : ''; }, 2800);
   }
-  var pg=document.getElementById('pickGrid');pg.innerHTML='';
-  for(var n=1;n<=25;n++){
-    var b=document.createElement('div');b.className='pn';b.textContent=n;b.id='pn'+n;
-    (function(num,btn){btn.onclick=function(){addSetup(num,btn);};})(n,b);
-    pg.appendChild(b);
-  }
-  updProg();
-  document.getElementById('confirmBtn').style.display='';
-  document.getElementById('confirmBtn').style.opacity='0.4';
-  document.getElementById('confirmBtn').disabled=true;
-  
-  startSetupTimer();
-}
 
-function startSetupTimer() {
-  clearInterval(setupTimerInterval);
-  setupTimeLeft = 180; 
-  updateTimerUI();
-  setupTimerInterval = setInterval(function() {
-    setupTimeLeft--;
-    updateTimerUI();
-    if (setupTimeLeft <= 0) {
-      clearInterval(setupTimerInterval);
-      autoFillBoard();
-      setTimeout(confirmSetup, 500); 
+  // ──────────────────────────────────────
+  // Render functions
+  // ──────────────────────────────────────
+  function renderDay(day, text) {
+    const list = document.getElementById(`day-${day}-list`);
+    if (!list) return;
+    const lines = (text || '').split('\n').filter(l => l.trim());
+    if (!lines.length) {
+      list.innerHTML = '<div class="itinerary-item"><span class="item-time"></span><div class="item-dot"></div><div class="item-text" style="color:var(--muted);font-style:italic">尚無行程</div></div>';
+      return;
     }
-  }, 1000);
-}
-
-function updateTimerUI() {
-  var el = document.getElementById('setupTimerDisplay');
-  if (!el) return;
-  var m = Math.floor(setupTimeLeft / 60).toString().padStart(2, '0');
-  var s = (setupTimeLeft % 60).toString().padStart(2, '0');
-  el.textContent = "⏳ " + m + ":" + s;
-  
-  if (setupTimeLeft <= 30) {
-    el.style.color = "var(--sakura)";
-  } else {
-    el.style.color = "var(--wood-dark)";
+    list.innerHTML = lines.map(line => {
+      const timeMatch = line.match(/^(\d{1,2}:\d{2})\s+(.+)$/);
+      const noteMatch = line.match(/^\[(.+?)\]\s+(.+)$/);
+      if (timeMatch) {
+        return `<div class="itinerary-item">
+          <span class="item-time">${timeMatch[1]}</span>
+          <div class="item-dot"></div>
+          <div class="item-text">${escHtml(timeMatch[2])}</div>
+        </div>`;
+      } else if (noteMatch) {
+        return `<div class="itinerary-item">
+          <span class="item-time"></span>
+          <div class="item-dot"></div>
+          <div class="item-text">${escHtml(noteMatch[2])}<div class="item-note">${escHtml(noteMatch[1])}</div></div>
+        </div>`;
+      } else {
+        return `<div class="itinerary-item">
+          <span class="item-time"></span>
+          <div class="item-dot"></div>
+          <div class="item-text">${escHtml(line)}</div>
+        </div>`;
+      }
+    }).join('');
   }
-}
 
-function autoFillBoard() {
-  if(G.setup.length >= 25) return;
-  var rem = [];
-  for(var n=1; n<=25; n++) if(G.setup.indexOf(n) < 0) rem.push(n);
-  shuffle(rem);
-  for(var i=0; i<rem.length; i++){
-    var b = document.getElementById('pn'+rem[i]);
-    if(b && !b.classList.contains('used')) addSetup(rem[i], b);
-    if(G.setup.length >= 25) break;
+  function renderHotel(day) {
+    const h = hotelData[day];
+    if (!h) return;
+    const nameEl = document.getElementById(`hotel-${day}-name`);
+    const addrEl = document.getElementById(`hotel-${day}-addr`);
+    if (nameEl) nameEl.textContent = h.name;
+    if (addrEl) addrEl.textContent = h.addr;
   }
-  note('已自動為您佈局', 'i');
-}
 
-function addSetup(n,btn){
-  if(G.setup.length>=25||G.setup.indexOf(n)>=0)return;
-  var idx=G.setup.length;
-  G.setup.push(n);
-  btn.classList.add('used','mine');
-  var c=document.getElementById('sc'+idx);
-  c.textContent=n;c.classList.add('filled');
-  updProg();
-}
-
-function removeSetup(idx){
-  if(idx>=G.setup.length)return;
-  var n=G.setup[idx];
-  G.setup.splice(idx,1);
-  var b=document.getElementById('pn'+n);
-  if(b){b.classList.remove('used','mine');}
-  for(var i=0;i<25;i++){
-    var c=document.getElementById('sc'+i);
-    if(i<G.setup.length){c.textContent=G.setup[i];c.classList.add('filled');}
-    else{c.innerHTML='<span class="ci">'+(i+1)+'</span>';c.classList.remove('filled');}
-  }
-  updProg();
-}
-
-function updProg(){
-  var n=G.setup.length;
-  document.getElementById('setupProg').textContent='已佈置 '+n+' / 25';
-  var btn=document.getElementById('confirmBtn');
-  btn.disabled=n<25;btn.style.opacity=n<25?'0.4':'1';
-}
-
-function confirmSetup(){
-  if(G.setup.length<25){note('請填滿25個格子','e');return;}
-  clearInterval(setupTimerInterval);
-  
-  G.myBoard=G.setup.slice();
-  if(G.mode==='ai'){
-    G.oppBoard=shuffle(Array.from({length:25},function(_,i){return i+1;}));
-    startGame();
-  } else {
-    if(!fbOk){note('連線狀態異常','e');return;}
-    db.ref('bingo/'+G.roomId+'/'+G.role+'Board').set(G.myBoard);
-    showWaiting();
-  }
-}
-
-function showWaiting(){
-  document.getElementById('setupBoard').innerHTML='<div style="padding:40px;text-align:center"><div class="ldots"><span></span><span></span><span></span></div><div style="margin-top:16px;color:var(--text-light);font-size:14px;font-weight:700">等待對手佈局中...</div></div>';
-  document.getElementById('pickGrid').innerHTML='';
-  document.getElementById('confirmBtn').style.display='none';
-  document.getElementById('setupProg').textContent='';
-  document.getElementById('setupTimerDisplay').textContent=''; 
-}
-
-// ═══════════ AI LOGIC ═══════════
-function startAISetup(){
-  G.mode='ai';G.role='p1';
-  G.myName=document.getElementById('aiName').value||'旅人';
-  G.turn='p1';
-  showS('sSetup');initSetup();
-}
-
-function aiPick(){
-  var rem=[];
-  for(var n=1;n<=25;n++)if(G.called.indexOf(n)<0)rem.push(n);
-  if(!rem.length)return;
-  var chosen;
-  if(G.aiDiff==='easy'){
-    chosen=rem[Math.floor(Math.random()*rem.length)];
-  } else if(G.aiDiff==='normal'){
-    chosen=Math.random()<0.6?smartPick(rem):rem[Math.floor(Math.random()*rem.length)];
-  } else {
-    chosen=smartPick(rem);
-  }
-  setTimeout(function(){callNum(chosen,'p2');},900+Math.random()*600);
-}
-
-function smartPick(rem){
-  var best=null,bs=-99;
-  for(var i=0;i<rem.length;i++){
-    var n=rem[i],sc=0;
-    var ai=G.oppBoard.indexOf(n);
-    if(ai>=0){sc+=2;sc+=lineBonus(ai,G.oppMk)*3;}
-    var pl=G.myBoard.indexOf(n);
-    if(pl>=0)sc+=lineBonus(pl,G.myMk)*1.5;
-    if(sc>bs){bs=sc;best=n;}
-  }
-  return best||rem[0];
-}
-
-function lineBonus(idx,mks){
-  var b=0;
-  for(var i=0;i<LINES.length;i++){
-    var ln=LINES[i];
-    if(ln.indexOf(idx)<0)continue;
-    var f=ln.filter(function(x){return mks.indexOf(x)>=0;}).length;
-    if(f>=3)b+=f-2;
-  }
-  return b;
-}
-
-// ═══════════ ONLINE LOGIC ═══════════
-function genCode(){
-  var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({length:4},function(){return ch[Math.floor(Math.random()*ch.length)];}).join('');
-}
-
-function createRoom(){
-  if(!fbOk){note('網路未連線','e');return;}
-  var name=document.getElementById('createName').value||'玩家一';
-  G.myName=name;G.role='p1';G.mode='online';
-  var code=genCode();G.roomCode=code;
-  var roomRef=db.ref('bingo').push();
-  G.roomId=roomRef.key;
-  db.ref('bingo/'+G.roomId).set({
-    code:code,status:'waiting',p1Name:name,p1Board:null,p2Name:null,p2Board:null,
-    called:[],turn:'p1',created:Date.now()
-  });
-  db.ref('bingo-codes/'+code).set(G.roomId);
-  document.getElementById('rcDisplay').textContent=code;
-  document.getElementById('roomInfo').style.display='block';
-  listenRoom();
-  note('房間建立成功！','s');
-}
-
-function joinRoom(){
-  if(!fbOk){note('網路未連線','e');return;}
-  var name=document.getElementById('joinName').value||'玩家二';
-  var code=document.getElementById('joinCode').value.trim().toUpperCase();
-  if(code.length!==4){note('代碼格式錯誤','e');return;}
-  db.ref('bingo-codes/'+code).get().then(function(snap){
-    if(!snap.exists()){note('找不到該房間','e');return;}
-    var rid=snap.val();
-    db.ref('bingo/'+rid).get().then(function(rsnap){
-      if(!rsnap.exists()){note('房間已解散','e');return;}
-      var rd=rsnap.val();
-      if(rd.status!=='waiting'){note('遊戲已開始','e');return;}
-      G.roomId=rid;G.roomCode=code;G.role='p2';G.mode='online';G.myName=name;
-      db.ref('bingo/'+rid).update({p2Name:name,status:'setup'});
-      listenRoom();
-      showS('sSetup');initSetup();
-      note('加入成功！請佈置陣地','s');
-    });
-  }).catch(function(e){note('連線失敗: '+e.message,'e');});
-}
-
-function listenRoom(){
-  var ref=db.ref('bingo/'+G.roomId);
-  G.roomListener=ref.on('value',function(snap){
-    if(!snap.exists())return;
-    handleRoomUpdate(snap.val());
-  });
-}
-
-function handleRoomUpdate(d){
-  var isP1=G.role==='p1';
-  if(d.status==='setup'&&isP1&&!document.getElementById('sSetup').classList.contains('active')){
-    document.getElementById('rcStatus').textContent='✓ 對手已進入！';
-    note((d.p2Name||'玩家二')+' 加入了！','s');
-    setTimeout(function(){showS('sSetup');initSetup();},1000);
-  }
-  
-  if(d.p1Board&&d.p2Board&&d.status!=='playing'){
-    if(isP1) db.ref('bingo/'+G.roomId).update({status:'playing'});
-  }
-  
-  if(d.status==='playing'||(d.p1Board&&d.p2Board)){
-    G.myBoard=isP1?(d.p1Board||[]):(d.p2Board||[]);
-    G.oppBoard=isP1?(d.p2Board||[]):(d.p1Board||[]);
-    G.called=d.called||[];
-    G.turn=d.turn||'p1';
-    G.myMk=[];G.oppMk=[];
-    G.called.forEach(function(n){
-      var mi=G.myBoard.indexOf(n);var oi=G.oppBoard.indexOf(n);
-      if(mi>=0)G.myMk.push(mi);if(oi>=0)G.oppMk.push(oi);
-    });
-    document.getElementById('n1').textContent=isP1?(d.p1Name||'玩家一'):(d.p2Name||'玩家二');
-    document.getElementById('n2').textContent=isP1?(d.p2Name||'玩家二'):(d.p1Name||'玩家一');
-    
-    if(!document.getElementById('sGame').classList.contains('active')){
-      startGame();
+  function renderFlight(dir) {
+    const f = flightData[dir];
+    if (!f) return;
+    if (dir === 'outbound') {
+      setTxt('f-dep-from',   f.from);
+      setTxt('f-dep-to',     f.to);
+      setTxt('f-dep-flight', f.flight);
+      setTxt('f-dep-date',   f.date);
+      setTxt('f-dep-time',   f.time);
     } else {
-      renderBoards();
-      checkBingo(); 
-      updUI();
+      setTxt('f-ret-from',   f.from);
+      setTxt('f-ret-to',     f.to);
+      setTxt('f-ret-flight', f.flight);
+      setTxt('f-ret-date',   f.date);
+      setTxt('f-ret-time',   f.time);
     }
   }
-}
 
-function initCallGrid(){
-  var g=document.getElementById('callGrid');g.innerHTML='';
-  for(var n=1;n<=25;n++){
-    var b=document.createElement('div');b.className='cn';b.textContent=n;b.id='cg'+n;
-    (function(num){b.onclick=function(){onlineCall(num);};})(n);
-    g.appendChild(b);
+  function setTxt(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '';
   }
-}
 
-function onlineCall(n){
-  if(G.over)return;
-  var myTurn=(G.role==='p1'&&G.turn==='p1')||(G.role==='p2'&&G.turn==='p2');
-  if(!myTurn){note('現在是对手的回合！','e');return;}
-  if(G.called.indexOf(n)>=0){note('這個數字已宣告過了','e');return;}
-  var nc=G.called.slice();nc.push(n);
-  var nt=G.turn==='p1'?'p2':'p1';
-  db.ref('bingo/'+G.roomId).update({called:nc,turn:nt});
-}
-
-// ═══════════ GAME START ═══════════
-function startGame(){
-  G.over=false;
-  var isAI=G.mode==='ai';
-  document.getElementById('n1').textContent=G.myName;
-  if(isAI){
-    var diffs={easy:'初級',normal:'中級',hard:'上級'};
-    document.getElementById('n2').textContent='狐狸 AI ('+diffs[G.aiDiff]+')';
-    document.getElementById('p2role').textContent='電腦對手';
-    document.getElementById('av2').textContent='🦊';
-    document.getElementById('av2').className='av av-ai';
-  } else {
-    document.getElementById('p2role').textContent='連線對手';
-    document.getElementById('av2').textContent='👤';
-    document.getElementById('av2').className='av av-p2';
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-  showS('sGame');
-  document.getElementById('callPanel').style.display=isAI?'none':'block';
-  if(!isAI)initCallGrid();
-  renderBoards();updUI();
-  if(isAI&&G.turn==='p2')aiPick();
-}
 
-// ═══════════ CALL NUM (AI) ═══════════
-function callNum(n,caller){
-  if(G.over||G.called.indexOf(n)>=0)return;
-  G.called.push(n);
-  var mi=G.myBoard.indexOf(n);var oi=G.oppBoard.indexOf(n);
-  if(mi>=0)G.myMk.push(mi);if(oi>=0)G.oppMk.push(oi);
-  renderBoards();checkBingo();
-  if(!G.over){
-    G.turn=caller==='p1'?'p2':'p1';
-    updUI();
-    if(G.mode==='ai'&&G.turn==='p2')aiPick();
+  function renderAll() {
+    for (let i = 1; i <= 8; i++) renderDay(i, dayData[i] || '');
+    for (let i = 1; i <= 7; i++) renderHotel(i);
+    renderFlight('outbound');
+    renderFlight('return');
   }
-}
 
-// ═══════════ RENDER ═══════════
-function renderBoards(){
-  renderBoard('b1',G.myBoard,G.myMk,false);
-  renderBoard('b2',G.oppBoard,G.oppMk,true);
-  if(G.mode==='online'){
-    for(var n=1;n<=25;n++){
-      var b=document.getElementById('cg'+n);
-      if(b)b.classList.toggle('used',G.called.indexOf(n)>=0);
+  // ──────────────────────────────────────
+  // Loading 畫面控制 (1.5秒強制定時器)
+  // ──────────────────────────────────────
+  function hideLoading() {
+    const ls = document.getElementById('loading-screen');
+    if (ls && !ls.classList.contains('hidden')) {
+      ls.classList.add('hidden');
+      setTimeout(() => { if (ls) ls.style.display = 'none'; }, 600);
     }
   }
-}
 
-function renderBoard(id,board,mks,isOpp){
-  var el=document.getElementById(id);
-  if(!board||board.length<25){el.innerHTML='';return;}
-  var bingoSet=new Set();var bcount=0;
-  LINES.forEach(function(ln){
-    if(ln.every(function(i){return mks.indexOf(i)>=0;})){bcount++;ln.forEach(function(i){bingoSet.add(i);});}
-  });
-  el.innerHTML='';
-  for(var i=0;i<25;i++){
-    var n=board[i];
-    var c=document.createElement('div');c.className='cell';
+  // 設定 1.5 秒後必定解除載入畫面，避免因網路不佳卡死
+  const maxLoadingTimer = setTimeout(hideLoading, 1500);
+
+  // ──────────────────────────────────────
+  // Firebase: load + live sync (非阻塞載入)
+  // ──────────────────────────────────────
+  function initFirebase() {
+    setSyncStatus('syncing', '連線中...');
     
-    // [邏輯更新] 如果是對手的盤面，且遊戲尚未結束，且該數字沒被喊中 -> 隱藏數字！
-    if(isOpp && !G.over && mks.indexOf(i) < 0){
-      c.innerHTML = '<span class="hidden-icon">🌸</span>';
-    } else {
-      c.textContent = n;
-    }
+    // 優先：直接使用本地預設資料渲染，提供無縫體驗
+    renderAll();
 
-    if(mks.indexOf(i)>=0){
-      c.classList.add('mk');
-      if(isOpp)c.classList.add('om'); // 對手的印章不同色
-    }
-    if(bingoSet.has(i))c.classList.add('bl');
-    
-    if(!isOpp && !G.over){
-      (function(num){
-        c.onclick=function(){
-          if (G.mode === 'ai') {
-            if(G.turn!=='p1')return;
-            if(G.called.indexOf(num)>=0){note('已宣告過此數字','e');return;}
-            callNum(num,'p1');
-          } else if (G.mode === 'online') {
-            var myTurn = (G.role === 'p1' && G.turn === 'p1') || (G.role === 'p2' && G.turn === 'p2');
-            if(!myTurn){note('尚未輪到你的回合！','e');return;}
-            if(G.called.indexOf(num)>=0){note('已宣告過此數字','e');return;}
-            onlineCall(num);
+    // 背景抓取 Firebase 資料（不使用 await 阻塞後續操作）
+    get(ref(db, TRIP_PATH)).then((snapshot) => {
+      if (snapshot.exists()) {
+        const d = snapshot.val();
+        if (d.days) Object.assign(dayData, d.days);
+        if (d.hotels) {
+          for (const k in d.hotels) {
+            hotelData[parseInt(k)] = d.hotels[k];
           }
-        };
-      })(n);
+        }
+        if (d.flights) Object.assign(flightData, d.flights);
+        // 如果遠端有資料，再重新渲染一次套用新資料
+        renderAll(); 
+      }
+      setSyncStatus('connected', '已同步');
       
-      var isMyTurn = G.mode === 'ai' ? (G.turn === 'p1') : ((G.role === 'p1' && G.turn === 'p1') || (G.role === 'p2' && G.turn === 'p2'));
-      if(!isMyTurn) c.classList.add('dis');
-    } else {
-      c.classList.add('dis');
+      // 若 1.5 秒內順利抓完資料，提早隱藏 Loading 並取消計時器
+      hideLoading();
+      clearTimeout(maxLoadingTimer);
+
+      // 註冊即時監聽更新
+      onValue(ref(db, TRIP_PATH), (snap) => {
+        if (!snap.exists()) return;
+        const d = snap.val();
+        if (d.days) Object.assign(dayData, d.days);
+        if (d.hotels) {
+          for (const k in d.hotels) hotelData[parseInt(k)] = d.hotels[k];
+        }
+        if (d.flights) Object.assign(flightData, d.flights);
+        renderAll();
+        setSyncStatus('connected', '已同步');
+      }, (err) => {
+        console.error('Firebase listen error:', err);
+        setSyncStatus('error', '監聽失敗');
+      });
+
+    }).catch((err) => {
+      console.error('Firebase init error:', err);
+      setSyncStatus('error', '連線失敗（離線模式）');
+      showToast('⚠ Firebase 連線失敗，使用離線模式', true);
+      
+      // 若連線失敗，也要提早關閉 Loading 畫面
+      hideLoading();
+      clearTimeout(maxLoadingTimer);
+    });
+  }
+
+  // ──────────────────────────────────────
+  // Firebase: write
+  // ──────────────────────────────────────
+  async function writeToFirebase() {
+    setSyncStatus('syncing', '儲存中...');
+    try {
+      await set(ref(db, TRIP_PATH), {
+        days:    dayData,
+        hotels:  hotelData,
+        flights: flightData,
+        updatedAt: new Date().toISOString()
+      });
+      setSyncStatus('connected', '已儲存');
+      showToast('✓ 儲存成功');
+    } catch (err) {
+      console.error('Write error:', err);
+      setSyncStatus('error', '儲存失敗');
+      showToast('✕ 儲存失敗，請重試', true);
     }
-    el.appendChild(c);
   }
-  if(!isOpp){G.myBingo=bcount;document.getElementById('bc1').textContent=bcount;}
-  else{G.oppBingo=bcount;document.getElementById('bc2').textContent=bcount;}
-}
 
-// ═══════════ BINGO CHECK ═══════════
-function checkBingo(){
-  var my=countB(G.myMk),op=countB(G.oppMk);
-  if(my>=5||op>=5){
-    G.over=true;
-    renderBoards(); // [更新] 遊戲結束時強制重新渲染，解除對手盤面的櫻花遮罩！
-    showWin(my>=5&&op>=5?'draw':my>=5?'win':'lose');
-    return;
+  // ──────────────────────────────────────
+  // Modal: open / close / save
+  // ──────────────────────────────────────
+  function openDayEdit(day) {
+    currentEditType = 'day';
+    currentEditId   = day;
+    const text = dayData[day] || '';
+    document.getElementById('modal-title').textContent = `DAY ${day} 行程編輯`;
+    document.getElementById('modal-body').innerHTML = `
+      <div class="field-group">
+        <label class="field-label">行程內容</label>
+        <textarea class="field-textarea" id="edit-day-text">${escHtml(text)}</textarea>
+        <p class="field-hint">每行一項。格式：<code style="color:var(--gold)">HH:MM 地點說明</code>　或　<code style="color:var(--gold)">[備注] 說明</code></p>
+      </div>`;
+    openModal();
   }
-}
 
-function countB(mks){
-  var c=0;
-  LINES.forEach(function(ln){if(ln.every(function(i){return mks.indexOf(i)>=0;}))c++;});
-  return c;
-}
-
-// ═══════════ UI ═══════════
-function updUI(){
-  if(G.over) return;
-  var isAI=G.mode==='ai';
-  var myTurn=isAI?(G.turn==='p1'):((G.role==='p1'&&G.turn==='p1')||(G.role==='p2'&&G.turn==='p2'));
-  document.getElementById('ad1').classList.toggle('on',(isAI&&G.turn==='p1')||(!isAI&&G.turn==='p1'));
-  document.getElementById('ad2').classList.toggle('on',(isAI&&G.turn==='p2')||(!isAI&&G.turn==='p2'));
-  if(isAI){
-    document.getElementById('statusTxt').textContent=G.turn==='p1'?'你的回合 — 請宣告數字！':'狐狸正在思考...';
-    document.getElementById('turnTxt').textContent=G.turn==='p1'?'己方回合':'敵方回合';
-  } else {
-    document.getElementById('statusTxt').textContent=myTurn?'你的回合 — 請宣告數字！':'等待對手出招...';
-    document.getElementById('turnTxt').textContent=myTurn?'己方回合':'敵方回合';
-    document.getElementById('callPanel').style.display=myTurn?'block':'none';
+  function openHotelEdit(day) {
+    currentEditType = 'hotel';
+    currentEditId   = day;
+    const h = hotelData[day] || { name: '', addr: '' };
+    document.getElementById('modal-title').textContent = `DAY ${day} 住宿編輯`;
+    document.getElementById('modal-body').innerHTML = `
+      <div class="field-group">
+        <label class="field-label">飯店名稱</label>
+        <input class="field-input" id="edit-hotel-name" value="${escHtml(h.name)}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">飯店地址</label>
+        <input class="field-input" id="edit-hotel-addr" value="${escHtml(h.addr)}">
+      </div>`;
+    openModal();
   }
-}
 
-// ═══════════ WIN & POST-GAME ═══════════
-function showWin(r){
-  var e=document.getElementById('winE'),t=document.getElementById('winT'),s=document.getElementById('winS');
-  if(r==='win'){e.textContent='🌸';t.textContent='大獲全勝';s.textContent='恭喜拿下勝利！';}
-  else if(r==='lose'){e.textContent='🍂';t.textContent='惜敗';s.textContent='再接再厲，下次定能取勝！';}
-  else{e.textContent='🍵';t.textContent='平局';s.textContent='勢均力敵，未分勝負！';}
-  document.getElementById('winOv').classList.add('on');
-  document.getElementById('statusTxt').textContent='遊戲結束';
-  document.getElementById('turnTxt').textContent='';
-  document.getElementById('ad1').classList.remove('on');
-  document.getElementById('ad2').classList.remove('on');
-  document.getElementById('callPanel').style.display='none';
-  
-  // 在多人模式下不顯示再玩一局 (需要雙方重新建立/加入)，以免狀態不同步
-  if(G.mode === 'online'){
-    document.getElementById('rematchBtn').style.display = 'none';
-  } else {
-    document.getElementById('rematchBtn').style.display = 'inline-block';
+  function openFlightEdit(dir) {
+    currentEditType = 'flight';
+    currentEditId   = dir;
+    const f     = flightData[dir] || {};
+    const label = dir === 'outbound' ? '去程' : '回程';
+    document.getElementById('modal-title').textContent = `${label}航班編輯`;
+    document.getElementById('modal-body').innerHTML = `
+      <div class="field-group">
+        <label class="field-label">出發地</label>
+        <input class="field-input" id="edit-f-from" value="${escHtml(f.from || '')}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">目的地</label>
+        <input class="field-input" id="edit-f-to" value="${escHtml(f.to || '')}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">航班號碼</label>
+        <input class="field-input" id="edit-f-flight" value="${escHtml(f.flight || '')}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">日期（顯示用）</label>
+        <input class="field-input" id="edit-f-date" value="${escHtml(f.date || '')}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">時間（例：10:15 — 14:00）</label>
+        <input class="field-input" id="edit-f-time" value="${escHtml(f.time || '')}">
+      </div>`;
+    openModal();
   }
-}
 
-// 隱藏 Win Overlay，檢視雙方盤面
-function viewBoard(){
-  document.getElementById('winOv').classList.remove('on');
-  note('可自由瀏覽雙方最後的佈局，點擊左上角即可退出。', 'i', 4000);
-}
-
-function rematch(){
-  document.getElementById('winOv').classList.remove('on');
-  G.called=[];G.myMk=[];G.oppMk=[];G.myBingo=0;G.oppBingo=0;G.over=false;G.turn='p1';G.setup=[];
-  if(G.mode==='ai'){showS('sSetup');initSetup();}
-  else goHome();
-}
-
-// ═══════════ UTILS ═══════════
-function shuffle(a){
-  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}
-  return a;
-}
-
-function copyCode(){
-  navigator.clipboard.writeText(G.roomCode||'').then(function(){note('房間代碼已複製！','s');}).catch(function(){note('複製失敗','e');});
-}
-
-// Quick fill Q key
-document.addEventListener('keydown',function(e){
-  if((e.key==='q'||e.key==='Q')&&document.getElementById('sSetup').classList.contains('active')&&G.setup.length<25){
-    autoFillBoard();
+  function openModal() {
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('btn-save').disabled = false;
+    setTimeout(() => {
+      const el = document.querySelector('#modal-body input, #modal-body textarea');
+      if (el) el.focus();
+    }, 100);
   }
-});
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    currentEditType = null;
+    currentEditId   = null;
+  }
+
+  async function saveModal() {
+    const saveBtn = document.getElementById('btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '儲存中...';
+
+    if (currentEditType === 'day') {
+      const text = document.getElementById('edit-day-text').value;
+      dayData[currentEditId] = text;
+      renderDay(currentEditId, text);
+
+    } else if (currentEditType === 'hotel') {
+      const name = document.getElementById('edit-hotel-name').value.trim();
+      const addr = document.getElementById('edit-hotel-addr').value.trim();
+      hotelData[currentEditId] = { name, addr };
+      renderHotel(currentEditId);
+
+    } else if (currentEditType === 'flight') {
+      const dir = currentEditId;
+      flightData[dir] = {
+        from:   document.getElementById('edit-f-from').value.trim(),
+        to:     document.getElementById('edit-f-to').value.trim(),
+        flight: document.getElementById('edit-f-flight').value.trim(),
+        date:   document.getElementById('edit-f-date').value.trim(),
+        time:   document.getElementById('edit-f-time').value.trim()
+      };
+      renderFlight(dir);
+    }
+
+    closeModal();
+    await writeToFirebase();
+    saveBtn.textContent = '儲存';
+  }
+
+  // ──────────────────────────────────────
+  // Keyboard & overlay close
+  // ──────────────────────────────────────
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ──────────────────────────────────────
+  // 將函式掛載至全域 (讓 HTML 中的 onclick 能呼叫)
+  // ──────────────────────────────────────
+  window.openDayEdit    = openDayEdit;
+  window.openHotelEdit  = openHotelEdit;
+  window.openFlightEdit = openFlightEdit;
+  window.closeModal     = closeModal;
+  window.saveModal      = saveModal;
+
+  // ──────────────────────────────────────
+  // Boot
+  // ──────────────────────────────────────
+  // 啟動應用程式
+  initFirebase();
 </script>
 
 </body>
